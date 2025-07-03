@@ -25,6 +25,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import AdminSettings from "./pages/AdminSettings";
 import AdminSenderIDs from "./pages/AdminSenderIDs";
 import AdminCreditRequests from "./pages/AdminCreditRequests";
+import AdminBrand from "./pages/AdminBrand";
 import SenderIDs from "./pages/SenderIDs";
 import NotFound from "./pages/NotFound";
 
@@ -91,6 +92,11 @@ const App = () => (
             <Route path="/admin/credit-requests" element={
               <AdminLayout>
                 <AdminCreditRequests />
+              </AdminLayout>
+            } />
+            <Route path="/admin/brand" element={
+              <AdminLayout>
+                <AdminBrand />
               </AdminLayout>
             } />
             

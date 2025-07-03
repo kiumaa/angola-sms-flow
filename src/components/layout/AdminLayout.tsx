@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText } from "lucide-react";
-import logo from "@/assets/logo.png";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -74,6 +74,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       href: "/admin/settings",
       icon: Settings,
       current: location.pathname.startsWith("/admin/settings")
+    },
+    {
+      name: "Personalização",
+      href: "/admin/brand",
+      icon: Settings,
+      current: location.pathname.startsWith("/admin/brand")
     }
   ];
 
@@ -91,8 +97,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <Menu className="h-5 w-5" />
               </button>
               <Link to="/admin" className="flex items-center ml-4">
-                <img src={logo} alt="SMS Marketing Angola" className="h-8 w-auto mr-2" />
-                <span className="font-bold text-lg">Admin - SMS Marketing</span>
+                <BrandAwareLogo 
+                  className="h-8 w-auto mr-2" 
+                  textClassName="font-bold text-lg"
+                  showText={true}
+                />
+                <span className="font-bold text-lg">Admin</span>
               </Link>
             </div>
 

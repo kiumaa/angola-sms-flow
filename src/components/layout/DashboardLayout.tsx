@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mail, Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, CreditCard } from "lucide-react";
-import logo from "@/assets/logo.png";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useUserCredits } from "@/hooks/useUserCredits";
+import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -93,8 +93,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <Layout className="h-5 w-5" />
               </button>
               <Link to="/dashboard" className="flex items-center ml-4">
-                <img src={logo} alt="SMS Marketing Angola" className="h-8 w-auto mr-2" />
-                <span className="font-bold text-lg">SMS Marketing Angola</span>
+                <BrandAwareLogo 
+                  className="h-8 w-auto mr-2" 
+                  textClassName="font-bold text-lg"
+                />
               </Link>
             </div>
 
