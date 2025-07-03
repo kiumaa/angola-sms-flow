@@ -51,6 +51,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       current: location.pathname.startsWith("/admin/transactions")
     },
     {
+      name: "Sender IDs",
+      href: "/admin/sender-ids",
+      icon: Send,
+      current: location.pathname.startsWith("/admin/sender-ids")
+    },
+    {
       name: "Relatórios",
       href: "/admin/reports",
       icon: BarChart3,

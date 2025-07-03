@@ -23,6 +23,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminPackages from "./pages/AdminPackages";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminSettings from "./pages/AdminSettings";
+import AdminSenderIDs from "./pages/AdminSenderIDs";
 import SenderIDs from "./pages/SenderIDs";
 import NotFound from "./pages/NotFound";
 
@@ -79,6 +80,11 @@ const App = () => (
             <Route path="/admin/reports" element={
               <AdminLayout>
                 <AdminReports />
+              </AdminLayout>
+            } />
+            <Route path="/admin/sender-ids" element={
+              <AdminLayout>
+                <AdminSenderIDs />
               </AdminLayout>
             } />
             

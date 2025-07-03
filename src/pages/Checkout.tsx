@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, CreditCard, Building2, CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { ProgressSteps } from "@/components/ui/progress-steps";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -152,6 +153,9 @@ const Checkout = () => {
     );
   }
 
+  const progressSteps = ["Escolher Pacote", "Método de Pagamento", "Confirmação"];
+  const currentStep = paymentMethod === "offline" && receipt ? 2 : 1;
+
   return (
     <DashboardLayout>
       <div className="space-y-8 max-w-4xl mx-auto">
@@ -169,6 +173,13 @@ const Checkout = () => {
             Voltar aos Pacotes
           </Button>
         </div>
+
+        {/* Progress Steps */}
+        <ProgressSteps 
+          steps={progressSteps} 
+          currentStep={currentStep}
+          className="max-w-2xl mx-auto"
+        />
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Order Summary */}
@@ -206,7 +217,7 @@ const Checkout = () => {
                 </TabsTrigger>
                 <TabsTrigger value="appypay" className="flex items-center space-x-2" disabled>
                   <CreditCard className="h-4 w-4" />
-                  <span>AppyPay (Em breve)</span>
+                  <span>Pagamentos Digitais (Em breve)</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -249,9 +260,20 @@ const Checkout = () => {
                       </div>
                     </div>
 
+                    {/* Instructions */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 mb-2">📋 Instruções de Pagamento</h4>
+                      <div className="text-blue-800 text-sm space-y-1">
+                        <p>1. Transfira o valor exato para a conta indicada acima</p>
+                        <p>2. Use como referência: <strong>SMS-{user?.id?.slice(-6)}</strong></p>
+                        <p>3. Envie o comprovante através do formulário abaixo</p>
+                        <p>4. Aguarde até 24h para confirmação do pagamento</p>
+                      </div>
+                    </div>
+
                     {/* Upload Receipt */}
                     <div className="space-y-4">
-                      <Label htmlFor="receipt">Comprovante de Transferência</Label>
+                      <Label htmlFor="receipt">Comprovante de Transferência *</Label>
                       <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                         <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                         <p className="text-sm text-muted-foreground mb-2">
@@ -266,31 +288,40 @@ const Checkout = () => {
                         />
                       </div>
                       {receipt && (
-                        <p className="text-sm text-muted-foreground">
-                          Arquivo selecionado: {receipt.name}
+                        <p className="text-sm text-success">
+                          ✓ Arquivo selecionado: {receipt.name}
                         </p>
                       )}
                     </div>
 
                     {/* Notes */}
                     <div className="space-y-2">
-                      <Label htmlFor="notes">Observações (opcional)</Label>
+                      <Label htmlFor="notes">Referência da Transferência</Label>
                       <Textarea
                         id="notes"
-                        placeholder="Referência da transferência, comentários..."
+                        placeholder={`Digite aqui a referência da transferência: SMS-${user?.id?.slice(-6) || 'XXXXXX'}`}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Use a referência sugerida acima para facilitar a identificação do pagamento
+                      </p>
                     </div>
 
                     <Button 
                       onClick={handleOfflinePayment}
-                      disabled={isProcessing}
+                      disabled={isProcessing || !receipt}
                       className="w-full"
                       size="lg"
                     >
-                      {isProcessing ? "Processando..." : "Confirmar Pagamento"}
+                      {isProcessing ? "Registrando transação..." : "Confirmar e Enviar Comprovante"}
                     </Button>
+                    
+                    {!receipt && (
+                      <p className="text-sm text-amber-600 text-center">
+                        ⚠️ Por favor, anexe o comprovante de transferência antes de confirmar
+                      </p>
+                    )}
 
                     <div className="text-sm text-muted-foreground">
                       <p>📧 Após o envio, nossa equipe verificará o pagamento em até 24 horas.</p>
@@ -305,18 +336,42 @@ const Checkout = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <CreditCard className="h-5 w-5" />
-                      <span>Pagamento via AppyPay</span>
+                      <span>Pagamentos Digitais</span>
                     </CardTitle>
                     <CardDescription>
-                      Integração em desenvolvimento - disponível em breve
+                      Métodos de pagamento digital em desenvolvimento
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-8">
-                      <CheckCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">Em breve!</h3>
-                      <p className="text-muted-foreground">
-                        Estamos integrando os métodos de pagamento digital para sua conveniência.
+                    <div className="grid gap-4">
+                      <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-medium mb-2">🏦 Multicaixa Express</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Pagamentos via terminais Multicaixa - <span className="text-amber-600">Em desenvolvimento</span>
+                        </p>
+                      </div>
+                      
+                      <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-medium mb-2">📱 Unitel Money</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Pagamentos via carteira digital - <span className="text-amber-600">Em desenvolvimento</span>
+                        </p>
+                      </div>
+                      
+                      <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-medium mb-2">💳 Débito Direto</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Pagamentos por referência bancária - <span className="text-amber-600">Em desenvolvimento</span>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="text-center py-6">
+                      <CheckCircle className="h-12 w-12 mx-auto text-primary mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Lançamento em breve!</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Estamos finalizando as integrações para oferecer mais opções de pagamento.
+                        Por enquanto, utilize a transferência bancária.
                       </p>
                     </div>
                   </CardContent>

@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Eye, CheckCircle, XCircle, Clock, FileText, User, Calendar } from "lucide-react";
+import { CreditCard, Eye, CheckCircle, XCircle, Clock, FileText, User, Calendar, Search, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,6 +31,7 @@ const AdminTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("pending");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -43,18 +45,28 @@ const AdminTransactions = () => {
     try {
       const { data, error } = await supabase
         .from('transactions')
-        .select(`
-          *,
-          profiles:user_id (
-            email,
-            full_name,
-            company_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTransactions((data as any) || []);
+
+      // Get profile data for each transaction
+      const transactionsWithProfiles = await Promise.all(
+        (data || []).map(async (transaction) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, full_name, company_name')
+            .eq('user_id', transaction.user_id)
+            .single();
+          
+          return {
+            ...transaction,
+            profiles: profile || { email: '', full_name: '', company_name: '' }
+          };
+        })
+      );
+
+      setTransactions(transactionsWithProfiles);
     } catch (error) {
       console.error('Error fetching transactions:', error);
       toast({
@@ -169,8 +181,15 @@ const AdminTransactions = () => {
   };
 
   const filteredTransactions = transactions.filter(transaction => {
-    if (filter === "all") return true;
-    return transaction.status === filter;
+    const matchesFilter = filter === "all" || transaction.status === filter;
+    const matchesSearch = !searchTerm || 
+      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.profiles?.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.payment_reference?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesFilter && matchesSearch;
   });
 
   const stats = {
@@ -203,6 +222,29 @@ const AdminTransactions = () => {
           Aprove ou rejeite pagamentos de créditos SMS
         </p>
       </div>
+
+      {/* Search and Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Filter className="h-5 w-5" />
+            <span>Filtros e Busca</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 flex-1">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por ID, usuário, empresa ou referência..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-md"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid md:grid-cols-4 gap-6">
@@ -366,10 +408,18 @@ const AdminTransactions = () => {
                                   <Label>Créditos</Label>
                                   <p className="font-medium">{transaction.credits_purchased} SMS</p>
                                 </div>
-                                <div>
-                                  <Label>Referência/Observações</Label>
-                                  <p className="text-sm">{transaction.payment_reference || 'Nenhuma'}</p>
-                                </div>
+                                 <div>
+                                   <Label>ID da Transação</Label>
+                                   <p className="font-mono text-sm">{transaction.id}</p>
+                                 </div>
+                                 <div>
+                                   <Label>Método de Pagamento</Label>
+                                   <p className="font-medium">{transaction.payment_method || 'N/A'}</p>
+                                 </div>
+                                 <div>
+                                   <Label>Referência/Observações</Label>
+                                   <p className="text-sm">{transaction.payment_reference || 'Nenhuma'}</p>
+                                 </div>
                               </div>
                             </DialogContent>
                           </Dialog>
