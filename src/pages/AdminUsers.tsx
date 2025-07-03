@@ -16,7 +16,7 @@ import { UserDetailsDrawer } from "@/components/admin/UserDetailsDrawer";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
-import AdminLayout from "@/components/layout/AdminLayout";
+
 import { User } from "@/hooks/useAdminUsers";
 
 const AdminUsers = () => {
@@ -107,9 +107,8 @@ const AdminUsers = () => {
   const totalCredits = users.reduce((sum, user) => sum + (user.credits || 0), 0);
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
+    <div className="space-y-6">
+      {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
@@ -385,8 +384,7 @@ const AdminUsers = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
-  );
-};
+    );
+  };
 
-export default AdminUsers;
+  export default AdminUsers;
