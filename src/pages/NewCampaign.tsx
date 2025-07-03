@@ -17,6 +17,7 @@ const NewCampaign = () => {
   const [recipients, setRecipients] = useState("");
   const [loading, setLoading] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
+  const [defaultSenderId, setDefaultSenderId] = useState("SMSao");
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -29,11 +30,12 @@ const NewCampaign = () => {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('credits')
+        .select('credits, default_sender_id')
         .eq('user_id', user?.id)
         .single();
       
       setUserCredits(data?.credits || 0);
+      setDefaultSenderId(data?.default_sender_id || 'SMSao');
     } catch (error) {
       console.error('Error fetching credits:', error);
     }
@@ -274,7 +276,7 @@ const NewCampaign = () => {
                   <div className="flex items-start space-x-2">
                     <MessageSquare className="h-4 w-4 text-primary mt-1" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium">SMSao</p>
+                      <p className="text-sm font-medium">{defaultSenderId}</p>
                       <p className="text-sm mt-1">
                         {message || "Sua mensagem aparecerá aqui..."}
                       </p>
