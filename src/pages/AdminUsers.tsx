@@ -270,7 +270,7 @@ const AdminUsers = () => {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                          <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
                             <DropdownMenuItem onClick={() => handleEditUser(user)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Editar
