@@ -9,16 +9,250 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      credit_packages: {
+        Row: {
+          created_at: string
+          credits: number
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_kwanza: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_kwanza: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_kwanza?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          credits: number | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          credits?: number | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          credits?: number | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sms_campaigns: {
+        Row: {
+          created_at: string
+          credits_used: number | null
+          id: string
+          message: string
+          name: string
+          scheduled_at: string | null
+          status: string | null
+          total_failed: number | null
+          total_recipients: number | null
+          total_sent: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_used?: number | null
+          id?: string
+          message: string
+          name: string
+          scheduled_at?: string | null
+          status?: string | null
+          total_failed?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_used?: number | null
+          id?: string
+          message?: string
+          name?: string
+          scheduled_at?: string | null
+          status?: string | null
+          total_failed?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sms_logs: {
+        Row: {
+          campaign_id: string
+          cost_credits: number | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          message: string
+          phone_number: string
+          sent_at: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          cost_credits?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message: string
+          phone_number: string
+          sent_at?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          cost_credits?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message?: string
+          phone_number?: string
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sms_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount_kwanza: number
+          created_at: string
+          credits_purchased: number
+          id: string
+          package_id: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_kwanza: number
+          created_at?: string
+          credits_purchased: number
+          id?: string
+          package_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_kwanza?: number
+          created_at?: string
+          credits_purchased?: number
+          id?: string
+          package_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +367,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "client"],
+    },
   },
 } as const

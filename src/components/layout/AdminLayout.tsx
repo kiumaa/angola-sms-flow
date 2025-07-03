@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, Users, Calendar, Settings, Plus, Layout, LogOut, Shield } from "lucide-react";
+import { Shield, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
-interface DashboardLayoutProps {
+interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -27,40 +27,40 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const navigation = [
     {
-      name: "Dashboard",
-      href: "/dashboard",
-      icon: Layout,
-      current: location.pathname === "/dashboard"
+      name: "Dashboard Admin",
+      href: "/admin",
+      icon: BarChart3,
+      current: location.pathname === "/admin"
     },
     {
-      name: "Campanhas",
-      href: "/campaigns",
-      icon: Mail,
-      current: location.pathname.startsWith("/campaigns")
-    },
-    {
-      name: "Contatos",
-      href: "/contacts",
+      name: "Gestão de Usuários",
+      href: "/admin/users",
       icon: Users,
-      current: location.pathname.startsWith("/contacts")
+      current: location.pathname.startsWith("/admin/users")
+    },
+    {
+      name: "Gestão de Pacotes",
+      href: "/admin/packages",
+      icon: Package,
+      current: location.pathname.startsWith("/admin/packages")
+    },
+    {
+      name: "Transações",
+      href: "/admin/transactions",
+      icon: CreditCard,
+      current: location.pathname.startsWith("/admin/transactions")
     },
     {
       name: "Relatórios",
-      href: "/reports",
-      icon: Calendar,
-      current: location.pathname.startsWith("/reports")
-    },
-    {
-      name: "Créditos",
-      href: "/credits",
-      icon: Plus,
-      current: location.pathname.startsWith("/credits")
+      href: "/admin/reports",
+      icon: BarChart3,
+      current: location.pathname.startsWith("/admin/reports")
     },
     {
       name: "Configurações",
-      href: "/settings",
+      href: "/admin/settings",
       icon: Settings,
-      current: location.pathname.startsWith("/settings")
+      current: location.pathname.startsWith("/admin/settings")
     }
   ];
 
@@ -75,30 +75,24 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
               >
-                <Layout className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
               </button>
-              <Link to="/dashboard" className="flex items-center ml-4">
-                <Mail className="h-6 w-6 text-primary mr-2" />
-                <span className="font-bold text-lg">SMS Marketing Angola</span>
+              <Link to="/admin" className="flex items-center ml-4">
+                <Shield className="h-6 w-6 text-primary mr-2" />
+                <span className="font-bold text-lg">Admin - SMS Marketing</span>
               </Link>
             </div>
 
             <div className="flex items-center space-x-4">
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button variant="outline" size="sm">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
               <div className="text-sm">
-                <span className="text-muted-foreground">Créditos:</span>
-                <span className="font-bold text-primary ml-1">0</span>
+                <span className="text-muted-foreground">Admin:</span>
+                <span className="font-bold text-primary ml-1">{user?.email}</span>
               </div>
-              <div className="text-sm text-muted-foreground">
-                {user?.email}
-              </div>
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm">
+                  Ver Site
+                </Button>
+              </Link>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
@@ -140,4 +134,4 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   );
 };
 
-export default DashboardLayout;
+export default AdminLayout;

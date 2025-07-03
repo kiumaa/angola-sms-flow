@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -12,31 +13,45 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn, user, isAdmin, loading } = useAuth();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      navigate(isAdmin ? "/admin" : "/dashboard");
+    }
+  }, [user, isAdmin, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (email && password) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userEmail", email);
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast({
+          title: "Erro no login",
+          description: error.message || "Credenciais inválidas",
+          variant: "destructive",
+        });
+      } else {
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta à sua conta.",
         });
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Erro no login",
-          description: "Por favor, verifique suas credenciais.",
-          variant: "destructive",
-        });
+        // Navigation will be handled by the useEffect above
       }
+    } catch (error) {
+      toast({
+        title: "Erro no login",
+        description: "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
