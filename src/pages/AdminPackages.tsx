@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Package, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,9 +28,20 @@ const AdminPackages = () => {
   const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    credits: "",
+    price_kwanza: "",
+    is_active: true
+  });
+
+  const [editFormData, setEditFormData] = useState({
     name: "",
     description: "",
     credits: "",
@@ -124,6 +136,88 @@ const AdminPackages = () => {
       toast({
         title: "Erro",
         description: "Erro ao atualizar pacote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditDialog = (pkg: CreditPackage) => {
+    setSelectedPackage(pkg);
+    setEditFormData({
+      name: pkg.name,
+      description: pkg.description || "",
+      credits: pkg.credits.toString(),
+      price_kwanza: pkg.price_kwanza.toString(),
+      is_active: pkg.is_active
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPackage) return;
+    
+    try {
+      const { error } = await supabase
+        .from('credit_packages')
+        .update({
+          name: editFormData.name,
+          description: editFormData.description || null,
+          credits: parseInt(editFormData.credits),
+          price_kwanza: parseFloat(editFormData.price_kwanza),
+          is_active: editFormData.is_active
+        })
+        .eq('id', selectedPackage.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Pacote atualizado com sucesso",
+      });
+
+      setIsEditDialogOpen(false);
+      setSelectedPackage(null);
+      fetchPackages();
+    } catch (error) {
+      console.error('Erro ao editar pacote:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao editar pacote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openDeleteDialog = (pkg: CreditPackage) => {
+    setSelectedPackage(pkg);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedPackage) return;
+    
+    try {
+      const { error } = await supabase
+        .from('credit_packages')
+        .delete()
+        .eq('id', selectedPackage.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Pacote excluído com sucesso",
+      });
+
+      setIsDeleteDialogOpen(false);
+      setSelectedPackage(null);
+      fetchPackages();
+    } catch (error) {
+      console.error('Erro ao excluir pacote:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir pacote",
         variant: "destructive",
       });
     }
@@ -282,10 +376,18 @@ const AdminPackages = () => {
                         >
                           {pkg.is_active ? "Desativar" : "Ativar"}
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => openEditDialog(pkg)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => openDeleteDialog(pkg)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -304,6 +406,90 @@ const AdminPackages = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Pacote</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome do Pacote</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                placeholder="Ex: Pacote Básico"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Descrição</Label>
+              <Input
+                id="edit-description"
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                placeholder="Descrição do pacote..."
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-credits">Créditos</Label>
+                <Input
+                  id="edit-credits"
+                  type="number"
+                  value={editFormData.credits}
+                  onChange={(e) => setEditFormData({...editFormData, credits: e.target.value})}
+                  placeholder="1000"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-price">Preço (AOA)</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  step="0.01"
+                  value={editFormData.price_kwanza}
+                  onChange={(e) => setEditFormData({...editFormData, price_kwanza: e.target.value})}
+                  placeholder="50000.00"
+                  required
+                />
+              </div>
+            </div>
+            
+            <Button type="submit" className="w-full btn-gradient">
+              Atualizar Pacote
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o pacote "{selectedPackage?.name}"? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
