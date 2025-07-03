@@ -141,6 +141,65 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_requests: {
+        Row: {
+          admin_notes: string | null
+          amount_kwanza: number
+          created_at: string
+          credits_requested: number
+          id: string
+          package_id: string | null
+          payment_reference: string | null
+          receipt_url: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_kwanza: number
+          created_at?: string
+          credits_requested: number
+          id?: string
+          package_id?: string | null
+          payment_reference?: string | null
+          receipt_url?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_kwanza?: number
+          created_at?: string
+          credits_requested?: number
+          id?: string
+          package_id?: string | null
+          payment_reference?: string | null
+          receipt_url?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_requests_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -148,6 +207,9 @@ export type Database = {
           credits: number | null
           default_sender_id: string | null
           email: string | null
+          email_confirm_expires_at: string | null
+          email_confirm_token: string | null
+          email_confirmed: boolean | null
           full_name: string | null
           id: string
           phone: string | null
@@ -160,6 +222,9 @@ export type Database = {
           credits?: number | null
           default_sender_id?: string | null
           email?: string | null
+          email_confirm_expires_at?: string | null
+          email_confirm_token?: string | null
+          email_confirmed?: boolean | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -172,6 +237,9 @@ export type Database = {
           credits?: number | null
           default_sender_id?: string | null
           email?: string | null
+          email_confirm_expires_at?: string | null
+          email_confirm_token?: string | null
+          email_confirmed?: boolean | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -379,6 +447,10 @@ export type Database = {
         Args: { user_id: string; credit_amount: number }
         Returns: undefined
       }
+      approve_credit_request: {
+        Args: { request_id: string; admin_user_id: string }
+        Returns: boolean
+      }
       count_contacts_in_list: {
         Args: { list_id: string }
         Returns: number
@@ -388,6 +460,10 @@ export type Database = {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      reject_credit_request: {
+        Args: { request_id: string; admin_user_id: string; notes?: string }
         Returns: boolean
       }
     }

@@ -61,30 +61,30 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // Create pending transaction
+      // Create credit request (replaces direct transaction)
       const { error } = await supabase
-        .from('transactions')
+        .from('credit_requests')
         .insert({
           user_id: user.id,
+          package_id: selectedPackage.id,
           amount_kwanza: selectedPackage.price,
-          credits_purchased: selectedPackage.credits,
+          credits_requested: selectedPackage.credits,
           status: 'pending',
-          payment_method: 'bank_transfer',
-          payment_reference: notes
+          payment_reference: notes || `SMS-${user.id.slice(-6)}`
         });
 
       if (error) throw error;
 
       toast({
-        title: "Transação registrada!",
-        description: "Siga as instruções de transferência e envie o comprovante.",
+        title: "Solicitação de créditos enviada!",
+        description: "Aguarde aprovação do administrador após confirmação do pagamento.",
       });
 
     } catch (error) {
-      console.error('Error creating transaction:', error);
+      console.error('Error creating credit request:', error);
       toast({
         title: "Erro",
-        description: "Erro ao registrar transação. Tente novamente.",
+        description: "Erro ao enviar solicitação. Tente novamente.",
         variant: "destructive"
       });
     } finally {

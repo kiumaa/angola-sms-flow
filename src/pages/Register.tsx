@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -30,41 +31,79 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
+    try {
+      // Basic validation
+      if (formData.password !== formData.confirmPassword) {
+        toast({
+          title: "Erro na validação",
+          description: "As senhas não coincidem.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (formData.password.length < 6) {
+        toast({
+          title: "Senha muito fraca",
+          description: "A senha deve ter pelo menos 6 caracteres.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Create user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.companyName,
+            phone: formData.phone,
+            company_name: formData.companyName
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Send confirmation email
+        const { error: emailError } = await supabase.functions.invoke('send-confirmation-email', {
+          body: {
+            email: formData.email,
+            userId: authData.user.id
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+        }
+
+        // Give initial credits (50 SMS)
+        await supabase.rpc('add_user_credits', {
+          user_id: authData.user.id,
+          credit_amount: 50
+        });
+
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Verifique seu email para confirmar a conta. Você ganhou 50 SMS grátis!",
+        });
+        
+        navigate("/login");
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
-        title: "Erro na validação",
-        description: "As senhas não coincidem.",
+        title: "Erro ao criar conta",
+        description: error.message || "Tente novamente mais tarde.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    if (formData.password.length < 6) {
-      toast({
-        title: "Senha muito fraca",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userEmail", formData.email);
-      localStorage.setItem("companyName", formData.companyName);
-      localStorage.setItem("smsCredits", "50"); // Free trial credits
-      
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Você ganhou 50 SMS grátis para começar.",
-      });
-      navigate("/dashboard");
-      setIsLoading(false);
-    }, 1000);
   };
 
   return (
