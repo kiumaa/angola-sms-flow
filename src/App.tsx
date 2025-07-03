@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Campaigns from "./pages/Campaigns";
 import NewCampaign from "./pages/NewCampaign";
 import Credits from "./pages/Credits";
+import Checkout from "./pages/Checkout";
+import Transactions from "./pages/Transactions";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPackages from "./pages/AdminPackages";
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaigns/new" element={<NewCampaign />} />
             <Route path="/credits" element={<Credits />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/transactions" element={<Transactions />} />
             <Route path="/sender-ids" element={<SenderIDs />} />
             
             {/* Admin Routes */}
