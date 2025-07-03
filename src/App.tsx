@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Campaigns from "./pages/Campaigns";
 import NewCampaign from "./pages/NewCampaign";
+import Contacts from "./pages/Contacts";
 import Credits from "./pages/Credits";
 import Checkout from "./pages/Checkout";
 import Transactions from "./pages/Transactions";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/sender-ids" element={<SenderIDs />} />
+            <Route path="/contacts" element={<Contacts />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={
