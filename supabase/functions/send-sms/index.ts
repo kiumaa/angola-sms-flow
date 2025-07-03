@@ -66,10 +66,10 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     )
 
-    // Check user credits
+    // Check user credits and get default sender ID
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('credits')
+      .select('credits, default_sender_id')
       .eq('user_id', user.id)
       .single()
 
@@ -112,7 +112,7 @@ serve(async (req) => {
         const smsData = {
           to: phoneNumber,
           body: message,
-          from: 'SMSao'
+          from: profile?.default_sender_id || 'SMSao'
         }
 
         console.log('SMS data:', JSON.stringify(smsData, null, 2))

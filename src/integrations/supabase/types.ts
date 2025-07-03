@@ -47,6 +47,7 @@ export type Database = {
           company_name: string | null
           created_at: string
           credits: number | null
+          default_sender_id: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -58,6 +59,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           credits?: number | null
+          default_sender_id?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -69,10 +71,41 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           credits?: number | null
+          default_sender_id?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sender_ids: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean | null
+          sender_id: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          sender_id: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          sender_id?: string
+          status?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -16,6 +16,8 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminPackages from "./pages/AdminPackages";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminSMSSettings from "./pages/AdminSMSSettings";
+import AdminSenderIDs from "./pages/AdminSenderIDs";
+import SenderIDs from "./pages/SenderIDs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,7 @@ const App = () => (
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaigns/new" element={<NewCampaign />} />
             <Route path="/credits" element={<Credits />} />
+            <Route path="/sender-ids" element={<SenderIDs />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={
@@ -55,6 +58,11 @@ const App = () => (
             <Route path="/admin/sms" element={
               <AdminLayout>
                 <AdminSMSSettings />
+              </AdminLayout>
+            } />
+            <Route path="/admin/sender-ids" element={
+              <AdminLayout>
+                <AdminSenderIDs />
               </AdminLayout>
             } />
             
