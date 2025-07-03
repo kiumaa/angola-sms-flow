@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -90,7 +91,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <Menu className="h-5 w-5" />
               </button>
               <Link to="/admin" className="flex items-center ml-4">
-                <Shield className="h-6 w-6 text-primary mr-2" />
+                <img src={logo} alt="SMS Marketing Angola" className="h-8 w-auto mr-2" />
                 <span className="font-bold text-lg">Admin - SMS Marketing</span>
               </Link>
             </div>

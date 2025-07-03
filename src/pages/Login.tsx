@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Check } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -61,7 +62,7 @@ const Login = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center">
-            <Mail className="h-8 w-8 text-primary mr-2" />
+            <img src={logo} alt="SMS Marketing Angola" className="h-12 w-auto mr-2" />
             <span className="text-2xl font-bold text-gradient">SMS Marketing Angola</span>
           </Link>
         </div>
