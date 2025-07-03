@@ -77,6 +77,7 @@ const AdminUsers = () => {
   };
 
   const handleViewDetails = (user: User) => {
+    console.log('Opening details for user:', user.user_id, user);
     setSelectedUser(user);
     setDetailsDrawerOpen(true);
   };
