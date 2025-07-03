@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Palette, Upload, Image, Globe } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Palette, Upload, Image, Globe, Type } from "lucide-react";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
 import { useToast } from "@/hooks/use-toast";
+import SiteTextSettings from "@/components/admin/SiteTextSettings";
 
 const AdminBrand = () => {
   const { settings, loading, updateSettings, uploadFile } = useBrandSettings();
@@ -134,9 +136,24 @@ const AdminBrand = () => {
         <div>
           <h1 className="text-3xl font-bold">Personalização da Marca</h1>
           <p className="text-muted-foreground">
-            Personalize as cores, logo e favicon da plataforma
+            Personalize as cores, logo, favicon e textos da plataforma
           </p>
         </div>
+
+        <Tabs defaultValue="visual" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="visual" className="flex items-center space-x-2">
+              <Palette className="h-4 w-4" />
+              <span>Visual</span>
+            </TabsTrigger>
+            <TabsTrigger value="text" className="flex items-center space-x-2">
+              <Type className="h-4 w-4" />
+              <span>Textos</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="visual" className="mt-6">
+            <div className="space-y-6">
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Colors */}
@@ -322,6 +339,13 @@ const AdminBrand = () => {
             </div>
           </CardContent>
         </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="text" className="mt-6">
+            <SiteTextSettings />
+          </TabsContent>
+        </Tabs>
       </div>
     );
 };

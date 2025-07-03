@@ -17,6 +17,8 @@ export type Database = {
           logo_url: string | null
           primary_color: string
           secondary_color: string
+          site_subtitle: string | null
+          site_title: string | null
           updated_at: string
         }
         Insert: {
@@ -26,6 +28,8 @@ export type Database = {
           logo_url?: string | null
           primary_color?: string
           secondary_color?: string
+          site_subtitle?: string | null
+          site_title?: string | null
           updated_at?: string
         }
         Update: {
@@ -35,6 +39,8 @@ export type Database = {
           logo_url?: string | null
           primary_color?: string
           secondary_color?: string
+          site_subtitle?: string | null
+          site_title?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Mail, Users, Calendar, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const Landing = () => {
+  const { settings } = useSiteSettings();
+
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -31,12 +34,10 @@ const Landing = () => {
         <div className="container-custom">
           <div className="text-center text-white">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up">
-              SMS Marketing Profissional
-              <br />
-              <span className="text-white/90">para Empresas Angolanas</span>
+              {settings.site_title}
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto animate-fade-in-up">
-              Alcance seus clientes de forma direta e eficaz. Envie milhares de SMS com poucos cliques e acompanhe resultados em tempo real.
+              {settings.site_subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up">
               <Link to="/register">

@@ -8,6 +8,8 @@ interface BrandSettings {
   secondary_color: string;
   logo_url?: string;
   favicon_url?: string;
+  site_title?: string;
+  site_subtitle?: string;
 }
 
 export const useBrandSettings = () => {
