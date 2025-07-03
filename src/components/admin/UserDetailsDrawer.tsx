@@ -70,22 +70,29 @@ export function UserDetailsDrawer({ isOpen, onClose, userId }: UserDetailsDrawer
 
     setLoading(true);
     try {
-      // Fetch user details with role
-      const { data: profile } = await supabase
+      // Fetch user profile first
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles(role)
-        `)
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        return;
+      }
+
+      // Fetch user role separately
+      const { data: userRole, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
         .eq('user_id', userId)
         .single();
 
       if (profile) {
         setUserDetails({
           ...profile,
-          role: Array.isArray(profile.user_roles) && profile.user_roles.length > 0 
-            ? profile.user_roles[0].role 
-            : 'client'
+          role: userRole?.role || 'client'
         });
       }
 
@@ -148,10 +155,6 @@ export function UserDetailsDrawer({ isOpen, onClose, userId }: UserDetailsDrawer
       </Badge>
     );
   };
-
-  if (!userDetails && !loading) {
-    return null;
-  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
