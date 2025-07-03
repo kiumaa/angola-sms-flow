@@ -92,11 +92,11 @@ const Checkout = () => {
   };
 
   const bankingInfo = {
-    bank: "Banco BAI",
-    agency: "0001", 
-    account: "123456789",
-    iban: "AO06 0001 0000 1234 5678 9012 3",
-    holder: "SMS Marketing Angola LDA"
+    bank: "BFA - Banco de Fomento Angola, S.A.",
+    agency: "-", 
+    account: "-",
+    iban: "AO06 0006 0000 3442 5465 3012.5",
+    holder: "KB AGENCY - PRESTAÇÃO DE SERVIÇOS, LDA"
   };
 
   if (!selectedPackage) {
