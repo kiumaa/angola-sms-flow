@@ -30,40 +30,71 @@ export const useAdminUsers = () => {
     try {
       setLoading(true);
       
-      let query = supabase
+      // First get all profiles
+      let profileQuery = supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles!inner(role)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      // Apply filters
+      // Apply profile-based filters
       if (filters?.search) {
-        query = query.or(`full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
-      }
-      
-      if (filters?.role && filters.role !== 'all') {
-        query = query.eq('user_roles.role', filters.role as 'admin' | 'client');
+        profileQuery = profileQuery.or(`full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
       }
       
       if (filters?.status && filters.status !== 'all') {
-        query = query.eq('user_status', filters.status);
+        profileQuery = profileQuery.eq('user_status', filters.status);
       }
       
       if (filters?.company) {
-        query = query.ilike('company_name', `%${filters.company}%`);
+        profileQuery = profileQuery.ilike('company_name', `%${filters.company}%`);
       }
 
-      const { data, error, count } = await query;
+      const { data: profiles, error: profileError } = await profileQuery;
       
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      if (!profiles || profiles.length === 0) {
+        setUsers([]);
+        setTotalUsers(0);
+        return;
+      }
+
+      // Get user roles for all users
+      const userIds = profiles.map(p => p.user_id);
+      const { data: userRoles, error: roleError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      if (roleError) throw roleError;
+
+      // Combine data and ensure proper typing
+      const usersWithRoles: User[] = profiles.map(profile => {
+        const roles = userRoles?.filter(r => r.user_id === profile.user_id) || [];
+        return {
+          id: profile.id,
+          user_id: profile.user_id,
+          email: profile.email || '',
+          full_name: profile.full_name || '',
+          company_name: profile.company_name || undefined,
+          phone: profile.phone || undefined,
+          credits: profile.credits || 0,
+          user_status: (profile.user_status || 'active') as 'active' | 'inactive' | 'suspended',
+          created_at: profile.created_at,
+          user_roles: roles.map(r => ({ role: r.role }))
+        };
+      });
+
+      // Apply role filter
+      let filteredUsers = usersWithRoles;
+      if (filters?.role && filters.role !== 'all') {
+        filteredUsers = usersWithRoles.filter(user => 
+          user.user_roles.some(r => r.role === filters.role)
+        );
+      }
       
-      setUsers((data as any[])?.map(user => ({
-        ...user,
-        user_roles: user.user_roles ? [user.user_roles] : []
-      })) || []);
-      setTotalUsers(count || 0);
+      setUsers(filteredUsers);
+      setTotalUsers(filteredUsers.length);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({
