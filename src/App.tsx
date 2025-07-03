@@ -12,10 +12,12 @@ import Campaigns from "./pages/Campaigns";
 import NewCampaign from "./pages/NewCampaign";
 import Contacts from "./pages/Contacts";
 import Reports from "./pages/Reports";
+import UserSettings from "./pages/UserSettings";
 import Credits from "./pages/Credits";
 import Checkout from "./pages/Checkout";
 import Transactions from "./pages/Transactions";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminReports from "./pages/AdminReports";
 import AdminTransactions from "./pages/AdminTransactions";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPackages from "./pages/AdminPackages";
@@ -46,6 +48,7 @@ const App = () => (
             <Route path="/sender-ids" element={<SenderIDs />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<UserSettings />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={
@@ -71,6 +74,11 @@ const App = () => (
             <Route path="/admin/transactions" element={
               <AdminLayout>
                 <AdminTransactions />
+              </AdminLayout>
+            } />
+            <Route path="/admin/reports" element={
+              <AdminLayout>
+                <AdminReports />
               </AdminLayout>
             } />
             
