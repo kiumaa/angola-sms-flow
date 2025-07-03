@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Campaigns from "./pages/Campaigns";
 import Credits from "./pages/Credits";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminPackages from "./pages/AdminPackages";
 import AdminLayout from "./components/layout/AdminLayout";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +37,16 @@ const App = () => (
             <Route path="/admin" element={
               <AdminLayout>
                 <AdminDashboard />
+              </AdminLayout>
+            } />
+            <Route path="/admin/users" element={
+              <AdminLayout>
+                <AdminUsers />
+              </AdminLayout>
+            } />
+            <Route path="/admin/packages" element={
+              <AdminLayout>
+                <AdminPackages />
               </AdminLayout>
             } />
             
