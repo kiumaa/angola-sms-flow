@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, CreditCard, Building2, CheckCircle } from "lucide-react";
+import { Upload, CreditCard, Building2, CheckCircle, Clock } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ProgressSteps } from "@/components/ui/progress-steps";
 import { useToast } from "@/hooks/use-toast";
@@ -265,7 +265,7 @@ const Checkout = () => {
                   <Building2 className="h-4 w-4" />
                   <span>Transferência Bancária</span>
                 </TabsTrigger>
-                <TabsTrigger value="appypay" className="flex items-center space-x-2" disabled>
+                <TabsTrigger value="appypay" className="flex items-center space-x-2 opacity-50 cursor-not-allowed" disabled>
                   <CreditCard className="h-4 w-4" />
                   <span>Pagamentos Digitais (Em breve)</span>
                 </TabsTrigger>
@@ -321,27 +321,24 @@ const Checkout = () => {
                       </div>
                     </div>
 
-                    {/* Upload Receipt */}
+                    {/* WhatsApp Confirmation */}
                     <div className="space-y-4">
-                      <Label htmlFor="receipt">Comprovante de Transferência *</Label>
-                      <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Arraste o comprovante aqui ou clique para selecionar
-                        </p>
-                        <Input 
-                          id="receipt"
-                          type="file" 
-                          accept="image/*,application/pdf"
-                          className="max-w-xs mx-auto"
-                          onChange={(e) => setReceipt(e.target.files?.[0] || null)}
-                        />
+                      <Label>Confirmação via WhatsApp</Label>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-green-100 rounded-full p-2">
+                            <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-green-900 mb-1">Confirme via WhatsApp</h4>
+                            <p className="text-green-700 text-sm">
+                              Após realizar a transferência, clique no botão abaixo para confirmar via WhatsApp
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      {receipt && (
-                        <p className="text-sm text-success">
-                          ✓ Arquivo selecionado: {receipt.name}
-                        </p>
-                      )}
                     </div>
 
                     {/* Notes */}
@@ -359,19 +356,18 @@ const Checkout = () => {
                     </div>
 
                     <Button 
-                      onClick={handleOfflinePayment}
-                      disabled={isProcessing || !receipt}
-                      className="w-full"
+                      onClick={() => {
+                        const whatsappMessage = `Olá! Confirmei a transferência de ${selectedPackage.price.toLocaleString()} Kz para compra de ${selectedPackage.credits} créditos SMS. Referência: SMS-${user?.id?.slice(-6)}`;
+                        const whatsappUrl = `https://wa.me/244923000000?text=${encodeURIComponent(whatsappMessage)}`;
+                        window.open(whatsappUrl, '_blank');
+                        handleOfflinePayment();
+                      }}
+                      disabled={isProcessing}
+                      className="w-full bg-green-600 hover:bg-green-700"
                       size="lg"
                     >
-                      {isProcessing ? "Registrando transação..." : "Confirmar e Enviar Comprovante"}
+                      {isProcessing ? "Registrando..." : "Confirmar via WhatsApp"}
                     </Button>
-                    
-                    {!receipt && (
-                      <p className="text-sm text-amber-600 text-center">
-                        ⚠️ Por favor, anexe o comprovante de transferência antes de confirmar
-                      </p>
-                    )}
 
                     <div className="text-sm text-muted-foreground">
                       <p>📧 Após o envio, nossa equipe verificará o pagamento em até 24 horas.</p>
@@ -393,35 +389,35 @@ const Checkout = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid gap-4">
-                      <div className="p-4 border rounded-lg bg-gray-50">
-                        <h4 className="font-medium mb-2">🏦 Multicaixa Express</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Pagamentos via terminais Multicaixa - <span className="text-amber-600">Em desenvolvimento</span>
+                    <div className="grid gap-4 opacity-60">
+                      <div className="p-4 border rounded-lg bg-gray-100 cursor-not-allowed">
+                        <h4 className="font-medium mb-2 text-gray-600">🏦 Multicaixa Express</h4>
+                        <p className="text-sm text-gray-500">
+                          Pagamentos via terminais Multicaixa - <span className="text-amber-600 font-medium">Temporariamente Indisponível</span>
                         </p>
                       </div>
                       
-                      <div className="p-4 border rounded-lg bg-gray-50">
-                        <h4 className="font-medium mb-2">📱 Unitel Money</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Pagamentos via carteira digital - <span className="text-amber-600">Em desenvolvimento</span>
+                      <div className="p-4 border rounded-lg bg-gray-100 cursor-not-allowed">
+                        <h4 className="font-medium mb-2 text-gray-600">📱 Unitel Money</h4>
+                        <p className="text-sm text-gray-500">
+                          Pagamentos via carteira digital - <span className="text-amber-600 font-medium">Temporariamente Indisponível</span>
                         </p>
                       </div>
                       
-                      <div className="p-4 border rounded-lg bg-gray-50">
-                        <h4 className="font-medium mb-2">💳 Débito Direto</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Pagamentos por referência bancária - <span className="text-amber-600">Em desenvolvimento</span>
+                      <div className="p-4 border rounded-lg bg-gray-100 cursor-not-allowed">
+                        <h4 className="font-medium mb-2 text-gray-600">💳 Débito Direto</h4>
+                        <p className="text-sm text-gray-500">
+                          Pagamentos por referência bancária - <span className="text-amber-600 font-medium">Temporariamente Indisponível</span>
                         </p>
                       </div>
                     </div>
                     
-                    <div className="text-center py-6">
-                      <CheckCircle className="h-12 w-12 mx-auto text-primary mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">Lançamento em breve!</h3>
-                      <p className="text-muted-foreground text-sm">
-                        Estamos finalizando as integrações para oferecer mais opções de pagamento.
-                        Por enquanto, utilize a transferência bancária.
+                    <div className="text-center py-6 bg-amber-50 rounded-lg border border-amber-200">
+                      <Clock className="h-12 w-12 mx-auto text-amber-500 mb-4" />
+                      <h3 className="text-lg font-semibold mb-2 text-amber-900">Métodos Temporariamente Indisponíveis</h3>
+                      <p className="text-amber-700 text-sm">
+                        Nossos gateways digitais estão em manutenção programada.
+                        Por favor, utilize a transferência bancária por enquanto.
                       </p>
                     </div>
                   </CardContent>

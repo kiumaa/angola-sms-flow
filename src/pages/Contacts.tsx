@@ -12,6 +12,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import CSVImport from "@/components/contacts/CSVImport";
 
 interface Contact {
   id: string;
@@ -430,11 +431,10 @@ const Contacts = () => {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="contacts" className="w-full">
+        <Tabs defaultValue="contacts" className="space-y-6">
           <TabsList>
             <TabsTrigger value="contacts">Contatos</TabsTrigger>
-            <TabsTrigger value="lists">Listas</TabsTrigger>
-            <TabsTrigger value="import">Importar</TabsTrigger>
+            <TabsTrigger value="import">Importar CSV</TabsTrigger>
           </TabsList>
 
           <TabsContent value="contacts" className="mt-6">
@@ -587,27 +587,8 @@ const Contacts = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="import" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Importar Contatos</CardTitle>
-                <CardDescription>
-                  Importe contatos em massa via arquivo CSV
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Upload className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Importação em massa</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Funcionalidade em desenvolvimento. Aguarde as próximas atualizações!
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Por enquanto, adicione contatos individualmente.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="import">
+            <CSVImport onImportComplete={fetchContacts} />
           </TabsContent>
         </Tabs>
       </div>
