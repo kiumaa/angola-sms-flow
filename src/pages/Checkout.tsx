@@ -111,6 +111,47 @@ const Checkout = () => {
             </p>
           </div>
 
+          {/* Como Funciona o Pagamento */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-blue-900">Como Funciona o Pagamento</CardTitle>
+              <CardDescription className="text-blue-700">
+                Processo simples em 3 passos para carregar seus créditos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                    <span className="text-blue-700 font-bold text-lg">1</span>
+                  </div>
+                  <h3 className="font-semibold text-blue-900 mb-2">Escolha o Pacote</h3>
+                  <p className="text-blue-700 text-sm">
+                    Selecione o pacote que melhor atende suas necessidades
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                    <span className="text-blue-700 font-bold text-lg">2</span>
+                  </div>
+                  <h3 className="font-semibold text-blue-900 mb-2">Faça a Transferência</h3>
+                  <p className="text-blue-700 text-sm">
+                    Realize o pagamento via transferência bancária em Kwanzas
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                    <span className="text-blue-700 font-bold text-lg">3</span>
+                  </div>
+                  <h3 className="font-semibold text-blue-900 mb-2">Receba os Créditos</h3>
+                  <p className="text-blue-700 text-sm">
+                    Seus SMS são creditados automaticamente após confirmação
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid md:grid-cols-3 gap-6">
             {packages.map((pkg) => (
               <Card 
