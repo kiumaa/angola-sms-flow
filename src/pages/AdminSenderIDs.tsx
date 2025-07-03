@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Check, X, Clock, User, Search, Edit, Trash2 } from "lucide-react";
-import AdminLayout from "@/components/layout/AdminLayout";
 
 interface SenderIDRequest {
   id: string;
@@ -170,161 +169,157 @@ const AdminSenderIDs = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p>Carregando solicitações...</p>
-          </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Carregando solicitações...</p>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold">Gerenciar Sender IDs</h1>
-          <p className="text-muted-foreground mt-2">
-            Aprovar ou rejeitar solicitações de Sender IDs personalizados
-          </p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              Solicitações de Sender IDs ({filteredRequests.length})
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Pesquisar por Sender ID, email ou nome..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {filteredRequests.length === 0 ? (
-              <div className="text-center py-8">
-                <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Nenhuma solicitação de Sender ID encontrada
-                </p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Sender ID</TableHead>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data de Criação</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(request.status)}
-                          <span className="font-medium">{request.sender_id}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {request.profiles.full_name || "Sem nome"}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {request.profiles.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(request.status)}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(request.created_at).toLocaleDateString('pt-BR', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          {request.status === 'pending' && (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={() => updateStatus(request.id, 'approved')}
-                                disabled={processing}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Check className="h-4 w-4 mr-1" />
-                                Aprovar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => updateStatus(request.id, 'rejected')}
-                                disabled={processing}
-                              >
-                                <X className="h-4 w-4 mr-1" />
-                                Rejeitar
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={processing}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteSenderID(request.id)}
-                            disabled={processing}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Info Card */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-start space-x-3">
-              <div className="bg-blue-100 rounded-full p-2">
-                <Check className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-blue-900">Critérios de aprovação</h3>
-                <p className="text-blue-700 text-sm mt-1">
-                  • Sender ID deve ser relacionado ao negócio do cliente<br/>
-                  • Máximo 11 caracteres alfanuméricos<br/>
-                  • Não pode ser genérico (ex: SMS, TEST, etc.)<br/>
-                  • Cliente deve ter histórico de uso responsável
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">Gerenciar Sender IDs</h1>
+        <p className="text-muted-foreground mt-2">
+          Aprovar ou rejeitar solicitações de Sender IDs personalizados
+        </p>
       </div>
-    </AdminLayout>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <User className="h-5 w-5 mr-2" />
+            Solicitações de Sender IDs ({filteredRequests.length})
+          </CardTitle>
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar por Sender ID, email ou nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredRequests.length === 0 ? (
+            <div className="text-center py-8">
+              <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">
+                Nenhuma solicitação de Sender ID encontrada
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sender ID</TableHead>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data de Criação</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(request.status)}
+                        <span className="font-medium">{request.sender_id}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {request.profiles.full_name || "Sem nome"}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {request.profiles.email}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(request.status)}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(request.created_at).toLocaleDateString('pt-BR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        {request.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => updateStatus(request.id, 'approved')}
+                              disabled={processing}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Aprovar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => updateStatus(request.id, 'rejected')}
+                              disabled={processing}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Rejeitar
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={processing}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deleteSenderID(request.id)}
+                          disabled={processing}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Info Card */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-3">
+            <div className="bg-blue-100 rounded-full p-2">
+              <Check className="h-4 w-4 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-medium text-blue-900">Critérios de aprovação</h3>
+              <p className="text-blue-700 text-sm mt-1">
+                • Sender ID deve ser relacionado ao negócio do cliente<br/>
+                • Máximo 11 caracteres alfanuméricos<br/>
+                • Não pode ser genérico (ex: SMS, TEST, etc.)<br/>
+                • Cliente deve ter histórico de uso responsável
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
