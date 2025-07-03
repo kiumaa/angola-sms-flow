@@ -15,8 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPackages from "./pages/AdminPackages";
 import AdminLayout from "./components/layout/AdminLayout";
-import AdminSMSSettings from "./pages/AdminSMSSettings";
-import AdminSenderIDs from "./pages/AdminSenderIDs";
+import AdminSettings from "./pages/AdminSettings";
 import SenderIDs from "./pages/SenderIDs";
 import NotFound from "./pages/NotFound";
 
@@ -55,14 +54,9 @@ const App = () => (
                 <AdminPackages />
               </AdminLayout>
             } />
-            <Route path="/admin/sms" element={
+            <Route path="/admin/settings" element={
               <AdminLayout>
-                <AdminSMSSettings />
-              </AdminLayout>
-            } />
-            <Route path="/admin/sender-ids" element={
-              <AdminLayout>
-                <AdminSenderIDs />
+                <AdminSettings />
               </AdminLayout>
             } />
             
