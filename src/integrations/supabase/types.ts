@@ -243,6 +243,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_user_credits: {
+        Args: { user_id: string; credit_amount: number }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _user_id: string
