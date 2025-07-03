@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Check, X, Clock, User, Search, Eye, CreditCard } from "lucide-react";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { useAuth } from "@/hooks/useAuth";
 
 interface CreditRequest {
@@ -186,20 +185,17 @@ const AdminCreditRequests = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p>Carregando solicitações...</p>
-          </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Carregando solicitações...</p>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold">Solicitações de Créditos</h1>
           <p className="text-muted-foreground mt-2">
@@ -389,8 +385,7 @@ const AdminCreditRequests = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
-  );
+    );
 };
 
 export default AdminCreditRequests;
