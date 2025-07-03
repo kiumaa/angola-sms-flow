@@ -109,39 +109,6 @@ const Login = () => {
               </Link>
             </div>
 
-            {/* Botão temporário para criar conta admin */}
-            <div className="mt-4 text-center">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const { data, error } = await supabase.functions.invoke('create-admin-account');
-                    if (error) {
-                      toast({
-                        title: "Erro",
-                        description: error.message,
-                        variant: "destructive",
-                      });
-                    } else {
-                      toast({
-                        title: "Sucesso!",
-                        description: "Conta admin criada. Pode fazer login agora.",
-                      });
-                    }
-                  } catch (error) {
-                    toast({
-                      title: "Erro",
-                      description: "Erro ao criar conta admin",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                🔧 Criar Conta Admin (Temporário)
-              </Button>
-            </div>
-
             <div className="mt-6 text-center text-sm text-muted-foreground">
               Não tem uma conta?{" "}
               <Link to="/register" className="text-primary hover:underline font-medium">
