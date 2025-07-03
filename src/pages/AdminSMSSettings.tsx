@@ -84,11 +84,17 @@ const AdminSMSSettings = () => {
 
     setLoading(true);
     try {
+      // Primeiro vamos buscar o user_id do usuário logado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       // Criar campanha de teste
       const { data: campaign, error: campaignError } = await supabase
         .from('sms_campaigns')
         .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
+          user_id: user.id,
           name: 'Teste de Conexão SMS',
           message: testMessage,
           total_recipients: 1,

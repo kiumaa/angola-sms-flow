@@ -13,16 +13,23 @@ interface SendSMSRequest {
 }
 
 serve(async (req) => {
+  console.log('SMS Function started:', new Date().toISOString())
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Processing SMS request...')
+    
     // Get auth header for user authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header found')
       throw new Error('Authorization header required')
     }
+
+    console.log('Auth header present, creating Supabase client...')
 
     // Create Supabase client for user operations
     const supabase = createClient(
@@ -34,16 +41,23 @@ serve(async (req) => {
     // Get user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
+      console.error('User authentication failed:', userError)
       throw new Error('User not authenticated')
     }
 
-    const { campaignId, recipients, message }: SendSMSRequest = await req.json()
+    console.log('User authenticated:', user.email)
+
+    const requestBody = await req.json()
+    console.log('Request body:', JSON.stringify(requestBody, null, 2))
+    
+    const { campaignId, recipients, message }: SendSMSRequest = requestBody
 
     if (!campaignId || !recipients || !message) {
+      console.error('Missing required fields')
       throw new Error('Campaign ID, recipients, and message are required')
     }
 
-    console.log(`Starting SMS campaign ${campaignId} for ${recipients.length} recipients`)
+    console.log(`Processing SMS campaign ${campaignId} for ${recipients.length} recipients`)
 
     // Create admin client for database operations
     const supabaseAdmin = createClient(
@@ -60,6 +74,8 @@ serve(async (req) => {
       .single()
 
     const userCredits = profile?.credits || 0
+    console.log(`User has ${userCredits} credits, needs ${recipients.length}`)
+    
     if (userCredits < recipients.length) {
       throw new Error(`Insufficient credits. You have ${userCredits} credits but need ${recipients.length}`)
     }
@@ -68,12 +84,20 @@ serve(async (req) => {
     const tokenId = Deno.env.get('BULKSMS_TOKEN_ID')
     const tokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
     
+    console.log('BulkSMS credentials check:', { 
+      hasTokenId: !!tokenId, 
+      hasTokenSecret: !!tokenSecret,
+      tokenIdLength: tokenId?.length || 0
+    })
+    
     if (!tokenId || !tokenSecret) {
+      console.error('Missing BulkSMS credentials')
       throw new Error('BulkSMS credentials not configured')
     }
 
     // Prepare Basic Auth header
     const basicAuth = btoa(`${tokenId}:${tokenSecret}`)
+    console.log('Basic auth prepared, starting SMS sending...')
 
     let totalSent = 0
     let totalFailed = 0
@@ -91,6 +115,8 @@ serve(async (req) => {
           from: 'SMSao'
         }
 
+        console.log('SMS data:', JSON.stringify(smsData, null, 2))
+
         // Send SMS via BulkSMS API
         const response = await fetch('https://api.bulksms.com/v1/messages', {
           method: 'POST',
@@ -102,7 +128,11 @@ serve(async (req) => {
         })
 
         const result = await response.json()
-        console.log(`BulkSMS API response for ${phoneNumber}:`, result)
+        console.log(`BulkSMS API response for ${phoneNumber}:`, {
+          status: response.status,
+          ok: response.ok,
+          result: JSON.stringify(result, null, 2)
+        })
 
         if (response.ok && result.id) {
           // Success
@@ -116,11 +146,12 @@ serve(async (req) => {
             cost_credits: 1,
             sent_at: new Date().toISOString()
           })
+          console.log(`✅ SMS sent successfully to ${phoneNumber}`)
         } else {
           // Failed
           totalFailed++
-          const errorMsg = result.detail || result.message || 'Unknown error'
-          console.error(`Failed to send SMS to ${phoneNumber}:`, errorMsg)
+          const errorMsg = result.detail || result.message || `HTTP ${response.status}`
+          console.error(`❌ Failed to send SMS to ${phoneNumber}:`, errorMsg)
           
           smsLogs.push({
             campaign_id: campaignId,
@@ -133,7 +164,7 @@ serve(async (req) => {
           })
         }
       } catch (error) {
-        console.error(`Error sending SMS to ${phoneNumber}:`, error)
+        console.error(`Exception sending SMS to ${phoneNumber}:`, error)
         totalFailed++
         smsLogs.push({
           campaign_id: campaignId,
@@ -147,6 +178,8 @@ serve(async (req) => {
       }
     }
 
+    console.log(`SMS sending completed: ${totalSent} sent, ${totalFailed} failed`)
+
     // Insert SMS logs
     if (smsLogs.length > 0) {
       const { error: logsError } = await supabaseAdmin
@@ -155,6 +188,8 @@ serve(async (req) => {
       
       if (logsError) {
         console.error('Error inserting SMS logs:', logsError)
+      } else {
+        console.log('SMS logs inserted successfully')
       }
     }
 
@@ -170,6 +205,8 @@ serve(async (req) => {
 
       if (creditsError) {
         console.error('Error updating credits:', creditsError)
+      } else {
+        console.log(`Credits updated: ${userCredits} -> ${userCredits - totalSent}`)
       }
     }
 
@@ -188,18 +225,22 @@ serve(async (req) => {
 
     if (campaignError) {
       console.error('Error updating campaign:', campaignError)
+    } else {
+      console.log('Campaign status updated successfully')
     }
 
-    console.log(`Campaign ${campaignId} completed: ${totalSent} sent, ${totalFailed} failed`)
+    const response = {
+      success: true,
+      totalSent,
+      totalFailed,
+      creditsUsed: totalSent,
+      remainingCredits: userCredits - totalSent
+    }
+
+    console.log('Sending success response:', JSON.stringify(response, null, 2))
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        totalSent,
-        totalFailed,
-        creditsUsed: totalSent,
-        remainingCredits: userCredits - totalSent
-      }),
+      JSON.stringify(response),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
@@ -208,8 +249,11 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in send-sms function:', error)
+    const errorResponse = { error: error.message }
+    console.log('Sending error response:', JSON.stringify(errorResponse, null, 2))
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify(errorResponse),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
