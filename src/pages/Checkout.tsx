@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,15 @@ const Checkout = () => {
   const [notes, setNotes] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Load selected package from sessionStorage
+  useEffect(() => {
+    const stored = sessionStorage.getItem('selectedPackage');
+    if (stored) {
+      setSelectedPackage(JSON.parse(stored));
+      sessionStorage.removeItem('selectedPackage'); // Clean up
+    }
+  }, []);
 
   const packages = [
     {

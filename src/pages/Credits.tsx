@@ -1,32 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Plus, Calendar } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Credits = () => {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const smsCredits = parseInt(localStorage.getItem("smsCredits") || "0");
+  const [recentPurchases, setRecentPurchases] = useState<any[]>([]);
+  const { user } = useAuth();
+  const { credits, loading: creditsLoading } = useUserCredits();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handlePurchase = (planName: string, smsAmount: number) => {
-    setSelectedPlan(planName);
+  useEffect(() => {
+    if (user) {
+      fetchRecentPurchases();
+    }
+  }, [user]);
+
+  const fetchRecentPurchases = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('credit_requests')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setRecentPurchases(data || []);
+    } catch (error) {
+      console.error('Error fetching purchases:', error);
+    }
+  };
+
+  const handlePurchase = (plan: any) => {
+    // Store selected package in sessionStorage to pass to checkout
+    sessionStorage.setItem('selectedPackage', JSON.stringify({
+      id: plan.name.toLowerCase(),
+      name: plan.name,
+      credits: plan.sms,
+      price: parseInt(plan.price.replace('.', '')),
+      description: `Ideal para ${plan.name === 'Básico' ? 'pequenos negócios' : plan.name === 'Intermediário' ? 'empresas em crescimento' : 'grandes volumes'}`,
+      popular: plan.popular,
+      savings: plan.savings
+    }));
     
-    // Simulate purchase process
-    setTimeout(() => {
-      const newCredits = smsCredits + smsAmount;
-      localStorage.setItem("smsCredits", newCredits.toString());
-      
-      toast({
-        title: "Compra realizada com sucesso!",
-        description: `${smsAmount} SMS foram adicionados à sua conta.`,
-      });
-      
-      setSelectedPlan(null);
-      // Refresh page to update credits display
-      window.location.reload();
-    }, 2000);
+    navigate('/checkout');
   };
 
   const pricingPlans = [
@@ -78,15 +102,6 @@ const Credits = () => {
     }
   ];
 
-  const recentPurchases = [
-    {
-      date: "2024-11-26",
-      plan: "Registro da conta",
-      sms: 50,
-      amount: "Grátis",
-      status: "Concluído"
-    }
-  ];
 
   return (
     <DashboardLayout>
@@ -109,7 +124,7 @@ const Credits = () => {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold text-primary mb-2">
-              {smsCredits} SMS
+              {creditsLoading ? "..." : credits} SMS
             </div>
             <p className="text-muted-foreground">
               Créditos disponíveis para suas campanhas
@@ -160,10 +175,9 @@ const Credits = () => {
 
                   <Button 
                     className={`w-full ${plan.popular ? 'btn-gradient' : ''}`}
-                    onClick={() => handlePurchase(plan.name, plan.sms)}
-                    disabled={selectedPlan === plan.name}
+                    onClick={() => handlePurchase(plan)}
                   >
-                    {selectedPlan === plan.name ? "Processando..." : "Comprar Agora"}
+                    Comprar Agora
                   </Button>
                 </CardContent>
               </Card>
@@ -225,25 +239,38 @@ const Credits = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentPurchases.map((purchase, index) => (
-                <div key={index} className="flex justify-between items-center p-4 border border-border rounded-lg">
-                  <div>
-                    <p className="font-semibold">{purchase.plan}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(purchase.date).toLocaleDateString('pt-AO')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">{purchase.sms} SMS</p>
-                    <p className="text-sm text-muted-foreground">{purchase.amount}</p>
-                  </div>
-                  <div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary">
-                      {purchase.status}
-                    </span>
-                  </div>
+              {recentPurchases.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Nenhuma compra realizada ainda
+                  </p>
                 </div>
-              ))}
+              ) : (
+                recentPurchases.map((purchase, index) => (
+                  <div key={index} className="flex justify-between items-center p-4 border border-border rounded-lg">
+                    <div>
+                      <p className="font-semibold">Pacote {purchase.credits_requested} SMS</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(purchase.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">{purchase.credits_requested} SMS</p>
+                      <p className="text-sm text-muted-foreground">{purchase.amount_kwanza.toLocaleString()} Kz</p>
+                    </div>
+                    <div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        purchase.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        purchase.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {purchase.status === 'approved' ? 'Aprovado' : 
+                         purchase.status === 'pending' ? 'Pendente' : 'Rejeitado'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
