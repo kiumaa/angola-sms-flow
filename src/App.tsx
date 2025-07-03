@@ -14,6 +14,7 @@ import Credits from "./pages/Credits";
 import Checkout from "./pages/Checkout";
 import Transactions from "./pages/Transactions";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminTransactions from "./pages/AdminTransactions";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPackages from "./pages/AdminPackages";
 import AdminLayout from "./components/layout/AdminLayout";
@@ -61,6 +62,11 @@ const App = () => (
             <Route path="/admin/settings" element={
               <AdminLayout>
                 <AdminSettings />
+              </AdminLayout>
+            } />
+            <Route path="/admin/transactions" element={
+              <AdminLayout>
+                <AdminTransactions />
               </AdminLayout>
             } />
             
