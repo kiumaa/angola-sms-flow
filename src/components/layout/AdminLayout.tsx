@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send } from "lucide-react";
+import { Shield, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +49,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       href: "/admin/transactions",
       icon: CreditCard,
       current: location.pathname.startsWith("/admin/transactions")
+    },
+    {
+      name: "Solicitações de Crédito",
+      href: "/admin/credit-requests",
+      icon: FileText,
+      current: location.pathname.startsWith("/admin/credit-requests")
     },
     {
       name: "Sender IDs",

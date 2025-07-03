@@ -24,6 +24,7 @@ import AdminPackages from "./pages/AdminPackages";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminSettings from "./pages/AdminSettings";
 import AdminSenderIDs from "./pages/AdminSenderIDs";
+import AdminCreditRequests from "./pages/AdminCreditRequests";
 import SenderIDs from "./pages/SenderIDs";
 import NotFound from "./pages/NotFound";
 
@@ -85,6 +86,11 @@ const App = () => (
             <Route path="/admin/sender-ids" element={
               <AdminLayout>
                 <AdminSenderIDs />
+              </AdminLayout>
+            } />
+            <Route path="/admin/credit-requests" element={
+              <AdminLayout>
+                <AdminCreditRequests />
               </AdminLayout>
             } />
             

@@ -4,6 +4,7 @@ import { Mail, Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, Cr
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useUserCredits } from "@/hooks/useUserCredits";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const { user, signOut, isAdmin } = useAuth();
   const { toast } = useToast();
+  const { credits } = useUserCredits();
 
   const handleLogout = async () => {
     await signOut();
@@ -106,7 +108,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               )}
               <div className="text-sm">
                 <span className="text-muted-foreground">Créditos:</span>
-                <span className="font-bold text-primary ml-1">0</span>
+                <span className="font-bold text-primary ml-1">{credits}</span>
               </div>
               <div className="text-sm text-muted-foreground">
                 {user?.email}
