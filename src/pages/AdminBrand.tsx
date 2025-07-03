@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Palette, Upload, Image, Globe } from "lucide-react";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
 import { useToast } from "@/hooks/use-toast";
 
@@ -121,20 +120,17 @@ const AdminBrand = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Carregando configurações...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando configurações...</p>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Personalização da Marca</h1>
           <p className="text-muted-foreground">
@@ -327,8 +323,7 @@ const AdminBrand = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
-  );
+    );
 };
 
 export default AdminBrand;
