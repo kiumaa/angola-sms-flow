@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,12 +19,15 @@ const NewCampaign = () => {
   const [loading, setLoading] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
   const [defaultSenderId, setDefaultSenderId] = useState("SMSao");
+  const [selectedSenderId, setSelectedSenderId] = useState("");
+  const [availableSenderIds, setAvailableSenderIds] = useState<{id: string, sender_id: string}[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserCredits();
+    fetchSenderIds();
   }, []);
 
   const fetchUserCredits = async () => {
@@ -36,8 +40,25 @@ const NewCampaign = () => {
       
       setUserCredits(data?.credits || 0);
       setDefaultSenderId(data?.default_sender_id || 'SMSao');
+      if (!selectedSenderId) {
+        setSelectedSenderId(data?.default_sender_id || 'SMSao');
+      }
     } catch (error) {
       console.error('Error fetching credits:', error);
+    }
+  };
+
+  const fetchSenderIds = async () => {
+    try {
+      const { data } = await supabase
+        .from('sender_ids')
+        .select('id, sender_id')
+        .eq('user_id', user?.id)
+        .eq('status', 'approved');
+      
+      setAvailableSenderIds(data || []);
+    } catch (error) {
+      console.error('Error fetching sender IDs:', error);
     }
   };
 
@@ -109,7 +130,8 @@ const NewCampaign = () => {
         body: {
           campaignId: campaign.id,
           recipients: recipientList,
-          message: message
+          message: message,
+          senderId: selectedSenderId || defaultSenderId
         }
       });
 
@@ -224,6 +246,26 @@ const NewCampaign = () => {
                     {message.length}/160 caracteres
                   </p>
                 </div>
+
+                <div>
+                  <Label htmlFor="senderId">Sender ID</Label>
+                  <Select value={selectedSenderId} onValueChange={setSelectedSenderId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um Sender ID" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={defaultSenderId}>{defaultSenderId} (Padrão)</SelectItem>
+                      {availableSenderIds.map((senderId) => (
+                        <SelectItem key={senderId.id} value={senderId.sender_id}>
+                          {senderId.sender_id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Este será o nome que aparecerá como remetente do SMS
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -276,7 +318,7 @@ const NewCampaign = () => {
                   <div className="flex items-start space-x-2">
                     <MessageSquare className="h-4 w-4 text-primary mt-1" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{defaultSenderId}</p>
+                      <p className="text-sm font-medium">{selectedSenderId || defaultSenderId}</p>
                       <p className="text-sm mt-1">
                         {message || "Sua mensagem aparecerá aqui..."}
                       </p>

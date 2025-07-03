@@ -10,6 +10,7 @@ interface SendSMSRequest {
   campaignId: string
   recipients: string[]
   message: string
+  senderId?: string
 }
 
 serve(async (req) => {
@@ -50,7 +51,7 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request body:', JSON.stringify(requestBody, null, 2))
     
-    const { campaignId, recipients, message }: SendSMSRequest = requestBody
+    const { campaignId, recipients, message, senderId }: SendSMSRequest = requestBody
 
     if (!campaignId || !recipients || !message) {
       console.error('Missing required fields')
@@ -112,7 +113,7 @@ serve(async (req) => {
         const smsData = {
           to: phoneNumber,
           body: message,
-          from: profile?.default_sender_id || 'SMSao'
+          from: senderId || profile?.default_sender_id || 'SMSao'
         }
 
         console.log('SMS data:', JSON.stringify(smsData, null, 2))
