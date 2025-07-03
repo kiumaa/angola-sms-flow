@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       brand_settings: {
         Row: {
           created_at: string
@@ -144,6 +192,57 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_adjustments: {
+        Row: {
+          adjustment_type: string
+          admin_id: string
+          created_at: string
+          delta: number
+          id: string
+          new_balance: number
+          previous_balance: number
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          adjustment_type: string
+          admin_id: string
+          created_at?: string
+          delta: number
+          id?: string
+          new_balance: number
+          previous_balance: number
+          reason: string
+          user_id: string
+        }
+        Update: {
+          adjustment_type?: string
+          admin_id?: string
+          created_at?: string
+          delta?: number
+          id?: string
+          new_balance?: number
+          previous_balance?: number
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_adjustments_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "credit_adjustments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       credit_packages: {
         Row: {
           created_at: string
@@ -251,6 +350,7 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          user_status: string | null
         }
         Insert: {
           company_name?: string | null
@@ -266,6 +366,7 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          user_status?: string | null
         }
         Update: {
           company_name?: string | null
@@ -281,6 +382,7 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          user_status?: string | null
         }
         Relationships: []
       }
