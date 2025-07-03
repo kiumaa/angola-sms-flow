@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPackages from "./pages/AdminPackages";
 import AdminLayout from "./components/layout/AdminLayout";
+import AdminSMSSettings from "./pages/AdminSMSSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,11 @@ const App = () => (
             <Route path="/admin/packages" element={
               <AdminLayout>
                 <AdminPackages />
+              </AdminLayout>
+            } />
+            <Route path="/admin/sms" element={
+              <AdminLayout>
+                <AdminSMSSettings />
               </AdminLayout>
             } />
             
