@@ -7,6 +7,7 @@ import { Mail, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -106,6 +107,39 @@ const Login = () => {
               <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                 Esqueceu sua senha?
               </Link>
+            </div>
+
+            {/* Botão temporário para criar conta admin */}
+            <div className="mt-4 text-center">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.functions.invoke('create-admin-account');
+                    if (error) {
+                      toast({
+                        title: "Erro",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    } else {
+                      toast({
+                        title: "Sucesso!",
+                        description: "Conta admin criada. Pode fazer login agora.",
+                      });
+                    }
+                  } catch (error) {
+                    toast({
+                      title: "Erro",
+                      description: "Erro ao criar conta admin",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                🔧 Criar Conta Admin (Temporário)
+              </Button>
             </div>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
