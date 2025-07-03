@@ -23,10 +23,12 @@ export const BrandAwareLogo = ({
       {hasCustomLogo ? (
         <img src={logoSrc} alt="SMS Marketing Angola" className={className} />
       ) : (
-        <Mail className="h-8 w-8 text-primary mr-2" />
-      )}
-      {(showText && !hasCustomLogo) && (
-        <span className={textClassName}>SMS Marketing Angola</span>
+        <>
+          <Mail className="h-8 w-8 text-primary mr-2" />
+          {showText && (
+            <span className={textClassName}>SMS Marketing Angola</span>
+          )}
+        </>
       )}
     </div>
   );
