@@ -403,6 +403,87 @@ export type Database = {
           },
         ]
       }
+      smtp_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_email: string
+          from_name: string
+          host: string
+          id: string
+          is_active: boolean | null
+          last_tested_at: string | null
+          password_encrypted: string
+          port: number
+          test_status: string | null
+          updated_at: string
+          use_tls: boolean
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_email: string
+          from_name: string
+          host: string
+          id?: string
+          is_active?: boolean | null
+          last_tested_at?: string | null
+          password_encrypted: string
+          port?: number
+          test_status?: string | null
+          updated_at?: string
+          use_tls?: boolean
+          username: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_email?: string
+          from_name?: string
+          host?: string
+          id?: string
+          is_active?: boolean | null
+          last_tested_at?: string | null
+          password_encrypted?: string
+          port?: number
+          test_status?: string | null
+          updated_at?: string
+          use_tls?: boolean
+          username?: string
+        }
+        Relationships: []
+      }
+      smtp_test_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          response_time_ms: number | null
+          status: string
+          test_email: string
+          tested_at: string
+          tested_by: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          response_time_ms?: number | null
+          status: string
+          test_email: string
+          tested_at?: string
+          tested_by?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          response_time_ms?: number | null
+          status?: string
+          test_email?: string
+          tested_at?: string
+          tested_by?: string | null
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount_kwanza: number
@@ -484,6 +565,14 @@ export type Database = {
       count_contacts_in_list: {
         Args: { list_id: string }
         Returns: number
+      }
+      decrypt_smtp_password: {
+        Args: { encrypted_password: string }
+        Returns: string
+      }
+      encrypt_smtp_password: {
+        Args: { password_text: string }
+        Returns: string
       }
       has_role: {
         Args: {
