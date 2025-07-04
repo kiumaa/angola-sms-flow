@@ -357,8 +357,8 @@ const Checkout = () => {
 
                     <Button 
                       onClick={() => {
-                        const whatsappMessage = `Olá! Confirmei a transferência de ${selectedPackage.price.toLocaleString()} Kz para compra de ${selectedPackage.credits} créditos SMS. Referência: SMS-${user?.id?.slice(-6)}`;
-                        const whatsappUrl = `https://wa.me/244923000000?text=${encodeURIComponent(whatsappMessage)}`;
+                        const whatsappMessage = `Olá, confirmei a transferência de SMS-${user?.id?.slice(-6)} no valor de ${selectedPackage.price.toLocaleString()} Kz. Obrigado!`;
+                        const whatsappUrl = `https://wa.me/244933493788?text=${encodeURIComponent(whatsappMessage)}`;
                         window.open(whatsappUrl, '_blank');
                         handleOfflinePayment();
                       }}
