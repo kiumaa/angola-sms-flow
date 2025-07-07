@@ -31,16 +31,26 @@ export const useScrollToTop = () => {
 // Custom hook for performance monitoring
 export const usePerformanceMonitor = () => {
   useEffect(() => {
-    // Monitor Core Web Vitals
-    if ('web-vital' in window) {
-      // @ts-ignore
-      import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-        getCLS(console.log);
-        getFID(console.log);
-        getFCP(console.log);
-        getLCP(console.log);
-        getTTFB(console.log);
+    // Simple performance monitoring without external dependencies
+    if (typeof window !== 'undefined' && 'performance' in window) {
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        entries.forEach((entry) => {
+          // Log performance metrics for debugging (can be sent to analytics)
+          if (entry.entryType === 'navigation') {
+            console.log('Navigation timing:', entry);
+          }
+        });
       });
+      
+      try {
+        observer.observe({ entryTypes: ['navigation', 'measure'] });
+      } catch (e) {
+        // Silently fail if browser doesn't support PerformanceObserver
+        console.log('Performance monitoring not supported');
+      }
+      
+      return () => observer.disconnect();
     }
   }, []);
 };
