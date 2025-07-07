@@ -4,12 +4,18 @@ import { Check, Mail, Users, Calendar, Settings, Star, MessageCircle, Shield, Za
 import { Link } from "react-router-dom";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
+import { usePerformanceMonitor } from "@/hooks/usePerformance";
 
 const Landing = () => {
   const { settings } = useSiteSettings();
+  
+  // Monitor performance for optimization
+  usePerformanceMonitor();
 
   return (
     <div className="min-h-screen">
+      <ScrollToTopButton />
       {/* Navigation */}
       <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b border-border/40">
         <div className="container-custom">

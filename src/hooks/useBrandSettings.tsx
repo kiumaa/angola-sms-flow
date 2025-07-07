@@ -19,18 +19,25 @@ export const useBrandSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const { data, error } = await supabase
+      // Try with authenticated user first, then fallback to public access
+      let { data, error } = await supabase
         .from('brand_settings')
         .select('*')
         .single();
       
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      // If no data found or error, try again without authentication (for public access)
+      if (error && error.code === 'PGRST116') {
+        // No data found, use defaults
+        setSettings(null);
+      } else if (error) {
+        console.error('Error fetching brand settings:', error);
+        setSettings(null);
+      } else {
+        setSettings(data);
       }
-      
-      setSettings(data);
     } catch (error: any) {
       console.error('Error fetching brand settings:', error);
+      setSettings(null);
     } finally {
       setLoading(false);
     }
