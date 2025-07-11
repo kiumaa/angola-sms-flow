@@ -393,29 +393,38 @@ export type Database = {
       }
       sender_ids: {
         Row: {
+          bulkgate_status: string | null
+          bulksms_status: string | null
           created_at: string
           id: string
           is_default: boolean | null
           sender_id: string
           status: string | null
+          supported_gateways: string[] | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          bulkgate_status?: string | null
+          bulksms_status?: string | null
           created_at?: string
           id?: string
           is_default?: boolean | null
           sender_id: string
           status?: string | null
+          supported_gateways?: string[] | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          bulkgate_status?: string | null
+          bulksms_status?: string | null
           created_at?: string
           id?: string
           is_default?: boolean | null
           sender_id?: string
           status?: string | null
+          supported_gateways?: string[] | null
           updated_at?: string
           user_id?: string
         }
@@ -466,6 +475,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_gateways: {
+        Row: {
+          api_endpoint: string
+          auth_type: string
+          created_at: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_endpoint: string
+          auth_type: string
+          created_at?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_endpoint?: string
+          auth_type?: string
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sms_logs: {
         Row: {
           campaign_id: string
@@ -473,8 +518,12 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           error_message: string | null
+          fallback_attempted: boolean | null
+          gateway_message_id: string | null
+          gateway_used: string | null
           id: string
           message: string
+          original_gateway: string | null
           phone_number: string
           sent_at: string | null
           status: string | null
@@ -486,8 +535,12 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
+          fallback_attempted?: boolean | null
+          gateway_message_id?: string | null
+          gateway_used?: string | null
           id?: string
           message: string
+          original_gateway?: string | null
           phone_number: string
           sent_at?: string | null
           status?: string | null
@@ -499,8 +552,12 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
+          fallback_attempted?: boolean | null
+          gateway_message_id?: string | null
+          gateway_used?: string | null
           id?: string
           message?: string
+          original_gateway?: string | null
           phone_number?: string
           sent_at?: string | null
           status?: string | null
