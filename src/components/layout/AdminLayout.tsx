@@ -64,6 +64,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       current: location.pathname.startsWith("/admin/sender-ids")
     },
     {
+      name: "Gateways SMS",
+      href: "/admin/sms-gateways",
+      icon: MessageSquare,
+      current: location.pathname.startsWith("/admin/sms-gateways")
+    },
+    {
       name: "Relatórios",
       href: "/admin/reports",
       icon: BarChart3,

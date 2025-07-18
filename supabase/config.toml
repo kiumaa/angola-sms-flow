@@ -1,1 +1,7 @@
 project_id = "hwxxcprqxqznselwzghi"
+
+[functions.bulkgate-webhook]
+verify_jwt = false
+
+[functions.gateway-status]
+verify_jwt = true

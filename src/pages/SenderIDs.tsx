@@ -15,6 +15,9 @@ interface SenderID {
   sender_id: string;
   is_default: boolean;
   status: string;
+  bulksms_status: string;
+  bulkgate_status: string;
+  supported_gateways: string[];
   created_at: string;
 }
 
@@ -232,6 +235,12 @@ const SenderIDs = () => {
                           {item.is_default && (
                             <Star className="h-4 w-4 text-yellow-500 fill-current" />
                           )}
+                        </div>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="text-xs text-muted-foreground">BulkSMS:</span>
+                          {getStatusBadge(item.bulksms_status)}
+                          <span className="text-xs text-muted-foreground">BulkGate:</span>
+                          {getStatusBadge(item.bulkgate_status)}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Criado em {new Date(item.created_at).toLocaleDateString('pt-BR')}

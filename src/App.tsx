@@ -27,6 +27,7 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminSenderIDs from "./pages/AdminSenderIDs";
 import AdminCreditRequests from "./pages/AdminCreditRequests";
 import AdminBrand from "./pages/AdminBrand";
+import AdminSMSGateways from "./pages/AdminSMSGateways";
 import SenderIDs from "./pages/SenderIDs";
 import NotFound from "./pages/NotFound";
 
@@ -87,6 +88,11 @@ const AppContent = () => {
             <Route path="/admin/sender-ids" element={
               <AdminLayout>
                 <AdminSenderIDs />
+              </AdminLayout>
+            } />
+            <Route path="/admin/sms-gateways" element={
+              <AdminLayout>
+                <AdminSMSGateways />
               </AdminLayout>
             } />
             <Route path="/admin/credit-requests" element={
