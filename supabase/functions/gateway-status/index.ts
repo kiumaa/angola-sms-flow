@@ -92,14 +92,22 @@ serve(async (req) => {
         if (apiKey) {
           console.log('Testing BulkGate connection with API key:', apiKey ? 'Present' : 'Missing')
           
+          // Parse the API key - should be in format "application_id:application_token"
+          const [applicationId, applicationToken] = apiKey.includes(':') 
+            ? apiKey.split(':') 
+            : [apiKey, ''] // fallback if no separator found
+          
+          console.log('Application ID present:', applicationId ? 'Yes' : 'No')
+          console.log('Application Token present:', applicationToken ? 'Yes' : 'No')
+          
           const response = await fetch('https://portal.bulkgate.com/api/2.0/advanced/info', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              'application_id': apiKey.split(':')[0] || apiKey,
-              'application_token': apiKey.split(':')[1] || apiKey
+              'application_id': applicationId,
+              'application_token': applicationToken
             })
           })
 
