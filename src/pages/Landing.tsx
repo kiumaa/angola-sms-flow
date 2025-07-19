@@ -59,7 +59,7 @@ const Landing = () => {
                   Começar Grátis
                 </Link>
               </Button>
-              <Button asChild size="lg" className="text-lg px-12 py-8 rounded-3xl border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105 w-48">
+              <Button asChild size="lg" variant="outline" className="text-lg px-12 py-8 rounded-3xl border border-white/20 bg-transparent text-white hover:bg-white/5 hover:border-white/30 transition-all duration-300 w-48">
                 <a href="#pricing" className="px-0">Ver Preços</a>
               </Button>
             </div>
