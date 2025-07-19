@@ -177,7 +177,7 @@ const Landing = () => {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto pt-6">
+          <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto pt-12">
             {[
               {
                 name: "Starter",
@@ -211,7 +211,7 @@ const Landing = () => {
                 {plan.highlight && (
                   <>
                     <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-                    <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow z-10">
+                    <Badge className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow z-10">
                       ⭐ Mais Popular
                     </Badge>
                   </>
