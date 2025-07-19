@@ -15,7 +15,8 @@ import {
   CheckCircle,
   XCircle,
   Download,
-  Filter
+  Filter,
+  Zap
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,19 +115,19 @@ const Reports = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: "Rascunho", variant: "secondary" as const, icon: Clock },
-      scheduled: { label: "Agendada", variant: "outline" as const, icon: Calendar },
-      sending: { label: "Enviando", variant: "default" as const, icon: MessageSquare },
-      completed: { label: "Concluída", variant: "default" as const, icon: CheckCircle },
-      cancelled: { label: "Cancelada", variant: "destructive" as const, icon: XCircle }
+      draft: { label: "Rascunho", variant: "secondary" as const, icon: Clock, color: "bg-gray-500" },
+      scheduled: { label: "Agendada", variant: "outline" as const, icon: Calendar, color: "bg-blue-500" },
+      sending: { label: "Enviando", variant: "default" as const, icon: MessageSquare, color: "bg-yellow-500" },
+      completed: { label: "Concluída", variant: "default" as const, icon: CheckCircle, color: "bg-green-500" },
+      cancelled: { label: "Cancelada", variant: "destructive" as const, icon: XCircle, color: "bg-red-500" }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     const Icon = config.icon;
     
     return (
-      <Badge variant={config.variant} className="flex items-center space-x-1">
-        <Icon className="h-3 w-3" />
+      <Badge className={`${config.color} text-white border-0 hover-lift`}>
+        <Icon className="h-3 w-3 mr-1" />
         <span>{config.label}</span>
       </Badge>
     );
@@ -139,7 +140,6 @@ const Reports = () => {
   };
 
   const exportReport = () => {
-    // Preparar dados para exportação
     const csvData = campaigns.map(campaign => ({
       'Nome da Campanha': campaign.name,
       'Status': campaign.status,
@@ -151,14 +151,12 @@ const Reports = () => {
       'Data de Criação': new Date(campaign.created_at).toLocaleDateString('pt-AO')
     }));
 
-    // Converter para CSV
     const headers = Object.keys(csvData[0] || {});
     const csvContent = [
       headers.join(','),
       ...csvData.map(row => headers.map(header => `"${(row as any)[header]}"`).join(','))
     ].join('\n');
 
-    // Download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -179,9 +177,16 @@ const Reports = () => {
     return (
       <DashboardLayout>
         <div className="space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold">Relatórios</h1>
-            <p className="text-muted-foreground mt-2">Carregando...</p>
+          <div className="glass-card p-8 animate-float">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 rounded-3xl bg-gradient-primary shadow-glow animate-glow">
+                <BarChart3 className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-light gradient-text">Relatórios</h1>
+                <p className="text-muted-foreground mt-1">Carregando analytics avançados...</p>
+              </div>
+            </div>
           </div>
         </div>
       </DashboardLayout>
@@ -191,146 +196,156 @@ const Reports = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center space-x-2">
-              <BarChart3 className="h-8 w-8" />
-              <span>Relatórios</span>
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Acompanhe o desempenho das suas campanhas SMS
-            </p>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-40">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Últimos 7 dias</SelectItem>
-                <SelectItem value="30">Últimos 30 dias</SelectItem>
-                <SelectItem value="90">Últimos 90 dias</SelectItem>
-                <SelectItem value="365">Último ano</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Advanced Header */}
+        <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+          <div className="flex justify-between items-center relative">
+            <div>
+              <h1 className="text-4xl font-light gradient-text mb-2 flex items-center space-x-3">
+                <div className="p-3 rounded-3xl bg-gradient-primary shadow-glow animate-glow">
+                  <BarChart3 className="h-8 w-8 text-white" />
+                </div>
+                <span>Analytics Avançados</span>
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Insights poderosos sobre o desempenho das suas campanhas SMS
+              </p>
+            </div>
             
-            <Button variant="outline" onClick={exportReport} disabled={campaigns.length === 0}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar CSV
-            </Button>
+            <div className="flex space-x-4">
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-48 glass-card border-glass-border rounded-2xl">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="glass-card border-glass-border">
+                  <SelectItem value="7">Últimos 7 dias</SelectItem>
+                  <SelectItem value="30">Últimos 30 dias</SelectItem>
+                  <SelectItem value="90">Últimos 90 dias</SelectItem>
+                  <SelectItem value="365">Último ano</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button 
+                onClick={exportReport} 
+                disabled={campaigns.length === 0}
+                className="button-futuristic"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar CSV
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Overall Stats */}
+        {/* Enhanced Stats Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Campanhas Enviadas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {overallStats.totalCampaigns}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {timeRange} dias
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                SMS Enviados
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">
-                {overallStats.totalSent.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Taxa: {overallStats.successRate.toFixed(1)}%
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <XCircle className="h-4 w-4 mr-2" />
-                SMS Falharam
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600">
-                {overallStats.totalFailed.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {(100 - overallStats.successRate).toFixed(1)}% do total
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Créditos Usados
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-600">
-                {overallStats.totalCreditsUsed.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Média: {Math.round(overallStats.avgRecipientsPerCampaign)} por campanha
-              </p>
-            </CardContent>
-          </Card>
+          {[
+            {
+              title: "Campanhas Enviadas",
+              value: overallStats.totalCampaigns,
+              description: `${timeRange} dias`,
+              icon: MessageSquare,
+              gradient: "from-blue-500 to-purple-600",
+              trend: "+15%"
+            },
+            {
+              title: "SMS Entregues",
+              value: overallStats.totalSent.toLocaleString(),
+              description: `Taxa: ${overallStats.successRate.toFixed(1)}%`,
+              icon: CheckCircle,
+              gradient: "from-green-500 to-emerald-600",
+              trend: "+8%"
+            },
+            {
+              title: "Taxa de Falhas",
+              value: `${(100 - overallStats.successRate).toFixed(1)}%`,
+              description: `${overallStats.totalFailed.toLocaleString()} falharam`,
+              icon: XCircle,
+              gradient: "from-red-500 to-pink-600",
+              trend: "-2%"
+            },
+            {
+              title: "Créditos Utilizados",
+              value: overallStats.totalCreditsUsed.toLocaleString(),
+              description: `Média: ${Math.round(overallStats.avgRecipientsPerCampaign)} por campanha`,
+              icon: Zap,
+              gradient: "from-orange-500 to-yellow-600",
+              trend: "+12%"
+            }
+          ].map((stat, index) => (
+            <Card 
+              key={index} 
+              className="card-futuristic animate-slide-up-stagger cursor-default relative overflow-hidden"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`}></div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+                <div className={`p-3 rounded-3xl bg-gradient-to-br ${stat.gradient} shadow-glow hover-lift`}>
+                  <stat.icon className="h-5 w-5 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent className="relative">
+                <div className="text-3xl font-light gradient-text mb-2">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {stat.description}
+                </p>
+                <div className="flex items-center text-xs text-green-600">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  {stat.trend} vs período anterior
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Performance Summary */}
-        <Card>
+        {/* Performance Dashboard */}
+        <Card className="card-futuristic">
           <CardHeader>
-            <CardTitle>Resumo de Performance</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-light gradient-text">Dashboard de Performance</CardTitle>
+            <CardDescription className="text-lg">
               Indicadores chave dos últimos {timeRange} dias
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-center mb-2">
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center p-6 glass-card rounded-3xl hover-lift group">
+                <div className="flex items-center justify-center mb-4">
                   {overallStats.successRate >= 95 ? (
-                    <TrendingUp className="h-8 w-8 text-green-600" />
+                    <div className="p-4 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-glow group-hover:scale-110 transition-all duration-300">
+                      <TrendingUp className="h-8 w-8 text-white" />
+                    </div>
                   ) : overallStats.successRate >= 85 ? (
-                    <BarChart3 className="h-8 w-8 text-yellow-600" />
+                    <div className="p-4 rounded-3xl bg-gradient-to-br from-yellow-500 to-orange-600 shadow-glow group-hover:scale-110 transition-all duration-300">
+                      <BarChart3 className="h-8 w-8 text-white" />
+                    </div>
                   ) : (
-                    <TrendingDown className="h-8 w-8 text-red-600" />
+                    <div className="p-4 rounded-3xl bg-gradient-to-br from-red-500 to-pink-600 shadow-glow group-hover:scale-110 transition-all duration-300">
+                      <TrendingDown className="h-8 w-8 text-white" />
+                    </div>
                   )}
                 </div>
-                <h3 className="font-semibold">Taxa de Entrega</h3>
-                <p className="text-2xl font-bold text-primary">
+                <h3 className="font-semibold text-lg gradient-text mb-2">Taxa de Entrega</h3>
+                <p className="text-3xl font-light gradient-text mb-2">
                   {overallStats.successRate.toFixed(1)}%
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {overallStats.successRate >= 95 ? "Excelente!" : 
-                   overallStats.successRate >= 85 ? "Bom desempenho" : "Precisa melhorar"}
+                  {overallStats.successRate >= 95 ? "🎉 Excelente performance!" : 
+                   overallStats.successRate >= 85 ? "👍 Bom desempenho" : "⚠️ Precisa otimizar"}
                 </p>
               </div>
 
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-center mb-2">
-                  <Users className="h-8 w-8 text-primary" />
+              <div className="text-center p-6 glass-card rounded-3xl hover-lift group">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-4 rounded-3xl bg-gradient-primary shadow-glow group-hover:scale-110 transition-all duration-300">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
                 </div>
-                <h3 className="font-semibold">Alcance Médio</h3>
-                <p className="text-2xl font-bold text-primary">
+                <h3 className="font-semibold text-lg gradient-text mb-2">Alcance Médio</h3>
+                <p className="text-3xl font-light gradient-text mb-2">
                   {Math.round(overallStats.avgRecipientsPerCampaign)}
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -338,12 +353,14 @@ const Reports = () => {
                 </p>
               </div>
 
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-center mb-2">
-                  <MessageSquare className="h-8 w-8 text-secondary" />
+              <div className="text-center p-6 glass-card rounded-3xl hover-lift group">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-4 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-glow group-hover:scale-110 transition-all duration-300">
+                    <MessageSquare className="h-8 w-8 text-white" />
+                  </div>
                 </div>
-                <h3 className="font-semibold">Eficiência</h3>
-                <p className="text-2xl font-bold text-primary">
+                <h3 className="font-semibold text-lg gradient-text mb-2">Eficiência</h3>
+                <p className="text-3xl font-light gradient-text mb-2">
                   {overallStats.totalCreditsUsed > 0 ? 
                     (overallStats.totalSent / overallStats.totalCreditsUsed * 100).toFixed(1) : 0}%
                 </p>
@@ -355,40 +372,46 @@ const Reports = () => {
           </CardContent>
         </Card>
 
-        {/* Campaigns Details */}
-        <Tabs defaultValue="campaigns">
-          <TabsList>
-            <TabsTrigger value="campaigns">Campanhas Detalhadas</TabsTrigger>
-            <TabsTrigger value="trends">Tendências</TabsTrigger>
+        {/* Enhanced Campaigns Details */}
+        <Tabs defaultValue="campaigns" className="w-full">
+          <TabsList className="glass-card rounded-2xl p-1">
+            <TabsTrigger value="campaigns" className="rounded-xl">Campanhas Detalhadas</TabsTrigger>
+            <TabsTrigger value="trends" className="rounded-xl">Tendências & Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="campaigns">
-            <Card>
+          <TabsContent value="campaigns" className="mt-6">
+            <Card className="card-futuristic">
               <CardHeader>
-                <CardTitle>Detalhes das Campanhas</CardTitle>
-                <CardDescription>
-                  Histórico detalhado de todas as suas campanhas
+                <CardTitle className="text-2xl font-light gradient-text">Histórico de Campanhas</CardTitle>
+                <CardDescription className="text-lg">
+                  Análise detalhada de todas as suas campanhas com métricas avançadas
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {campaigns.length === 0 ? (
-                  <div className="text-center py-8">
-                    <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Nenhuma campanha encontrada</h3>
-                    <p className="text-muted-foreground">
-                      Não há campanhas no período selecionado.
+                  <div className="text-center py-16">
+                    <div className="p-6 rounded-3xl bg-gradient-primary/10 w-fit mx-auto mb-6">
+                      <BarChart3 className="h-16 w-16 text-primary mx-auto" />
+                    </div>
+                    <h3 className="text-2xl font-light gradient-text mb-4">Nenhuma campanha encontrada</h3>
+                    <p className="text-muted-foreground text-lg mb-8">
+                      Não há campanhas no período selecionado. Comece criando sua primeira campanha!
                     </p>
+                    <Button className="button-futuristic">
+                      Criar Primeira Campanha
+                    </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {campaigns.map((campaign) => (
+                  <div className="space-y-6">
+                    {campaigns.map((campaign, index) => (
                       <div 
                         key={campaign.id}
-                        className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                        className="glass-card p-6 rounded-3xl hover-lift animate-slide-up-stagger"
+                        style={{ animationDelay: `${index * 0.1}s` }}
                       >
-                        <div className="flex justify-between items-start mb-3">
+                        <div className="flex justify-between items-start mb-6">
                           <div>
-                            <h4 className="font-semibold text-lg">{campaign.name}</h4>
+                            <h4 className="font-semibold text-xl gradient-text">{campaign.name}</h4>
                             <p className="text-sm text-muted-foreground">
                               {new Date(campaign.created_at).toLocaleDateString('pt-AO', {
                                 year: 'numeric',
@@ -402,28 +425,28 @@ const Reports = () => {
                           {getStatusBadge(campaign.status)}
                         </div>
 
-                        <div className="grid md:grid-cols-5 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Destinatários:</span>
-                            <p className="font-medium">{campaign.total_recipients || 0}</p>
+                        <div className="grid md:grid-cols-5 gap-6 text-center">
+                          <div className="p-4 glass-card rounded-2xl">
+                            <span className="text-sm text-muted-foreground block mb-1">Destinatários</span>
+                            <p className="font-semibold text-xl gradient-text">{campaign.total_recipients || 0}</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Enviados:</span>
-                            <p className="font-medium text-green-600">{campaign.total_sent || 0}</p>
+                          <div className="p-4 glass-card rounded-2xl">
+                            <span className="text-sm text-muted-foreground block mb-1">Enviados</span>
+                            <p className="font-semibold text-xl text-green-500">{campaign.total_sent || 0}</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Falharam:</span>
-                            <p className="font-medium text-red-600">{campaign.total_failed || 0}</p>
+                          <div className="p-4 glass-card rounded-2xl">
+                            <span className="text-sm text-muted-foreground block mb-1">Falharam</span>
+                            <p className="font-semibold text-xl text-red-500">{campaign.total_failed || 0}</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Taxa de Sucesso:</span>
-                            <p className="font-medium">
+                          <div className="p-4 glass-card rounded-2xl">
+                            <span className="text-sm text-muted-foreground block mb-1">Taxa de Sucesso</span>
+                            <p className="font-semibold text-xl gradient-text">
                               {getSuccessRate(campaign.total_sent, campaign.total_failed).toFixed(1)}%
                             </p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Créditos:</span>
-                            <p className="font-medium">{campaign.credits_used || 0}</p>
+                          <div className="p-4 glass-card rounded-2xl">
+                            <span className="text-sm text-muted-foreground block mb-1">Créditos</span>
+                            <p className="font-semibold text-xl gradient-text">{campaign.credits_used || 0}</p>
                           </div>
                         </div>
                       </div>
@@ -434,21 +457,28 @@ const Reports = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="trends">
-            <Card>
+          <TabsContent value="trends" className="mt-6">
+            <Card className="card-futuristic">
               <CardHeader>
-                <CardTitle>Análise de Tendências</CardTitle>
-                <CardDescription>
-                  Insights sobre o comportamento das suas campanhas
+                <CardTitle className="text-2xl font-light gradient-text">Analytics Avançados</CardTitle>
+                <CardDescription className="text-lg">
+                  Insights profundos sobre o comportamento das suas campanhas
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Gráficos em desenvolvimento</h3>
-                  <p className="text-muted-foreground">
-                    Em breve teremos gráficos interativos e análises avançadas.
+                <div className="text-center py-16">
+                  <div className="p-6 rounded-3xl bg-gradient-primary/10 w-fit mx-auto mb-6">
+                    <BarChart3 className="h-16 w-16 text-primary mx-auto animate-float" />
+                  </div>
+                  <h3 className="text-2xl font-light gradient-text mb-4">Gráficos Interativos em Desenvolvimento</h3>
+                  <p className="text-muted-foreground text-lg mb-8">
+                    Em breve teremos gráficos dinâmicos, heatmaps de performance e análises preditivas com IA.
                   </p>
+                  <div className="flex justify-center space-x-4">
+                    <Badge className="bg-blue-500 text-white px-4 py-2">📊 Charts Dinâmicos</Badge>
+                    <Badge className="bg-purple-500 text-white px-4 py-2">🤖 Analytics com IA</Badge>
+                    <Badge className="bg-green-500 text-white px-4 py-2">🎯 Segmentação Avançada</Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>

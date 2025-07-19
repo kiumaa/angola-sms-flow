@@ -363,9 +363,10 @@ const Contacts = () => {
         {/* CSV Import Modal */}
         {showImport && (
           <CSVImport 
-            isOpen={showImport}
-            onClose={() => setShowImport(false)}
-            onSuccess={handleImportSuccess}
+            onImportComplete={() => {
+              // Refresh contacts list (in a real app this would fetch from API)
+              setShowImport(false);
+            }}
           />
         )}
       </div>

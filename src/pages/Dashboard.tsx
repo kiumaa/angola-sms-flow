@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Users, Calendar, Settings, Plus, TrendingUp, Zap } from "lucide-react";
+import { Mail, Users, Calendar, Settings, Plus, TrendingUp, Zap, BarChart3, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -30,16 +30,16 @@ const Dashboard = () => {
       title: "Créditos Disponíveis",
       value: smsCredits,
       description: "SMS prontos para envio",
-      icon: Mail,
-      color: "text-primary",
+      icon: Zap,
+      gradient: "from-blue-500 to-purple-600",
       trend: "+5% vs mês anterior"
     },
     {
       title: "Campanhas Enviadas",
       value: "12",
       description: "Este mês",
-      icon: Calendar,
-      color: "text-green-500",
+      icon: MessageSquare,
+      gradient: "from-green-500 to-emerald-600",
       trend: "+25% vs mês anterior"
     },
     {
@@ -47,7 +47,7 @@ const Dashboard = () => {
       value: "1.2K",
       description: "Total na base",
       icon: Users,
-      color: "text-blue-500",
+      gradient: "from-orange-500 to-red-600",
       trend: "+8% vs mês anterior"
     },
     {
@@ -55,7 +55,7 @@ const Dashboard = () => {
       value: "98.5%",
       description: "Média geral",
       icon: TrendingUp,
-      color: "text-purple-500",
+      gradient: "from-purple-500 to-indigo-600",
       trend: "+2% vs mês anterior"
     }
   ];
@@ -88,7 +88,7 @@ const Dashboard = () => {
     {
       title: "Ver Relatórios",
       description: "Analisar campanhas",
-      icon: Calendar,
+      icon: BarChart3,
       action: () => navigate("/reports"),
       primary: false,
       gradient: "from-indigo-500 to-blue-600"
@@ -98,44 +98,48 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Advanced Welcome Section */}
-        <div className="glass-card p-8 bg-gradient-hero">
-          <div className="flex items-center justify-between">
+        {/* Revolutionary Welcome Section */}
+        <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+          <div className="flex items-center justify-between relative">
             <div>
-              <h1 className="text-4xl font-light mb-2 gradient-text">
-                Bem-vindo, {companyName || userEmail}!
+              <h1 className="text-5xl font-light mb-4 gradient-text">
+                Bem-vindo, {companyName || userEmail}! 
               </h1>
-              <p className="text-muted-foreground text-lg">
+              <p className="text-muted-foreground text-xl leading-relaxed">
                 Gerencie suas campanhas de SMS com inteligência artificial e analytics avançados.
+                <br />
+                <span className="text-primary">Transforme cada mensagem em resultados reais.</span>
               </p>
             </div>
             <div className="hidden md:block">
-              <div className="p-4 rounded-3xl bg-gradient-primary shadow-glow animate-float">
-                <Zap className="h-8 w-8 text-white" />
+              <div className="p-6 rounded-3xl bg-gradient-primary shadow-glow animate-float">
+                <Zap className="h-12 w-12 text-white" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Enhanced Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
             <Card 
               key={index} 
-              className="card-futuristic animate-slide-up-stagger cursor-default"
+              className="card-futuristic animate-slide-up-stagger cursor-default relative overflow-hidden"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`}></div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
-                  <stat.icon className="h-4 w-4 text-white" />
+                <div className={`p-3 rounded-3xl bg-gradient-to-br ${stat.gradient} shadow-glow hover-lift`}>
+                  <stat.icon className="h-5 w-5 text-white" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-light gradient-text mb-1">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mb-2">
+              <CardContent className="relative">
+                <div className="text-4xl font-light gradient-text mb-2">{stat.value}</div>
+                <p className="text-sm text-muted-foreground mb-3">
                   {stat.description}
                 </p>
                 <div className="flex items-center text-xs text-green-600">
@@ -149,8 +153,8 @@ const Dashboard = () => {
 
         {/* Revolutionary Quick Actions */}
         <div>
-          <h2 className="text-2xl font-light mb-8 gradient-text">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <h2 className="text-3xl font-light mb-8 gradient-text">🚀 Ações Rápidas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {quickActions.map((action, index) => (
               <Card 
                 key={index} 
@@ -162,41 +166,41 @@ const Dashboard = () => {
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-10 transition-all duration-300`}></div>
                 <CardHeader className="text-center relative">
-                  <div className={`h-16 w-16 rounded-3xl bg-gradient-primary shadow-glow flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300`}>
-                    <action.icon className="h-8 w-8 text-white" />
+                  <div className={`h-20 w-20 rounded-3xl bg-gradient-to-br ${action.gradient} shadow-glow flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300`}>
+                    <action.icon className="h-10 w-10 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-normal gradient-text">{action.title}</CardTitle>
-                  <CardDescription className="text-base">{action.description}</CardDescription>
+                  <CardTitle className="text-xl font-medium gradient-text">{action.title}</CardTitle>
+                  <CardDescription className="text-base leading-relaxed">{action.description}</CardDescription>
                 </CardHeader>
               </Card>
             ))}
           </div>
         </div>
 
-        {/* Futuristic Getting Started */}
+        {/* Welcome Bonus for New Users */}
         {smsCredits === 50 && (
           <Card className="card-futuristic border-primary bg-gradient-primary/5 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
             <CardHeader className="relative">
-              <CardTitle className="text-2xl gradient-text flex items-center">
-                <span className="text-2xl mr-3">🎉</span>
+              <CardTitle className="text-3xl gradient-text flex items-center">
+                <span className="text-3xl mr-4">🎉</span>
                 Conta criada com sucesso!
               </CardTitle>
-              <CardDescription className="text-lg">
-                Você ganhou 50 SMS grátis para começar. Que tal enviar sua primeira campanha com IA?
+              <CardDescription className="text-xl">
+                Você ganhou 50 SMS grátis para começar. Que tal enviar sua primeira campanha agora?
               </CardDescription>
             </CardHeader>
             <CardContent className="relative">
-              <div className="flex gap-6">
+              <div className="flex gap-8">
                 <Button 
-                  className="button-futuristic text-lg px-8 py-6" 
+                  className="button-futuristic text-xl px-12 py-8 rounded-3xl" 
                   onClick={() => navigate("/campaigns/new")}
                 >
                   Enviar Primeira Campanha
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="glass-card border-glass-border text-lg px-8 py-6 hover:scale-105 transition-all duration-300" 
+                  className="glass-card border-glass-border text-xl px-12 py-8 rounded-3xl hover:scale-105 transition-all duration-300" 
                   onClick={() => navigate("/contacts")}
                 >
                   Importar Contatos
@@ -209,22 +213,24 @@ const Dashboard = () => {
         {/* Advanced Recent Activity */}
         <Card className="card-futuristic">
           <CardHeader>
-            <CardTitle className="text-2xl font-light gradient-text">Atividade Recente</CardTitle>
-            <CardDescription className="text-lg">
+            <CardTitle className="text-3xl font-light gradient-text">📊 Atividade Recente</CardTitle>
+            <CardDescription className="text-xl">
               Suas últimas ações na plataforma com analytics em tempo real
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-16">
-              <div className="p-6 rounded-3xl bg-gradient-primary/10 w-fit mx-auto mb-6">
-                <Calendar className="h-12 w-12 text-primary mx-auto" />
+            <div className="text-center py-20">
+              <div className="p-8 rounded-3xl bg-gradient-primary/10 w-fit mx-auto mb-8">
+                <Calendar className="h-16 w-16 text-primary mx-auto" />
               </div>
-              <h3 className="text-xl font-normal mb-2">Nenhuma atividade ainda</h3>
-              <p className="text-muted-foreground mb-8">
+              <h3 className="text-2xl font-medium gradient-text mb-4">Nenhuma atividade ainda</h3>
+              <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
                 Comece enviando sua primeira campanha para ver analytics detalhados aqui.
+                <br />
+                Você terá acesso a métricas avançadas, gráficos interativos e insights poderosos.
               </p>
               <Button 
-                className="button-futuristic" 
+                className="button-futuristic text-lg px-10 py-6 rounded-3xl" 
                 onClick={() => navigate("/campaigns/new")}
               >
                 Criar Primeira Campanha
@@ -232,6 +238,51 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Platform Features Preview */}
+        <div className="grid md:grid-cols-3 gap-8">
+          <Card className="card-futuristic cursor-default">
+            <CardHeader className="text-center">
+              <div className="p-4 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-glow w-fit mx-auto mb-4">
+                <BarChart3 className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="gradient-text">Analytics Avançados</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <CardDescription className="text-base leading-relaxed">
+                Acompanhe suas campanhas com métricas detalhadas, gráficos interativos e relatórios personalizáveis.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="card-futuristic cursor-default">
+            <CardHeader className="text-center">
+              <div className="p-4 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-glow w-fit mx-auto mb-4">
+                <Zap className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="gradient-text">Envios em Massa</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <CardDescription className="text-base leading-relaxed">
+                Envie para milhares de contatos simultaneamente com alta taxa de entrega e velocidade.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="card-futuristic cursor-default">
+            <CardHeader className="text-center">
+              <div className="p-4 rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 shadow-glow w-fit mx-auto mb-4">
+                <Settings className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="gradient-text">API Completa</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <CardDescription className="text-base leading-relaxed">
+                Integre facilmente com seus sistemas existentes usando nossa API REST robusta.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
