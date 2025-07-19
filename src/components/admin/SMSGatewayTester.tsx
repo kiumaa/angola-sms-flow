@@ -109,7 +109,8 @@ export default function SMSGatewayTester() {
         .insert({
           name: `Teste Gateway - ${new Date().toLocaleString('pt-BR')}`,
           message: message,
-          status: 'sending'
+          status: 'sending',
+          user_id: (await supabase.auth.getUser()).data.user?.id
         })
         .select()
         .single();

@@ -4,12 +4,10 @@ import { useAuth } from './hooks/useAuth';
 import './App.css';
 
 // Public Pages
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import PricingPage from './pages/PricingPage';
-import SignUpPage from './pages/SignUpPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import UpdatePasswordPage from './pages/UpdatePasswordPage';
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 
 // User Pages
@@ -43,12 +41,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/update-password" element={<UpdatePasswordPage />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<Dashboard />} />

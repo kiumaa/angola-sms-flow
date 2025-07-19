@@ -174,15 +174,13 @@ export default function AdminSMSGatewaySettings() {
           </div>
         )}
 
-        {/* Last checked */}
-        {status?.lastChecked && (
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Última verificação:</span>
-            <span className="text-xs text-muted-foreground">
-              {new Date(status.lastChecked).toLocaleString('pt-BR')}
-            </span>
-          </div>
-        )}
+        {/* Status info */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Estado:</span>
+          <span className="text-xs text-muted-foreground">
+            {status.status === 'active' ? 'Ativo' : 'Inativo'}
+          </span>
+        </div>
 
         {/* Error message */}
         {status?.error && (
