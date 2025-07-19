@@ -121,20 +121,34 @@ serve(async (req) => {
               const result = await response.json()
               console.log('BulkGate balance response:', result)
               
-              balance = {
-                credits: result.data?.balance || 0,
-                currency: result.data?.currency || 'EUR'
+              // Handle success response format: { "data": { "credit": 215.8138, "currency": "credits" } }
+              if (result.data) {
+                balance = {
+                  credits: result.data.credit || 0,
+                  currency: result.data.currency === 'credits' ? 'EUR' : result.data.currency || 'EUR'
+                }
+                status = 'active'
+              } else {
+                console.error('Unexpected response format:', result)
+                error = 'Unexpected response format from BulkGate API'
               }
-              status = 'active'
             } else {
               const responseText = await response.text()
               console.error('BulkGate API returned non-JSON response:', responseText.substring(0, 200))
               error = `API returned ${contentType} instead of JSON`
             }
           } else {
-            const errorText = await response.text()
-            console.error('BulkGate API error:', errorText.substring(0, 200))
-            error = `HTTP ${response.status}: ${errorText.substring(0, 100)}`
+            const contentType = response.headers.get('content-type') || ''
+            
+            if (contentType.includes('application/json')) {
+              const errorResponse = await response.json()
+              console.error('BulkGate API error response:', errorResponse)
+              error = `HTTP ${response.status}: ${errorResponse.error || 'Unknown error'}`
+            } else {
+              const errorText = await response.text()
+              console.error('BulkGate API error:', errorText.substring(0, 200))
+              error = `HTTP ${response.status}: ${errorText.substring(0, 100)}`
+            }
           }
         } else {
           error = 'Missing BULKGATE_API_KEY'
