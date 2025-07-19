@@ -2,6 +2,7 @@ import { SMSGateway } from '../interfaces/SMSGateway';
 import { SMSMessage, SMSResult, SMSBulkResult, FallbackResult, GatewayConfig } from '../interfaces/SMSTypes';
 import { BulkSMSGateway } from '../gateways/BulkSMSGateway';
 import { BulkGateGateway } from '../gateways/BulkGateGateway';
+import { AfricasTalkingGateway } from '../gateways/AfricasTalkingGateway';
 
 export class SMSGatewayManager {
   private gateways: Map<string, SMSGateway> = new Map();
@@ -18,6 +19,8 @@ export class SMSGatewayManager {
     bulksmsTokenId?: string;
     bulksmsTokenSecret?: string;
     bulkgateApiKey?: string;
+    atUsername?: string;
+    atApiKey?: string;
   }): Promise<void> {
     // Limpar gateways existentes
     this.gateways.clear();
@@ -35,6 +38,12 @@ export class SMSGatewayManager {
     if (credentials.bulkgateApiKey) {
       const bulkGateGateway = new BulkGateGateway(credentials.bulkgateApiKey);
       this.gateways.set('bulkgate', bulkGateGateway);
+    }
+
+    // Inicializar Africa's Talking se as credenciais estiverem disponíveis
+    if (credentials.atUsername && credentials.atApiKey) {
+      const atGateway = new AfricasTalkingGateway(credentials.atUsername, credentials.atApiKey);
+      this.gateways.set('africastalking', atGateway);
     }
   }
 

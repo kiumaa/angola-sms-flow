@@ -60,7 +60,49 @@ serve(async (req) => {
     let error = null
 
     try {
-      if (gatewayName === 'bulksms') {
+      if (gatewayName === 'africastalking') {
+        const atUsername = Deno.env.get('AT_USERNAME')
+        const atApiKey = Deno.env.get('AT_API_KEY')
+        
+        if (atUsername && atApiKey) {
+          console.log('Testing Africa\'s Talking with username:', atUsername)
+          
+          const response = await fetch(`https://api.africastalking.com/version1/user?username=${atUsername}`, {
+            headers: {
+              'apiKey': atApiKey,
+              'Accept': 'application/json'
+            }
+          })
+
+          console.log('Africa\'s Talking response status:', response.status)
+          
+          if (response.ok) {
+            const result = await response.json()
+            console.log('Africa\'s Talking response:', result)
+            
+            if (result.UserData) {
+              const userBalance = result.UserData.balance || 'USD 0.00'
+              const creditAmount = parseFloat(userBalance.replace(/[^\d.]/g, '')) || 0
+              const currency = userBalance.includes('USD') ? 'USD' : 'KES'
+              
+              balance = {
+                credits: creditAmount,
+                currency: currency
+              }
+              status = 'active'
+            } else {
+              console.error('Unexpected response format:', result)
+              error = 'Unexpected response format from Africa\'s Talking API'
+            }
+          } else {
+            const errorResponse = await response.json().catch(() => null)
+            console.error('Africa\'s Talking API error response:', errorResponse)
+            error = `HTTP ${response.status}: ${errorResponse?.message || 'Unknown error'}`
+          }
+        } else {
+          error = 'Missing AT_USERNAME or AT_API_KEY'
+        }
+      } else if (gatewayName === 'bulksms') {
         const tokenId = Deno.env.get('BULKSMS_TOKEN_ID')
         const tokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
         

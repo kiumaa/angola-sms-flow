@@ -119,82 +119,66 @@ serve(async (req) => {
     const normalizedPhone = normalizePhone(phoneNumber);
     const startTime = Date.now();
 
-    // Get primary gateway
-    const { data: primaryGateway } = await supabase
-      .from('sms_gateways')
-      .select('*')
-      .eq('is_primary', true)
-      .eq('is_active', true)
-      .single();
-
-    if (!primaryGateway) {
-      throw new Error('No active primary gateway configured');
+    // Use Africa's Talking as the exclusive SMS provider
+    const atUsername = Deno.env.get('AT_USERNAME');
+    const atApiKey = Deno.env.get('AT_API_KEY');
+    
+    if (!atUsername || !atApiKey) {
+      throw new Error('Africa\'s Talking credentials not configured');
     }
 
     let success = false;
     let error = null;
-    let gatewayUsed = primaryGateway.name;
+    let gatewayUsed = 'africastalking';
     let fallbackAttempted = false;
+    let messageId = null;
+    let cost = 1;
 
     try {
-      // Try primary gateway first
-      if (primaryGateway.name === 'bulkgate') {
-        const response = await fetch('https://portal.bulkgate.com/api/1.0/simple/transactional', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            application_id: Deno.env.get('BULKGATE_API_KEY'),
-            application_token: Deno.env.get('BULKGATE_API_KEY'),
-            number: normalizedPhone,
-            text: sanitizedMessage,
-            sender_id: 'SMSao',
-            sender_id_value: 'SMSao'
-          })
-        });
+      console.log('Sending via Africa\'s Talking...');
+      
+      // Prepare form data for Africa's Talking API
+      const formData = new URLSearchParams();
+      formData.append('username', atUsername);
+      formData.append('to', normalizedPhone);
+      formData.append('message', sanitizedMessage);
+      
+      const response = await fetch('https://api.africastalking.com/version1/messaging', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'apiKey': atApiKey,
+          'Accept': 'application/json'
+        },
+        body: formData
+      });
 
-        const result = await response.json();
+      const result = await response.json();
+      console.log('Africa\'s Talking response:', result);
+
+      if (response.ok && result.SMSMessageData) {
+        const recipients = result.SMSMessageData.Recipients;
         
-        if (response.ok && result.data && result.data.status === 'accepted') {
-          success = true;
+        if (recipients && recipients.length > 0) {
+          const recipient = recipients[0];
+          
+          if (recipient.status === 'Success') {
+            success = true;
+            messageId = recipient.messageId;
+            cost = recipient.cost ? parseFloat(recipient.cost.replace(/[^\d.]/g, '')) : 1;
+          } else {
+            error = `SMS failed: ${recipient.status}`;
+          }
         } else {
-          throw new Error(result.error?.message || 'BulkGate API error');
+          error = 'No recipients found in response';
         }
+      } else {
+        error = result.SMSMessageData?.Message || `HTTP ${response.status}`;
       }
+
     } catch (primaryError) {
-      console.error('Primary gateway failed:', primaryError);
+      console.error('Africa\'s Talking error:', primaryError);
       error = primaryError.message;
-
-      // Try fallback gateway (BulkSMS)
-      try {
-        fallbackAttempted = true;
-        gatewayUsed = 'bulksms';
-
-        const response = await fetch('https://api.bulksms.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${btoa(`${Deno.env.get('BULKSMS_TOKEN_ID')}:${Deno.env.get('BULKSMS_TOKEN_SECRET')}`)}`,
-          },
-          body: JSON.stringify({
-            to: normalizedPhone,
-            body: sanitizedMessage,
-            from: 'SMSao'
-          })
-        });
-
-        if (response.ok) {
-          success = true;
-          error = null;
-        } else {
-          const fallbackResult = await response.json();
-          throw new Error(fallbackResult.detail || 'BulkSMS API error');
-        }
-      } catch (fallbackError) {
-        console.error('Fallback gateway also failed:', fallbackError);
-        error = fallbackError.message;
-      }
     }
 
     const responseTime = Date.now() - startTime;
@@ -208,10 +192,11 @@ serve(async (req) => {
         message: sanitizedMessage,
         status: success ? 'sent' : 'failed',
         gateway_used: gatewayUsed,
-        original_gateway: primaryGateway.name,
+        gateway_message_id: messageId,
+        original_gateway: 'africastalking',
         fallback_attempted: fallbackAttempted,
         error_message: error,
-        cost_credits: success ? 1 : 0,
+        cost_credits: success ? cost : 0,
         sent_at: success ? new Date().toISOString() : null
       });
 

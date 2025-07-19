@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Settings2, MessageSquare, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import SMSProvidersSection from "@/components/admin/sms/SMSProvidersSection";
+import AfricasTalkingConfigSection from "@/components/admin/sms/AfricasTalkingConfigSection";
 import SenderIDsSection from "@/components/admin/sms/SenderIDsSection";
 import SMSConfigurationHeader from "@/components/admin/sms/SMSConfigurationHeader";
 
@@ -224,9 +224,16 @@ export default function AdminSMSConfiguration() {
         </TabsList>
 
         <TabsContent value="providers" className="mt-6">
-          <SMSProvidersSection 
-            config={config}
-            onSave={saveConfiguration}
+          <AfricasTalkingConfigSection 
+            config={{
+              active: true,
+              username: 'kiumaf',
+              defaultSender: 'SHORTCODE',
+              status: 'disconnected'
+            }}
+            onSave={async (config) => {
+              console.log('Saving Africa\'s Talking config:', config);
+            }}
             saving={saving}
           />
         </TabsContent>
