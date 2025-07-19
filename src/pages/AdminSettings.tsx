@@ -23,10 +23,16 @@ const AdminSettings = () => {
 
       {/* Quick Actions */}
       <div className="flex gap-4 mb-6">
-        <Link to="/admin/gateways">
+        <Link to="/admin/sms-gateway-settings">
           <Button variant="outline" className="flex items-center space-x-2">
             <Wifi className="h-4 w-4" />
-            <span>Gateways SMS</span>
+            <span>Configurações Gateways</span>
+          </Button>
+        </Link>
+        <Link to="/admin/sender-ids-multi">
+          <Button variant="outline" className="flex items-center space-x-2">
+            <Send className="h-4 w-4" />
+            <span>Sender IDs Multi-Gateway</span>
           </Button>
         </Link>
       </div>
