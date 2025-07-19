@@ -39,8 +39,8 @@ import AdminSenderIDsMultiGateway from './pages/AdminSenderIDsMultiGateway';
 import AdminSMSMonitoring from "./pages/AdminSMSMonitoring";
 
 // Layout Components
-import { DashboardLayout } from './components/layout/DashboardLayout';
-import { AdminLayout } from './components/layout/AdminLayout';
+import DashboardLayout from './components/layout/DashboardLayout';
+import AdminLayout from './components/layout/AdminLayout';
 
 function App() {
   return (
