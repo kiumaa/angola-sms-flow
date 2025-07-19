@@ -1,251 +1,131 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Upload, Search, Edit, Trash2, List, UserPlus, Phone, Mail, Tag } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Upload, Download, Search, Users, FileText, Trash2, Edit, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import CSVImport from "@/components/contacts/CSVImport";
 
-interface Contact {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  tags?: string[];
-  notes?: string;
-  created_at: string;
-}
-
-interface ContactList {
-  id: string;
-  name: string;
-  description?: string;
-  created_at: string;
-  contact_count?: number;
-}
-
 const Contacts = () => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [contactLists, setContactLists] = useState<ContactList[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [contacts, setContacts] = useState([]);
+  const [contactLists, setContactLists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedList, setSelectedList] = useState<string>("all");
-  
-  // Form states
-  const [isAddingContact, setIsAddingContact] = useState(false);
-  const [isAddingList, setIsAddingList] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    tags: "",
-    notes: ""
-  });
-  const [listForm, setListForm] = useState({
-    name: "",
-    description: ""
-  });
-
-  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [showImport, setShowImport] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
+  const mockContactLists = [
+    {
+      id: "1",
+      name: "Todos os Contatos",
+      description: "Lista principal com todos os contatos",
+      contactCount: 1250,
+      createdAt: "2024-01-10T10:00:00Z"
+    },
+    {
+      id: "2",
+      name: "Clientes Ativos",
+      description: "Clientes que fizeram compras nos últimos 6 meses",
+      contactCount: 850,
+      createdAt: "2024-01-15T14:30:00Z"
+    },
+    {
+      id: "3",
+      name: "Prospects",
+      description: "Leads interessados nos produtos",
+      contactCount: 350,
+      createdAt: "2024-01-20T09:15:00Z"
+    },
+    {
+      id: "4",
+      name: "Clientes VIP",
+      description: "Clientes premium com alto valor",
+      contactCount: 120,
+      createdAt: "2024-01-12T16:45:00Z"
+    }
+  ];
+
+  const mockContacts = [
+    {
+      id: "1",
+      name: "João Silva",
+      phone: "+244 900 123 456",
+      email: "joao@empresa.ao",
+      tags: ["Cliente", "VIP"],
+      lists: ["Clientes Ativos", "Clientes VIP"],
+      createdAt: "2024-01-10T10:00:00Z"
+    },
+    {
+      id: "2",
+      name: "Maria Santos",
+      phone: "+244 900 789 012",
+      email: "maria@negocio.ao",
+      tags: ["Prospect", "Hot Lead"],
+      lists: ["Prospects"],
+      createdAt: "2024-01-15T14:30:00Z"
+    },
+    {
+      id: "3",
+      name: "Carlos Mendes",
+      phone: "+244 900 345 678",
+      email: "carlos@tech.ao",
+      tags: ["Cliente", "Tecnologia"],
+      lists: ["Clientes Ativos"],
+      createdAt: "2024-01-20T09:15:00Z"
+    }
+  ];
+
   useEffect(() => {
-    if (user) {
-      fetchContacts();
-      fetchContactLists();
-    }
-  }, [user]);
+    // Simulate loading
+    setTimeout(() => {
+      setContactLists(mockContactLists);
+      setContacts(mockContacts);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
 
-  const fetchContacts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setContacts(data || []);
-    } catch (error) {
-      console.error('Error fetching contacts:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar contatos.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const fetchContactLists = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('contact_lists')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Get contact count for each list
-      const listsWithCount = await Promise.all((data || []).map(async (list) => {
-        const { count } = await supabase
-          .from('contact_list_members')
-          .select('*', { count: 'exact', head: true })
-          .eq('list_id', list.id);
-        
-        return { ...list, contact_count: count || 0 };
-      }));
-
-      setContactLists(listsWithCount);
-    } catch (error) {
-      console.error('Error fetching contact lists:', error);
-      toast({
-        title: "Erro", 
-        description: "Erro ao carregar listas de contatos.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addContact = async () => {
-    if (!contactForm.name || !contactForm.phone) {
-      toast({
-        title: "Erro",
-        description: "Nome e telefone são obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('contacts')
-        .insert({
-          user_id: user?.id,
-          name: contactForm.name,
-          phone: contactForm.phone,
-          email: contactForm.email || null,
-          tags: contactForm.tags ? contactForm.tags.split(',').map(t => t.trim()) : [],
-          notes: contactForm.notes || null
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Contato adicionado com sucesso.",
-      });
-
-      setContactForm({ name: "", phone: "", email: "", tags: "", notes: "" });
-      setIsAddingContact(false);
-      fetchContacts();
-    } catch (error: any) {
-      console.error('Error adding contact:', error);
-      toast({
-        title: "Erro",
-        description: error.message?.includes('duplicate') ? 
-          "Este telefone já está cadastrado." : 
-          "Erro ao adicionar contato.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const addContactList = async () => {
-    if (!listForm.name) {
-      toast({
-        title: "Erro",
-        description: "Nome da lista é obrigatório.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('contact_lists')
-        .insert({
-          user_id: user?.id,
-          name: listForm.name,
-          description: listForm.description || null
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Lista criada com sucesso.",
-      });
-
-      setListForm({ name: "", description: "" });
-      setIsAddingList(false);
-      fetchContactLists();
-    } catch (error) {
-      console.error('Error adding contact list:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao criar lista.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const deleteContact = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('contacts')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Contato removido com sucesso.",
-      });
-
-      fetchContacts();
-    } catch (error) {
-      console.error('Error deleting contact:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao remover contato.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const filteredContacts = contacts.filter(contact => 
+  const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.phone.includes(searchTerm) ||
-    contact.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    contact.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const stats = {
-    totalContacts: contacts.length,
-    totalLists: contactLists.length,
-    recentContacts: contacts.filter(c => 
-      new Date(c.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    ).length
+  const handleDeleteContact = (contactId: string) => {
+    setContacts(contacts.filter(c => c.id !== contactId));
+    toast({
+      title: "Contato removido",
+      description: "O contato foi removido com sucesso.",
+    });
   };
 
-  if (loading) {
+  const handleImportSuccess = (importedContacts: any[]) => {
+    setContacts([...contacts, ...importedContacts]);
+    setShowImport(false);
+    toast({
+      title: "Importação concluída",
+      description: `${importedContacts.length} contatos foram importados com sucesso.`,
+    });
+  };
+
+  if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold">Gestão de Contatos</h1>
-            <p className="text-muted-foreground mt-2">Carregando...</p>
+        <div className="space-y-8 animate-pulse">
+          <div className="h-20 bg-muted/20 rounded-3xl"></div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="h-96 bg-muted/20 rounded-3xl"></div>
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 bg-muted/20 rounded-3xl"></div>
+              ))}
+            </div>
           </div>
         </div>
       </DashboardLayout>
@@ -255,345 +135,241 @@ const Contacts = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center space-x-2">
-              <Users className="h-8 w-8" />
-              <span>Gestão de Contatos</span>
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Organize seus contatos e crie listas para suas campanhas
-            </p>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Dialog open={isAddingList} onOpenChange={setIsAddingList}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <List className="h-4 w-4 mr-2" />
-                  Nova Lista
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Criar Nova Lista</DialogTitle>
-                  <DialogDescription>
-                    Organize seus contatos em listas para facilitar o envio de campanhas
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="listName">Nome da Lista</Label>
-                    <Input
-                      id="listName"
-                      placeholder="Ex: Clientes Premium"
-                      value={listForm.name}
-                      onChange={(e) => setListForm({...listForm, name: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="listDescription">Descrição (opcional)</Label>
-                    <Textarea
-                      id="listDescription"
-                      placeholder="Descreva o propósito desta lista..."
-                      value={listForm.description}
-                      onChange={(e) => setListForm({...listForm, description: e.target.value})}
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsAddingList(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={addContactList}>
-                      Criar Lista
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={isAddingContact} onOpenChange={setIsAddingContact}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Contato
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Adicionar Novo Contato</DialogTitle>
-                  <DialogDescription>
-                    Adicione um novo contato à sua lista
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Nome *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Nome completo"
-                      value={contactForm.name}
-                      onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Telefone *</Label>
-                    <Input
-                      id="phone"
-                      placeholder="+244 900 000 000"
-                      value={contactForm.phone}
-                      onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="email@exemplo.com"
-                      value={contactForm.email}
-                      onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
-                    <Input
-                      id="tags"
-                      placeholder="cliente, vip, luanda"
-                      value={contactForm.tags}
-                      onChange={(e) => setContactForm({...contactForm, tags: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="notes">Observações</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Informações adicionais..."
-                      value={contactForm.notes}
-                      onChange={(e) => setContactForm({...contactForm, notes: e.target.value})}
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsAddingContact(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={addContact}>
-                      Adicionar Contato
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+        {/* Header Section */}
+        <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+          <div className="flex items-center justify-between relative">
+            <div>
+              <h1 className="text-4xl font-light mb-2 gradient-text">Contatos</h1>
+              <p className="text-muted-foreground text-lg">
+                Gerencie sua base de contatos e listas de marketing
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setShowImport(true)}
+                variant="outline"
+                className="glass-card border-glass-border text-lg px-6 py-6"
+              >
+                <Upload className="h-5 w-5 mr-2" />
+                Importar CSV
+              </Button>
+              <Button 
+                onClick={() => {/* Add new contact logic */}}
+                className="button-futuristic text-lg px-8 py-6"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Novo Contato
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total de Contatos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {stats.totalContacts}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Listas Criadas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-secondary">
-                {stats.totalLists}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Adicionados esta semana
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {stats.recentContacts}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="contacts" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="contacts">Contatos</TabsTrigger>
-            <TabsTrigger value="import">Importar CSV</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="contacts" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Seus Contatos</CardTitle>
-                <CardDescription>
-                  Gerencie todos os seus contatos aqui
-                </CardDescription>
-                <div className="flex space-x-2">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Search and Actions */}
+            <Card className="card-futuristic">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar contatos..."
+                      placeholder="Buscar por nome, telefone ou email..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 h-12 rounded-2xl glass-card border-glass-border"
                     />
                   </div>
+                  <Button variant="outline" className="glass-card border-glass-border">
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
+                  </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Contacts Table */}
+            <Card className="card-futuristic">
+              <CardHeader>
+                <CardTitle className="gradient-text">Lista de Contatos</CardTitle>
+                <CardDescription>
+                  {filteredContacts.length} contatos encontrados
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {filteredContacts.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      {searchTerm ? "Nenhum contato encontrado" : "Nenhum contato cadastrado"}
+                  <div className="text-center py-16">
+                    <div className="p-6 rounded-3xl bg-gradient-primary/10 w-fit mx-auto mb-6">
+                      <Users className="h-12 w-12 text-primary mx-auto" />
+                    </div>
+                    <h3 className="text-xl font-normal mb-2">
+                      {searchTerm ? "Nenhum contato encontrado" : "Nenhum contato ainda"}
                     </h3>
-                    <p className="text-muted-foreground mb-4">
-                      {searchTerm ? 
-                        "Tente buscar com outros termos." :
-                        "Comece adicionando seus primeiros contatos."
+                    <p className="text-muted-foreground mb-8">
+                      {searchTerm 
+                        ? "Tente buscar com outros termos." 
+                        : "Importe ou adicione contatos para começar suas campanhas."
                       }
                     </p>
                     {!searchTerm && (
-                      <Button onClick={() => setIsAddingContact(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Primeiro Contato
+                      <Button 
+                        className="button-futuristic" 
+                        onClick={() => setShowImport(true)}
+                      >
+                        Importar Contatos
                       </Button>
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {filteredContacts.map((contact) => (
-                      <div 
-                        key={contact.id}
-                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h4 className="font-semibold">{contact.name}</h4>
-                            {contact.tags && contact.tags.length > 0 && (
-                              <div className="flex space-x-1">
-                                {contact.tags.map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    <Tag className="h-3 w-3 mr-1" />
+                  <div className="rounded-2xl border border-glass-border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/20">
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Telefone</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Tags</TableHead>
+                          <TableHead>Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredContacts.map((contact) => (
+                          <TableRow key={contact.id} className="hover:bg-muted/10">
+                            <TableCell className="font-medium">{contact.name}</TableCell>
+                            <TableCell>{contact.phone}</TableCell>
+                            <TableCell>{contact.email}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 flex-wrap">
+                                {contact.tags?.map((tag, index) => (
+                                  <Badge key={index} variant="secondary" className="text-xs">
                                     {tag}
                                   </Badge>
                                 ))}
                               </div>
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Phone className="h-4 w-4" />
-                              <span>{contact.phone}</span>
-                            </div>
-                            {contact.email && (
-                              <div className="flex items-center space-x-2">
-                                <Mail className="h-4 w-4" />
-                                <span>{contact.email}</span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" className="glass-card border-glass-border">
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                                <Button variant="outline" size="sm" className="glass-card border-glass-border">
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="glass-card border-glass-border text-red-500 hover:text-red-700"
+                                  onClick={() => handleDeleteContact(contact.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                               </div>
-                            )}
-                            {contact.notes && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {contact.notes}
-                              </p>
-                            )}
-                          </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <Card className="card-futuristic">
+              <CardHeader>
+                <CardTitle className="gradient-text">Estatísticas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total de Contatos:</span>
+                  <span className="font-bold text-primary">1.250</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Listas Ativas:</span>
+                  <span className="font-bold">4</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Adicionados hoje:</span>
+                  <span className="font-bold text-green-500">+12</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Taxa de engajamento:</span>
+                  <span className="font-bold text-blue-500">94.5%</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact Lists */}
+            <Card className="card-futuristic">
+              <CardHeader>
+                <CardTitle className="gradient-text">Listas de Contatos</CardTitle>
+                <CardDescription>Organize seus contatos em listas</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {contactLists.map((list) => (
+                  <Card 
+                    key={list.id} 
+                    className="p-4 cursor-pointer hover-lift glass-card border-glass-border"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
+                          <FileText className="h-4 w-4 text-white" />
                         </div>
-                        
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => deleteContact(contact.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div>
+                          <h4 className="font-medium">{list.name}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {list.contactCount} contatos
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <Badge variant="outline" className="text-xs">
+                        {list.contactCount}
+                      </Badge>
+                    </div>
+                  </Card>
+                ))}
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full glass-card border-glass-border border-dashed hover:border-primary"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Lista
+                </Button>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="lists" className="mt-6">
-            <Card>
+            {/* Import Tips */}
+            <Card className="card-futuristic border-blue-500/30 bg-blue-500/5">
               <CardHeader>
-                <CardTitle>Listas de Contatos</CardTitle>
-                <CardDescription>
-                  Organize seus contatos em listas para campanhas direcionadas
-                </CardDescription>
+                <CardTitle className="text-blue-400 text-lg">💡 Dicas de Importação</CardTitle>
               </CardHeader>
-              <CardContent>
-                {contactLists.length === 0 ? (
-                  <div className="text-center py-8">
-                    <List className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Nenhuma lista criada</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Crie listas para organizar seus contatos em grupos específicos.
-                    </p>
-                    <Button onClick={() => setIsAddingList(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Primeira Lista
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {contactLists.map((list) => (
-                      <Card key={list.id} className="hover:bg-muted/50 transition-colors cursor-pointer">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">{list.name}</CardTitle>
-                          {list.description && (
-                            <CardDescription className="text-sm">
-                              {list.description}
-                            </CardDescription>
-                          )}
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex justify-between items-center">
-                            <div className="text-sm text-muted-foreground">
-                              {list.contact_count} contatos
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(list.created_at).toLocaleDateString('pt-AO')}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+              <CardContent className="space-y-2 text-sm">
+                <p>• Use formato CSV com colunas: nome, telefone, email</p>
+                <p>• Telefones devem incluir código do país (+244)</p>
+                <p>• Máximo de 10.000 contatos por importação</p>
+                <p>• Remova duplicatas antes de importar</p>
+                <p>• Respeite as leis de proteção de dados</p>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </div>
 
-          <TabsContent value="import">
-            <CSVImport onImportComplete={fetchContacts} />
-          </TabsContent>
-        </Tabs>
+        {/* CSV Import Modal */}
+        {showImport && (
+          <CSVImport 
+            isOpen={showImport}
+            onClose={() => setShowImport(false)}
+            onSuccess={handleImportSuccess}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
 };
-
 export default Contacts;
