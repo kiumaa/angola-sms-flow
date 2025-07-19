@@ -3,17 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Check } from "lucide-react";
+import { Mail, Check, Eye, EyeOff, Zap } from "lucide-react";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
-import logo from "@/assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, user, isAdmin, loading } = useAuth();
@@ -44,7 +44,6 @@ const Login = () => {
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta à sua conta.",
         });
-        // Navigation will be handled by the useEffect above
       }
     } catch (error) {
       toast({
@@ -58,77 +57,124 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center">
-            <BrandAwareLogo />
-          </Link>
+    <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent animate-float"></div>
+      
+      {/* Header with Theme Toggle */}
+      <header className="absolute top-0 w-full glass backdrop-blur-glass border-b border-glass-border z-50">
+        <div className="container-futuristic py-4">
+          <div className="flex justify-between items-center">
+            <Link to="/" className="flex items-center space-x-3">
+              <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+              <span className="font-semibold gradient-text">SMS Marketing Angola</span>
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
+      </header>
 
-        <Card className="card-elegant">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Entrar na sua conta</CardTitle>
-            <CardDescription>
-              Entre com suas credenciais para acessar o dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+      <div className="flex items-center justify-center min-h-screen pt-20 px-6">
+        <div className="w-full max-w-md">
+          {/* Advanced Login Card */}
+          <Card className="card-futuristic relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+            <CardHeader className="text-center relative">
+              <div className="p-4 rounded-3xl bg-gradient-primary shadow-glow w-fit mx-auto mb-6 animate-glow">
+                <Mail className="h-8 w-8 text-white" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+              <CardTitle className="text-3xl font-light gradient-text">Entrar na sua conta</CardTitle>
+              <CardDescription className="text-lg">
+                Entre com suas credenciais para acessar o dashboard
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="relative">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-base">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="rounded-2xl h-14 text-base glass-card border-glass-border"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-base">Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full button-futuristic text-lg py-6" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Entrando..." : "Entrar"}
+                </Button>
+              </form>
+
+              <div className="mt-8 text-center">
+                <Link 
+                  to="/forgot-password" 
+                  className="text-primary hover:underline transition-all duration-300 hover:scale-105"
+                >
+                  Esqueceu sua senha?
+                </Link>
               </div>
 
-              <Button type="submit" className="w-full btn-gradient" disabled={isLoading}>
-                {isLoading ? "Entrando..." : "Entrar"}
-              </Button>
-            </form>
+              <div className="mt-8 text-center">
+                <span className="text-muted-foreground">Não tem uma conta? </span>
+                <Link 
+                  to="/register" 
+                  className="text-primary hover:underline font-medium gradient-text transition-all duration-300 hover:scale-105"
+                >
+                  Criar conta grátis
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
-            <div className="mt-6 text-center">
-              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                Esqueceu sua senha?
-              </Link>
+          {/* Enhanced Features */}
+          <div className="mt-12 text-center">
+            <p className="text-muted-foreground mb-6 text-lg">Por que escolher nossa plataforma?</p>
+            <div className="space-y-4">
+              {loginFeatures.map((feature, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center justify-center text-base glass-card p-4 rounded-2xl hover-lift animate-slide-up-stagger"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="p-2 rounded-full bg-gradient-primary shadow-glow mr-4">
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                  <span>{feature}</span>
+                </div>
+              ))}
             </div>
-
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              Não tem uma conta?{" "}
-              <Link to="/register" className="text-primary hover:underline font-medium">
-                Criar conta grátis
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Features */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground mb-4">Por que escolher nossa plataforma?</p>
-          <div className="space-y-2">
-            {loginFeatures.map((feature, index) => (
-              <div key={index} className="flex items-center justify-center text-sm text-muted-foreground">
-                <Check className="h-4 w-4 text-secondary mr-2" />
-                {feature}
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -138,9 +184,9 @@ const Login = () => {
 
 const loginFeatures = [
   "99,9% de uptime garantido",
-  "Suporte em português",
-  "Preços em Kwanzas",
-  "API completa disponível"
+  "Suporte especializado em português",
+  "Preços transparentes em Kwanzas",
+  "API completa com documentação"
 ];
 
 export default Login;
