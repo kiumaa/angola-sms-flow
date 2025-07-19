@@ -47,7 +47,16 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+          <Suspense fallback={
+            <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+              <div className="text-center">
+                <div className="p-6 rounded-3xl bg-gradient-primary shadow-glow w-fit mx-auto mb-6 animate-glow">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+                <p className="gradient-text text-lg">Carregando plataforma...</p>
+              </div>
+            </div>
+          }>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
