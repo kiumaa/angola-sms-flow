@@ -21,12 +21,12 @@ export const BrandAwareLogo = ({
   return (
     <div className="flex items-center">
       {hasCustomLogo ? (
-        <img src={logoSrc} alt="SMS Marketing Angola" className={className} />
+        <img src={logoSrc} alt="SMS AO" className={className} />
       ) : (
         <>
           <Mail className="h-8 w-8 text-primary mr-2" />
           {showText && (
-            <span className={textClassName}>SMS Marketing Angola</span>
+            <span className={textClassName}>SMS AO</span>
           )}
         </>
       )}

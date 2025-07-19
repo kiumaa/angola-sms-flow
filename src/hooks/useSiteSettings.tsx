@@ -8,7 +8,7 @@ interface SiteSettings {
 
 export const useSiteSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
-    site_title: "SMS Marketing Angola",
+    site_title: "SMS AO",
     site_subtitle: "Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional"
   });
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ export const useSiteSettings = () => {
       
       if (data) {
         setSettings({
-          site_title: data.site_title || "SMS Marketing Angola",
+          site_title: data.site_title || "SMS AO",
           site_subtitle: data.site_subtitle || "Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional"
         });
       }
