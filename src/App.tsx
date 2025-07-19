@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./hooks/useAuth";
 import AdminLayout from "./components/layout/AdminLayout";
 
 const queryClient = new QueryClient();
@@ -43,10 +44,11 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Suspense fallback={
             <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
               <div className="text-center">
@@ -253,6 +255,7 @@ function App() {
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
