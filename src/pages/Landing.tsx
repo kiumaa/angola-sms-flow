@@ -55,13 +55,13 @@ const Landing = () => {
               <br className="hidden md:block" />
               marketing eficiente e profissional.
             </p>
-            <div className="flex flex-col sm:flex-row gap-8 justify-center animate-slide-up mb-12">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-slide-up mb-12">
               <Button asChild size="lg" className="text-lg px-12 py-8 rounded-3xl button-futuristic hover:shadow-elevated">
                 <Link to="/register">
                   Começar Grátis
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-12 py-8 rounded-3xl glass-card border-glass-border hover:scale-105 transition-all duration-300">
+              <Button asChild variant="outline" size="lg" className="text-lg px-12 py-8 rounded-3xl border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105">
                 <a href="#pricing">Ver Preços</a>
               </Button>
             </div>
