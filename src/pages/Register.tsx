@@ -59,10 +59,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(formData.email, formData.password, {
-        full_name: formData.fullName,
-        company_name: formData.company
-      });
+      const { error } = await signUp(formData.email, formData.password, formData.fullName);
       
       if (error) {
         toast({
