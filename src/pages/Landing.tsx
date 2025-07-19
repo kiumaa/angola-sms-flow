@@ -4,10 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap, Star, CheckCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Link } from "react-router-dom";
-
 const Landing = () => {
-  return (
-    <div className="min-h-screen bg-gradient-hero">
+  return <div className="min-h-screen bg-gradient-hero">
       {/* Advanced Header with Glassmorphism */}
       <header className="fixed top-0 w-full glass backdrop-blur-glass border-b border-glass-border z-50 transition-all duration-300">
         <div className="container-futuristic">
@@ -61,8 +59,8 @@ const Landing = () => {
                   Começar Grátis
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-12 py-8 rounded-3xl border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105 w-48">
-                <a href="#pricing">Ver Preços</a>
+              <Button asChild size="lg" className="text-lg px-12 py-8 rounded-3xl border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105 w-48">
+                <a href="#pricing" className="px-0">Ver Preços</a>
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -87,43 +85,33 @@ const Landing = () => {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {[
-              {
-                icon: <Zap className="h-10 w-10" />,
-                title: "Envio em Massa",
-                description: "Envie para milhares de contatos simultaneamente com alta taxa de entrega garantida e velocidade impressionante."
-              },
-              {
-                icon: <MessageSquare className="h-10 w-10" />,
-                title: "Personalização Avançada",
-                description: "Mensagens personalizadas com nome e dados do cliente para maior engajamento e conversão."
-              },
-              {
-                icon: <Clock className="h-10 w-10" />,
-                title: "Agendamento Inteligente",
-                description: "Programe campanhas para o melhor momento e configure envios recorrentes automatizados."
-              },
-              {
-                icon: <BarChart3 className="h-10 w-10" />,
-                title: "Relatórios em Tempo Real",
-                description: "Acompanhe entregas, taxa de sucesso e engajamento com dashboards interativos e insights poderosos."
-              },
-              {
-                icon: <Shield className="h-10 w-10" />,
-                title: "API Completa",
-                description: "Integre facilmente com seus sistemas existentes usando nossa API REST robusta e bem documentada."
-              },
-              {
-                icon: <Users className="h-10 w-10" />,
-                title: "Suporte Premium",
-                description: "Atendimento especializado em português com conhecimento profundo do mercado angolano."
-              }
-            ].map((feature, index) => (
-              <Card 
-                key={index} 
-                className="card-futuristic group animate-slide-up-stagger cursor-default"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
+            {[{
+            icon: <Zap className="h-10 w-10" />,
+            title: "Envio em Massa",
+            description: "Envie para milhares de contatos simultaneamente com alta taxa de entrega garantida e velocidade impressionante."
+          }, {
+            icon: <MessageSquare className="h-10 w-10" />,
+            title: "Personalização Avançada",
+            description: "Mensagens personalizadas com nome e dados do cliente para maior engajamento e conversão."
+          }, {
+            icon: <Clock className="h-10 w-10" />,
+            title: "Agendamento Inteligente",
+            description: "Programe campanhas para o melhor momento e configure envios recorrentes automatizados."
+          }, {
+            icon: <BarChart3 className="h-10 w-10" />,
+            title: "Relatórios em Tempo Real",
+            description: "Acompanhe entregas, taxa de sucesso e engajamento com dashboards interativos e insights poderosos."
+          }, {
+            icon: <Shield className="h-10 w-10" />,
+            title: "API Completa",
+            description: "Integre facilmente com seus sistemas existentes usando nossa API REST robusta e bem documentada."
+          }, {
+            icon: <Users className="h-10 w-10" />,
+            title: "Suporte Premium",
+            description: "Atendimento especializado em português com conhecimento profundo do mercado angolano."
+          }].map((feature, index) => <Card key={index} className="card-futuristic group animate-slide-up-stagger cursor-default" style={{
+            animationDelay: `${index * 0.1}s`
+          }}>
                 <CardHeader className="text-center pb-6">
                   <div className="mx-auto mb-8 p-6 bg-gradient-primary rounded-3xl w-fit group-hover:shadow-glow transition-all duration-500 group-hover:scale-110">
                     <div className="text-white">
@@ -137,8 +125,7 @@ const Landing = () => {
                     {feature.description}
                   </CardDescription>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -156,32 +143,27 @@ const Landing = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-10">
-            {[
-              {
-                name: "Carlos Mendes",
-                company: "Tech Solutions Luanda",
-                text: "Aumentamos nossa taxa de conversão em 300% após começar a usar a plataforma. O suporte é excepcional!",
-                rating: 5
-              },
-              {
-                name: "Ana Silva", 
-                company: "Comercial Benguela",
-                text: "Interface muito intuitiva e preços justos. Conseguimos alcançar mais clientes com o mesmo orçamento.",
-                rating: 5
-              },
-              {
-                name: "João Santos",
-                company: "Startup Huambo", 
-                text: "A API é fantástica! Integramos em 2 dias e já estamos vendo resultados incríveis nas nossas campanhas.",
-                rating: 5
-              }
-            ].map((testimonial, index) => (
-              <Card key={index} className="card-futuristic animate-slide-up-stagger" style={{ animationDelay: `${index * 0.2}s` }}>
+            {[{
+            name: "Carlos Mendes",
+            company: "Tech Solutions Luanda",
+            text: "Aumentamos nossa taxa de conversão em 300% após começar a usar a plataforma. O suporte é excepcional!",
+            rating: 5
+          }, {
+            name: "Ana Silva",
+            company: "Comercial Benguela",
+            text: "Interface muito intuitiva e preços justos. Conseguimos alcançar mais clientes com o mesmo orçamento.",
+            rating: 5
+          }, {
+            name: "João Santos",
+            company: "Startup Huambo",
+            text: "A API é fantástica! Integramos em 2 dias e já estamos vendo resultados incríveis nas nossas campanhas.",
+            rating: 5
+          }].map((testimonial, index) => <Card key={index} className="card-futuristic animate-slide-up-stagger" style={{
+            animationDelay: `${index * 0.2}s`
+          }}>
                 <CardHeader>
                   <div className="flex space-x-1 mb-6">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-                    ))}
+                    {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />)}
                   </div>
                   <CardDescription className="text-lg italic leading-relaxed">
                     "{testimonial.text}"
@@ -198,8 +180,7 @@ const Landing = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -219,71 +200,35 @@ const Landing = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto pt-12">
-            {[
-              {
-                name: "Básico",
-                price: "10.000",
-                sms: "100",
-                description: "100 SMS incluídos",
-                features: [
-                  "100 SMS incluídos",
-                  "Dashboard básico", 
-                  "Suporte por email",
-                  "Validade: 90 dias",
-                  "Relatórios básicos"
-                ],
-                highlight: false
-              },
-              {
-                name: "Intermediário", 
-                price: "38.000",
-                sms: "400",
-                description: "400 SMS incluídos",
-                features: [
-                  "400 SMS incluídos",
-                  "Suporte prioritário",
-                  "Relatórios avançados", 
-                  "Agendamento de campanhas",
-                  "Validade: 120 dias",
-                  "API básica"
-                ],
-                highlight: true
-              },
-              {
-                name: "Avançado",
-                price: "90.000", 
-                sms: "1.000",
-                description: "1.000 SMS incluídos",
-                features: [
-                  "1.000 SMS incluídos",
-                  "API completa",
-                  "Webhooks personalizados",
-                  "Suporte por telefone", 
-                  "Validade: 180 dias",
-                  "Relatórios premium"
-                ],
-                highlight: false
-              }
-            ].map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden ${
-                  plan.highlight 
-                    ? 'card-futuristic border-2 border-primary shadow-glow scale-105' 
-                    : 'card-futuristic border-glass-border'
-                }`}
-              >
-                {plan.highlight && (
-                  <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-                )}
+            {[{
+            name: "Básico",
+            price: "10.000",
+            sms: "100",
+            description: "100 SMS incluídos",
+            features: ["100 SMS incluídos", "Dashboard básico", "Suporte por email", "Validade: 90 dias", "Relatórios básicos"],
+            highlight: false
+          }, {
+            name: "Intermediário",
+            price: "38.000",
+            sms: "400",
+            description: "400 SMS incluídos",
+            features: ["400 SMS incluídos", "Suporte prioritário", "Relatórios avançados", "Agendamento de campanhas", "Validade: 120 dias", "API básica"],
+            highlight: true
+          }, {
+            name: "Avançado",
+            price: "90.000",
+            sms: "1.000",
+            description: "1.000 SMS incluídos",
+            features: ["1.000 SMS incluídos", "API completa", "Webhooks personalizados", "Suporte por telefone", "Validade: 180 dias", "Relatórios premium"],
+            highlight: false
+          }].map((plan, index) => <Card key={index} className={`relative transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden ${plan.highlight ? 'card-futuristic border-2 border-primary shadow-glow scale-105' : 'card-futuristic border-glass-border'}`}>
+                {plan.highlight && <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>}
                 
-                {plan.highlight && (
-                  <div className="flex justify-center mb-4">
+                {plan.highlight && <div className="flex justify-center mb-4">
                     <Badge className="bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow">
                       ⭐ Mais Popular
                     </Badge>
-                  </div>
-                )}
+                  </div>}
                 
                 <CardHeader className="text-center pb-8 relative">
                   <CardTitle className="text-3xl font-light gradient-text">{plan.name}</CardTitle>
@@ -296,27 +241,18 @@ const Landing = () => {
                 
                 <CardContent className="pt-0 relative">
                   <ul className="space-y-5 mb-10">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start text-base">
+                    {plan.features.map((feature, featureIndex) => <li key={featureIndex} className="flex items-start text-base">
                         <CheckCircle className="w-6 h-6 text-primary mr-4 mt-0.5 flex-shrink-0" />
                         <span>{feature}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
-                  <Button 
-                    asChild
-                    className={`w-full rounded-3xl transition-all duration-300 hover:scale-105 text-lg py-6 ${
-                      plan.highlight ? 'button-futuristic' : 'glass-card border-glass-border hover:bg-primary hover:text-white'
-                    }`}
-                    size="lg"
-                  >
+                  <Button asChild className={`w-full rounded-3xl transition-all duration-300 hover:scale-105 text-lg py-6 ${plan.highlight ? 'button-futuristic' : 'glass-card border-glass-border hover:bg-primary hover:text-white'}`} size="lg">
                     <Link to="/register">
                       Escolher Plano
                     </Link>
                   </Button>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -325,17 +261,22 @@ const Landing = () => {
       <section className="section-padding relative">
         <div className="container-futuristic">
           <div className="grid md:grid-cols-4 gap-12 text-center">
-            {[
-              { number: "99.9%", label: "Uptime Garantido" },
-              { number: "95%+", label: "Taxa de Entrega" },
-              { number: "500+", label: "Empresas Confiam" },
-              { number: "24/7", label: "Monitoramento" }
-            ].map((stat, index) => (
-              <div key={index} className="group cursor-default">
+            {[{
+            number: "99.9%",
+            label: "Uptime Garantido"
+          }, {
+            number: "95%+",
+            label: "Taxa de Entrega"
+          }, {
+            number: "500+",
+            label: "Empresas Confiam"
+          }, {
+            number: "24/7",
+            label: "Monitoramento"
+          }].map((stat, index) => <div key={index} className="group cursor-default">
                 <div className="text-5xl md:text-6xl font-light text-primary mb-4 transition-all duration-300 group-hover:scale-110">{stat.number}</div>
                 <div className="text-muted-foreground text-lg">{stat.label}</div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -378,26 +319,13 @@ const Landing = () => {
             <div>
               <h4 className="font-semibold mb-6 text-lg gradient-text">Suporte</h4>
               <div className="space-y-4">
-                <a 
-                  href="https://wa.me/244933493788" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105"
-                >
+                <a href="https://wa.me/244933493788" target="_blank" rel="noopener noreferrer" className="block text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105">
                   Contato WhatsApp
                 </a>
-                <a 
-                  href="mailto:suporte@sms.ao" 
-                  className="block text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105"
-                >
+                <a href="mailto:suporte@sms.ao" className="block text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105">
                   Email Suporte
                 </a>
-                <a 
-                  href="https://wa.me/244933493788?text=Olá! Preciso de ajuda com a plataforma SMS.AO." 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105"
-                >
+                <a href="https://wa.me/244933493788?text=Olá! Preciso de ajuda com a plataforma SMS.AO." target="_blank" rel="noopener noreferrer" className="block text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105">
                   Central de Ajuda
                 </a>
               </div>
@@ -430,8 +358,6 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
