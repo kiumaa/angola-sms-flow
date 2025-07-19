@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Mail, Users, Calendar, Settings, Star, MessageCircle, Shield, Zap, TrendingUp, Award } from "lucide-react";
+import { Check, MessageCircle, Shield, Zap, TrendingUp, Calendar, Settings, ChevronRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
-import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { usePerformanceMonitor } from "@/hooks/usePerformance";
 
 const Landing = () => {
@@ -13,104 +13,91 @@ const Landing = () => {
   // Monitor performance for optimization
   usePerformanceMonitor();
 
-  console.log('Landing page rendered, settings:', settings, 'loading:', loading);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full border-2 border-primary border-t-transparent h-8 w-8"></div>
+        <div className="w-2 h-2 bg-foreground rounded-full animate-pulse-soft"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <ScrollToTopButton />
-      {/* Navigation */}
-      <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b border-border/40">
-        <div className="container-custom">
-          <div className="flex h-16 items-center justify-between">
+    <div className="min-h-screen bg-background">
+      {/* Futuristic Header */}
+      <header className="fixed top-0 w-full bg-background/95 backdrop-blur-xl border-b border-border z-50">
+        <div className="container-futuristic">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <BrandAwareLogo />
+              <BrandAwareLogo className="h-6 w-auto" />
             </div>
-            <div className="flex items-center space-x-4">
-              <a 
-                href="https://wa.me/244933493788" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Contato
-              </a>
-              <a 
-                href="https://wa.me/244933493788?text=Olá! Preciso de ajuda com a plataforma SMS Marketing Angola." 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Central de Ajuda
-              </a>
-              <Link to="/login">
-                <Button variant="outline">Entrar</Button>
-              </Link>
-              <Link to="/register">
-                <Button className="btn-gradient">Começar Grátis</Button>
-              </Link>
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+              <Button variant="ghost" size="sm" className="btn-ghost font-light" asChild>
+                <Link to="/login">Entrar</Link>
+              </Button>
+              <Button size="sm" className="btn-minimal" asChild>
+                <Link to="/register">Começar</Link>
+              </Button>
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {/* Hero Section */}
-      <section className="hero-gradient section-padding">
-        <div className="container-custom">
-          <div className="text-center text-white">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up">
-              {settings.site_title}
+      {/* Futuristic Hero Section */}
+      <section className="hero-futuristic section-modern pt-32">
+        <div className="container-futuristic">
+          <div className="text-center">
+            <h1 className="text-h1 md:text-6xl mb-8 animate-slide-up">
+              {settings.site_title || "SMS Marketing Angola"}
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto animate-fade-in-up">
-              {settings.site_subtitle}
+            <p className="text-body md:text-lg mb-12 text-muted-foreground max-w-2xl mx-auto animate-slide-up text-balance">
+              {settings.site_subtitle || "Conecte-se aos seus clientes através de SMS marketing eficiente e profissional."}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up">
               <Link to="/register">
-                <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6">
-                  Começar Grátis - 50 SMS
+                <Button size="lg" className="btn-minimal px-8 py-3 hover-scale">
+                  Começar Agora
+                  <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <a href="#pricing">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 text-lg px-8 py-6">
-                  Ver Preços
+              <a href="#features">
+                <Button size="lg" variant="ghost" className="btn-ghost px-8 py-3">
+                  Explorar Funcionalidades
                 </Button>
               </a>
             </div>
-            <p className="text-sm text-white/70 mt-4">Sem mensalidade • Pague apenas pelo que usar • Suporte em português</p>
+            <div className="text-xs text-muted-foreground">
+              Sem mensalidade • Pague apenas pelo que usar
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="section-padding bg-muted/30">
-        <div className="container-custom">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 animate-fade-in-up">
-              🚀 Funcionalidades <span className="text-gradient">Poderosas</span>
+      {/* Modern Features Section */}
+      <section id="features" className="section-modern">
+        <div className="container-futuristic">
+          <div className="text-center mb-20">
+            <h2 className="text-h2 mb-6 animate-slide-up">
+              Funcionalidades Avançadas
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-up">
-              Tudo que você precisa para suas campanhas de SMS marketing em uma plataforma completa e fácil de usar.
+            <p className="text-body text-muted-foreground max-w-xl mx-auto animate-slide-up">
+              Tudo que você precisa para campanhas de SMS marketing eficientes.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid-responsive">
             {features.map((feature, index) => (
-              <Card key={index} className="feature-card card-elegant group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-gradient-to-br from-card to-accent/10">
-                <CardHeader>
-                  <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <feature.icon className="h-8 w-8 text-primary group-hover:text-secondary transition-colors" />
-                  </div>
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{feature.title}</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
-                </CardHeader>
-              </Card>
+              <div 
+                key={index} 
+                className="card-modern p-8 hover-lift group animate-scale-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <feature.icon className="h-6 w-6" />
+                </div>
+                <h3 className="text-h3 mb-4">{feature.title}</h3>
+                <p className="text-body text-muted-foreground">{feature.description}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -158,69 +145,68 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="section-padding bg-gradient-to-br from-primary/5 to-secondary/5">
-        <div className="container-custom">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 animate-fade-in-up">
-              💰 Preços <span className="text-gradient">Simples e Transparentes</span>
+      {/* Modern Pricing Section */}
+      <section id="pricing" className="section-modern bg-muted/20">
+        <div className="container-futuristic">
+          <div className="text-center mb-20">
+            <h2 className="text-h2 mb-6 animate-slide-up">
+              Preços Simples e Transparentes
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-up">
-              Sem mensalidade. Pague apenas pelos SMS que usar. Preços em Kwanzas para sua conveniência.
+            <p className="text-body text-muted-foreground max-w-xl mx-auto animate-slide-up">
+              Sem mensalidade. Pague apenas pelos SMS que usar.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid-responsive max-w-4xl mx-auto">
             {pricingPlans.map((plan, index) => (
-              <Card key={index} className={`relative transition-all duration-300 hover:scale-105 hover:shadow-xl card-elegant ${plan.popular ? 'ring-2 ring-primary scale-105 bg-gradient-to-br from-primary/5 to-secondary/5' : 'hover:shadow-lg'}`}>
+              <div 
+                key={index} 
+                className={`card-modern p-8 text-center hover-lift relative ${plan.popular ? 'border-primary' : ''}`}
+              >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-primary to-secondary text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg animate-pulse">
-                      ⭐ Mais Popular
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-primary text-primary-foreground text-xs px-3 py-1 rounded-full">
+                      Mais Popular
                     </span>
                   </div>
                 )}
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                  <div className="text-5xl font-bold text-gradient mb-2">
-                    {plan.price} <span className="text-lg font-normal text-muted-foreground">Kz</span>
-                  </div>
-                  <CardDescription className="text-lg">
-                    <span className="font-semibold text-primary">{plan.sms} SMS</span> incluídos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-4 mb-6">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start">
-                        <Check className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm leading-relaxed">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to="/register" className="w-full block">
-                    <Button className={`w-full text-lg py-6 transition-all duration-300 ${plan.popular ? 'btn-gradient shadow-lg hover:shadow-xl' : 'hover:scale-105'}`}>
-                      🚀 Escolher Plano
-                    </Button>
-                  </Link>
-                  <p className="text-center text-sm text-muted-foreground mt-3">
-                    💳 Apenas {(parseInt(plan.price.replace('.', '')) / parseInt(plan.sms)).toFixed(0)} Kz por SMS
-                  </p>
-                </CardContent>
-              </Card>
+                <h3 className="text-h3 mb-4">{plan.name}</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-light">{plan.price}</span>
+                  <span className="text-body text-muted-foreground ml-1">Kz</span>
+                </div>
+                <p className="text-body text-muted-foreground mb-8">
+                  {plan.sms} SMS incluídos
+                </p>
+                <ul className="space-y-3 mb-8 text-left">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start text-sm">
+                      <Check className="h-4 w-4 text-primary mr-3 mt-0.5 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/register" className="w-full block">
+                  <Button 
+                    className={`w-full ${plan.popular ? 'btn-minimal' : 'btn-ghost'} hover-scale`}
+                  >
+                    Escolher Plano
+                  </Button>
+                </Link>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="section-padding bg-primary/5">
-        <div className="container-custom">
-          <div className="grid md:grid-cols-4 gap-8">
+      {/* Modern Stats Section */}
+      <section className="section-modern">
+        <div className="container-futuristic">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">{stat.value}</div>
-                <div className="text-muted-foreground">{stat.label}</div>
+                <div className="text-3xl font-light mb-2">{stat.value}</div>
+                <div className="text-body text-muted-foreground">{stat.label}</div>
               </div>
             ))}
           </div>
