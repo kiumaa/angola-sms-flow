@@ -209,12 +209,15 @@ const Landing = () => {
                 }`}
               >
                 {plan.highlight && (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-                    <Badge className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow z-10">
+                  <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+                )}
+                
+                {plan.highlight && (
+                  <div className="flex justify-center mb-4">
+                    <Badge className="bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow">
                       ⭐ Mais Popular
                     </Badge>
-                  </>
+                  </div>
                 )}
                 
                 <CardHeader className="text-center pb-8 relative">
