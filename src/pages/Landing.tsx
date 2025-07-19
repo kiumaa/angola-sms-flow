@@ -56,12 +56,12 @@ const Landing = () => {
               marketing eficiente e profissional.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-slide-up mb-12">
-              <Button asChild size="lg" className="text-lg px-12 py-8 rounded-3xl button-futuristic hover:shadow-elevated">
+              <Button asChild size="lg" className="text-lg px-12 py-8 rounded-3xl button-futuristic hover:shadow-elevated w-48">
                 <Link to="/register">
                   Começar Grátis
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-12 py-8 rounded-3xl border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105">
+              <Button asChild variant="outline" size="lg" className="text-lg px-12 py-8 rounded-3xl border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105 w-48">
                 <a href="#pricing">Ver Preços</a>
               </Button>
             </div>
