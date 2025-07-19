@@ -63,7 +63,7 @@ const Landing = () => {
                 <a href="#pricing" className="px-0">Ver Preços</a>
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm font-light">
               Comece com 50 SMS grátis • Sem mensalidade • Preços em Kwanzas
             </p>
           </div>
@@ -75,10 +75,10 @@ const Landing = () => {
         <div className="absolute inset-0 bg-gradient-subtle opacity-50"></div>
         <div className="container-futuristic relative">
           <div className="text-center mb-24">
-            <h2 className="text-5xl md:text-6xl font-light mb-8 tracking-tight">
+            <h2 className="text-5xl mb-8 tracking-tight md:text-4xl font-normal">
               🚀 <span className="gradient-text">Funcionalidades</span> Poderosas
             </h2>
-            <p className="text-muted-foreground text-2xl max-w-4xl mx-auto leading-relaxed">
+            <p className="text-muted-foreground max-w-4xl mx-auto leading-relaxed font-light text-xl">
               Tudo que você precisa para suas campanhas de SMS marketing
               <br />em uma plataforma completa e fácil de usar
             </p>
@@ -118,10 +118,10 @@ const Landing = () => {
                       {feature.icon}
                     </div>
                   </div>
-                  <CardTitle className="text-2xl font-normal gradient-text">{feature.title}</CardTitle>
+                  <CardTitle className="gradient-text text-xl font-medium">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center">
-                  <CardDescription className="text-lg leading-relaxed">
+                  <CardDescription className="leading-relaxed text-base font-light">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
@@ -134,10 +134,10 @@ const Landing = () => {
       <section className="section-padding relative">
         <div className="container-futuristic">
           <div className="text-center mb-24">
-            <h2 className="text-5xl md:text-6xl font-light mb-8 tracking-tight">
+            <h2 className="text-5xl mb-8 tracking-tight md:text-4xl font-normal">
               ⭐ O que nossos <span className="gradient-text">clientes dizem</span>
             </h2>
-            <p className="text-muted-foreground text-2xl leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed font-light text-xl">
               Empresas angolanas que confiam na nossa plataforma para crescer seus negócios
             </p>
           </div>
@@ -165,7 +165,7 @@ const Landing = () => {
                   <div className="flex space-x-1 mb-6">
                     {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />)}
                   </div>
-                  <CardDescription className="text-lg italic leading-relaxed">
+                  <CardDescription className="italic leading-relaxed text-lg font-light">
                     "{testimonial.text}"
                   </CardDescription>
                 </CardHeader>
@@ -190,10 +190,10 @@ const Landing = () => {
         <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent"></div>
         <div className="container-futuristic relative">
           <div className="text-center mb-24">
-            <h2 className="text-5xl md:text-6xl font-light mb-8 tracking-tight">
+            <h2 className="text-5xl mb-8 tracking-tight font-normal md:text-4xl">
               🔒 Preços <span className="gradient-text">Simples e Transparentes</span>
             </h2>
-            <p className="text-muted-foreground text-2xl leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed text-xl font-light">
               Sem mensalidade. Pague apenas pelos SMS que usar. Preços em
               <br />Kwanzas para sua conveniência
             </p>
@@ -231,7 +231,7 @@ const Landing = () => {
                   </div>}
                 
                 <CardHeader className="text-center pb-8 relative">
-                  <CardTitle className="text-3xl font-light gradient-text">{plan.name}</CardTitle>
+                  <CardTitle className="gradient-text font-medium text-xl">{plan.name}</CardTitle>
                   <div className="mt-8">
                     <span className="text-6xl font-light gradient-text">{plan.price}</span>
                     <span className="text-muted-foreground text-xl"> Kz</span>
