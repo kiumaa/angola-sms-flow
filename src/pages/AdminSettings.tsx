@@ -1,6 +1,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, MessageSquare, Send, Mail, Wifi } from "lucide-react";
+import { Settings, MessageSquare, Send, Mail, Wifi, Activity } from "lucide-react";
 import AdminSMSSettings from "./AdminSMSSettings";
 import AdminSenderIDs from "./AdminSenderIDs";
 import AdminSMTPSettings from "./AdminSMTPSettings";
@@ -22,7 +22,7 @@ const AdminSettings = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-6 flex-wrap">
         <Link to="/admin/sms-gateway-settings">
           <Button variant="outline" className="flex items-center space-x-2">
             <Wifi className="h-4 w-4" />
@@ -33,6 +33,12 @@ const AdminSettings = () => {
           <Button variant="outline" className="flex items-center space-x-2">
             <Send className="h-4 w-4" />
             <span>Sender IDs Multi-Gateway</span>
+          </Button>
+        </Link>
+        <Link to="/admin/sms-monitoring">
+          <Button variant="outline" className="flex items-center space-x-2">
+            <Activity className="h-4 w-4" />
+            <span>Monitoramento SMS</span>
           </Button>
         </Link>
       </div>

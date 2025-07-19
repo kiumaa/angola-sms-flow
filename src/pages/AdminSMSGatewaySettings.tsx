@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, CheckCircle, Loader2, Wifi, WifiOff } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -43,6 +43,7 @@ export default function AdminSMSGatewaySettings() {
 
   const loadGatewayStatuses = async () => {
     try {
+      console.log('Loading gateway statuses...');
       const [bulkSMSResponse, bulkGateResponse] = await Promise.all([
         supabase.functions.invoke('gateway-status', {
           body: { gateway: 'bulksms' }
@@ -51,6 +52,9 @@ export default function AdminSMSGatewaySettings() {
           body: { gateway: 'bulkgate' }
         })
       ]);
+
+      console.log('BulkSMS Response:', bulkSMSResponse);
+      console.log('BulkGate Response:', bulkGateResponse);
 
       if (bulkSMSResponse.data) setBulkSMSStatus(bulkSMSResponse.data);
       if (bulkGateResponse.data) setBulkGateStatus(bulkGateResponse.data);
@@ -140,6 +144,9 @@ export default function AdminSMSGatewaySettings() {
             <WifiOff className="h-5 w-5 text-destructive" />
           )}
           {title}
+          {status?.status === 'active' && (
+            <Badge variant="default" className="ml-auto">Online</Badge>
+          )}
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
@@ -161,8 +168,18 @@ export default function AdminSMSGatewaySettings() {
         {status?.balance && (
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Créditos:</span>
-            <span className="text-sm">
+            <span className="text-sm font-mono">
               {status.balance.credits.toLocaleString()} {status.balance.currency}
+            </span>
+          </div>
+        )}
+
+        {/* Last checked */}
+        {status?.lastChecked && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Última verificação:</span>
+            <span className="text-xs text-muted-foreground">
+              {new Date(status.lastChecked).toLocaleString('pt-BR')}
             </span>
           </div>
         )}
@@ -170,7 +187,14 @@ export default function AdminSMSGatewaySettings() {
         {/* Error message */}
         {status?.error && (
           <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-sm text-destructive font-medium">Erro:</p>
             <p className="text-sm text-destructive">{status.error}</p>
+            
+            {status.error.includes('Missing') && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                <strong>Configuração necessária:</strong> Configure as credenciais no Supabase Dashboard → Settings → Edge Functions
+              </div>
+            )}
           </div>
         )}
 
@@ -200,11 +224,25 @@ export default function AdminSMSGatewaySettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Configurações de Gateways SMS</h1>
-        <p className="text-muted-foreground">
-          Configure e gerencie seus provedores de SMS
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Configurações de Gateways SMS</h1>
+          <p className="text-muted-foreground">
+            Configure e gerencie seus provedores de SMS
+          </p>
+        </div>
+        <Button 
+          onClick={loadGatewayStatuses} 
+          variant="outline"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
+          Atualizar Status
+        </Button>
       </div>
 
       {/* Primary Gateway Selection */}
@@ -226,10 +264,16 @@ export default function AdminSMSGatewaySettings() {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="bulksms" id="bulksms" />
                 <Label htmlFor="bulksms">BulkSMS</Label>
+                {bulkSMSStatus?.status === 'active' && (
+                  <Badge variant="outline" className="text-xs">Online</Badge>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="bulkgate" id="bulkgate" />
                 <Label htmlFor="bulkgate">BulkGate</Label>
+                {bulkGateStatus?.status === 'active' && (
+                  <Badge variant="outline" className="text-xs">Online</Badge>
+                )}
               </div>
             </RadioGroup>
           </div>
@@ -271,6 +315,35 @@ export default function AdminSMSGatewaySettings() {
           "bulkgate"
         )}
       </div>
+
+      {/* System Status Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Resumo do Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold text-primary">
+                {config.primary.toUpperCase()}
+              </p>
+              <p className="text-sm text-muted-foreground">Gateway Primário</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-green-600">
+                {config.fallbackEnabled ? 'ATIVO' : 'INATIVO'}
+              </p>
+              <p className="text-sm text-muted-foreground">Fallback Automático</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-blue-600">
+                {(bulkSMSStatus?.status === 'active' ? 1 : 0) + (bulkGateStatus?.status === 'active' ? 1 : 0)}/2
+              </p>
+              <p className="text-sm text-muted-foreground">Gateways Online</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
