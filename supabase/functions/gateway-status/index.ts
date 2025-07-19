@@ -43,14 +43,16 @@ serve(async (req) => {
       )
     }
 
-    const { gatewayName } = await req.json()
+    const { gateway } = await req.json()
 
-    if (!gatewayName) {
+    if (!gateway) {
       return new Response(
         JSON.stringify({ error: 'Gateway name is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+    
+    const gatewayName = gateway;
 
     let balance = null
     let status = 'inactive'
