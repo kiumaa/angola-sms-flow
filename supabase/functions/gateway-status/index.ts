@@ -92,28 +92,41 @@ serve(async (req) => {
         if (apiKey) {
           console.log('Testing BulkGate connection with API key:', apiKey ? 'Present' : 'Missing')
           
-          const response = await fetch('https://api.bulkgate.com/v2.0/credit/balance', {
+          const response = await fetch('https://portal.bulkgate.com/api/2.0/advanced/info', {
+            method: 'POST',
             headers: {
-              'Authorization': `Bearer ${apiKey}`,
               'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+              'application_id': apiKey.split(':')[0] || apiKey,
+              'application_token': apiKey.split(':')[1] || apiKey
+            })
           })
 
           console.log('BulkGate API response status:', response.status)
+          console.log('BulkGate API response headers:', Object.fromEntries(response.headers.entries()))
           
           if (response.ok) {
-            const result = await response.json()
-            console.log('BulkGate balance response:', result)
+            const contentType = response.headers.get('content-type') || ''
             
-            balance = {
-              credits: result.data?.balance || 0,
-              currency: result.data?.currency || 'EUR'
+            if (contentType.includes('application/json')) {
+              const result = await response.json()
+              console.log('BulkGate balance response:', result)
+              
+              balance = {
+                credits: result.data?.balance || 0,
+                currency: result.data?.currency || 'EUR'
+              }
+              status = 'active'
+            } else {
+              const responseText = await response.text()
+              console.error('BulkGate API returned non-JSON response:', responseText.substring(0, 200))
+              error = `API returned ${contentType} instead of JSON`
             }
-            status = 'active'
           } else {
             const errorText = await response.text()
-            console.error('BulkGate API error:', errorText)
-            error = `HTTP ${response.status}: ${errorText}`
+            console.error('BulkGate API error:', errorText.substring(0, 200))
+            error = `HTTP ${response.status}: ${errorText.substring(0, 100)}`
           }
         } else {
           error = 'Missing BULKGATE_API_KEY'
