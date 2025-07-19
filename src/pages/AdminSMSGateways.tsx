@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Settings, TestTube, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, Settings, TestTube, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 
 interface Gateway {
@@ -22,11 +23,14 @@ interface Gateway {
 }
 
 interface GatewayStatus {
-  name: string;
-  configured: boolean;
-  connected: boolean;
-  balance?: number;
+  gateway: string;
+  status: 'active' | 'inactive';
+  balance?: {
+    credits: number;
+    currency: string;
+  };
   error?: string;
+  lastChecked: string;
 }
 
 export default function AdminSMSGateways() {
@@ -35,6 +39,7 @@ export default function AdminSMSGateways() {
   const [gatewayStatuses, setGatewayStatuses] = useState<Record<string, GatewayStatus>>({});
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState<Record<string, boolean>>({});
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -44,6 +49,7 @@ export default function AdminSMSGateways() {
 
   const fetchGateways = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('sms_gateways')
         .select('*')
@@ -71,32 +77,55 @@ export default function AdminSMSGateways() {
     const statuses: Record<string, GatewayStatus> = {};
 
     for (const gateway of gatewayList) {
-      statuses[gateway.name] = {
-        name: gateway.name,
-        configured: false,
-        connected: false,
-      };
-
       try {
-        // Check if gateway is configured and get status
+        console.log(`Checking status for gateway: ${gateway.name}`);
+        
         const { data, error } = await supabase.functions.invoke('gateway-status', {
           body: { gateway: gateway.name }
         });
 
-        if (data && !error) {
+        if (error) {
+          console.error(`Gateway ${gateway.name} error:`, error);
           statuses[gateway.name] = {
-            name: gateway.name,
-            configured: true,
-            connected: data.status === 'connected',
-            balance: data.balance,
+            gateway: gateway.name,
+            status: 'inactive',
+            error: error.message || 'Unknown error',
+            lastChecked: new Date().toISOString()
+          };
+        } else if (data) {
+          console.log(`Gateway ${gateway.name} response:`, data);
+          statuses[gateway.name] = data;
+        } else {
+          statuses[gateway.name] = {
+            gateway: gateway.name,
+            status: 'inactive',
+            error: 'No response from gateway',
+            lastChecked: new Date().toISOString()
           };
         }
       } catch (error) {
-        statuses[gateway.name].error = error.message;
+        console.error(`Exception checking ${gateway.name}:`, error);
+        statuses[gateway.name] = {
+          gateway: gateway.name,
+          status: 'inactive',
+          error: error.message || 'Connection failed',
+          lastChecked: new Date().toISOString()
+        };
       }
     }
 
+    console.log('Final gateway statuses:', statuses);
     setGatewayStatuses(statuses);
+  };
+
+  const refreshStatuses = async () => {
+    setRefreshing(true);
+    await checkGatewayStatuses(gateways);
+    setRefreshing(false);
+    toast({
+      title: 'Status Atualizado',
+      description: 'Status dos gateways foi atualizado com sucesso',
+    });
   };
 
   const toggleGatewayActive = async (gatewayId: string, isActive: boolean) => {
@@ -167,15 +196,12 @@ export default function AdminSMSGateways() {
 
     try {
       const { data, error } = await supabase.functions.invoke('gateway-status', {
-        body: { 
-          gateway: gatewayName,
-          test: true
-        }
+        body: { gateway: gatewayName }
       });
 
       if (error) throw error;
 
-      if (data.success) {
+      if (data && data.status === 'active') {
         toast({
           title: 'Teste bem-sucedido',
           description: `Gateway ${gatewayName} está funcionando corretamente`,
@@ -183,12 +209,12 @@ export default function AdminSMSGateways() {
       } else {
         toast({
           title: 'Teste falhou',
-          description: data.error || 'Erro desconhecido',
+          description: data?.error || 'Erro desconhecido',
           variant: 'destructive',
         });
       }
 
-      // Refresh status
+      // Refresh status after test
       await checkGatewayStatuses(gateways);
     } catch (error) {
       console.error('Error testing gateway:', error);
@@ -209,21 +235,21 @@ export default function AdminSMSGateways() {
       return <Badge variant="secondary">Verificando...</Badge>;
     }
 
-    if (!status.configured) {
-      return <Badge variant="destructive">Não Configurado</Badge>;
+    if (status.status === 'active') {
+      return <Badge variant="default" className="bg-green-600">Conectado</Badge>;
+    } else {
+      return <Badge variant="destructive">
+        {status.error === 'Missing BULKGATE_API_KEY' || status.error === 'Missing credentials' 
+          ? 'Não Configurado' 
+          : 'Desconectado'}
+      </Badge>;
     }
-
-    if (!status.connected) {
-      return <Badge variant="destructive">Desconectado</Badge>;
-    }
-
-    return <Badge variant="default">Conectado</Badge>;
   };
 
   const getGatewayIcon = (gateway: Gateway) => {
     const status = gatewayStatuses[gateway.name];
     
-    if (!status?.configured || !status?.connected) {
+    if (!status || status.status !== 'active') {
       return <AlertCircle className="h-5 w-5 text-destructive" />;
     }
 
@@ -250,8 +276,12 @@ export default function AdminSMSGateways() {
               Configure e gerencie os gateways de envio de SMS
             </p>
           </div>
-          <Button onClick={fetchGateways} variant="outline">
-            <Settings className="h-4 w-4 mr-2" />
+          <Button onClick={refreshStatuses} variant="outline" disabled={refreshing}>
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
             Atualizar Status
           </Button>
         </div>
@@ -286,16 +316,18 @@ export default function AdminSMSGateways() {
                     />
                   </div>
 
-                  {status?.balance !== undefined && (
+                  {status?.balance && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Saldo:</span>
-                      <span className="text-sm">{status.balance} créditos</span>
+                      <span className="text-sm">
+                        {status.balance.credits} {status.balance.currency}
+                      </span>
                     </div>
                   )}
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Endpoint:</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground truncate max-w-48">
                       {gateway.api_endpoint}
                     </span>
                   </div>
@@ -308,8 +340,22 @@ export default function AdminSMSGateways() {
                   </div>
 
                   {status?.error && (
-                    <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-                      Erro: {status.error}
+                    <>
+                      <div className="text-sm text-destructive bg-destructive/10 p-3 rounded border">
+                        <strong>Erro:</strong> {status.error}
+                      </div>
+
+                      {status.error === 'Missing BULKGATE_API_KEY' && (
+                        <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
+                          <strong>Configuração necessária:</strong> Configure a secret BULKGATE_API_KEY no Supabase Dashboard → Settings → Edge Functions
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {status?.lastChecked && (
+                    <div className="text-xs text-muted-foreground">
+                      Última verificação: {new Date(status.lastChecked).toLocaleString('pt-BR')}
                     </div>
                   )}
 
@@ -380,6 +426,7 @@ export default function AdminSMSGateways() {
             <li>• O sistema tentará automaticamente o gateway de fallback em caso de falha</li>
             <li>• Certifique-se de configurar as credenciais nos secrets do Supabase</li>
             <li>• BulkGate requer a secret BULKGATE_API_KEY configurada</li>
+            <li>• BulkSMS requer as secrets BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET</li>
           </ul>
         </div>
       </div>

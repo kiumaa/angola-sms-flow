@@ -1,8 +1,11 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, MessageSquare, Send, Mail } from "lucide-react";
+import { Settings, MessageSquare, Send, Mail, Wifi } from "lucide-react";
 import AdminSMSSettings from "./AdminSMSSettings";
 import AdminSenderIDs from "./AdminSenderIDs";
 import AdminSMTPSettings from "./AdminSMTPSettings";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const AdminSettings = () => {
   return (
@@ -16,6 +19,16 @@ const AdminSettings = () => {
         <p className="text-muted-foreground mt-2">
           Gerencie todas as configurações do sistema
         </p>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex gap-4 mb-6">
+        <Link to="/admin/gateways">
+          <Button variant="outline" className="flex items-center space-x-2">
+            <Wifi className="h-4 w-4" />
+            <span>Gateways SMS</span>
+          </Button>
+        </Link>
       </div>
 
       {/* Tabs */}

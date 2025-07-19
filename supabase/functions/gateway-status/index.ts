@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -80,44 +81,63 @@ serve(async (req) => {
             }
             status = 'active'
           } else {
-            error = `HTTP ${response.status}`
+            error = `HTTP ${response.status}: ${await response.text()}`
           }
+        } else {
+          error = 'Missing credentials'
         }
       } else if (gatewayName === 'bulkgate') {
         const apiKey = Deno.env.get('BULKGATE_API_KEY')
         
         if (apiKey) {
+          console.log('Testing BulkGate connection with API key:', apiKey ? 'Present' : 'Missing')
+          
           const response = await fetch('https://api.bulkgate.com/v2.0/credit/balance', {
             headers: {
-              'Authorization': `Bearer ${apiKey}`
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
             }
           })
 
+          console.log('BulkGate API response status:', response.status)
+          
           if (response.ok) {
             const result = await response.json()
+            console.log('BulkGate balance response:', result)
+            
             balance = {
               credits: result.data?.balance || 0,
               currency: result.data?.currency || 'EUR'
             }
             status = 'active'
           } else {
-            error = `HTTP ${response.status}`
+            const errorText = await response.text()
+            console.error('BulkGate API error:', errorText)
+            error = `HTTP ${response.status}: ${errorText}`
           }
+        } else {
+          error = 'Missing BULKGATE_API_KEY'
         }
+      } else {
+        error = 'Unknown gateway'
       }
     } catch (e) {
       console.error(`Error checking ${gatewayName} status:`, e)
       error = e.message
     }
 
+    const result = {
+      gateway: gatewayName,
+      status,
+      balance,
+      error,
+      lastChecked: new Date().toISOString()
+    }
+
+    console.log(`Gateway ${gatewayName} status result:`, result)
+
     return new Response(
-      JSON.stringify({
-        gateway: gatewayName,
-        status,
-        balance,
-        error,
-        lastChecked: new Date().toISOString()
-      }),
+      JSON.stringify(result),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
