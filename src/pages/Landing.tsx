@@ -1,143 +1,127 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, MessageCircle, Shield, Zap, TrendingUp, Calendar, Settings, ChevronRight, Star } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { usePerformanceMonitor } from "@/hooks/usePerformance";
 
 const Landing = () => {
-  const { settings, loading } = useSiteSettings();
-  
-  // Monitor performance for optimization
-  usePerformanceMonitor();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="w-2 h-2 bg-foreground rounded-full animate-pulse-soft"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Futuristic Header */}
-      <header className="fixed top-0 w-full bg-background/95 backdrop-blur-xl border-b border-border z-50">
-        <div className="container-futuristic">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <BrandAwareLogo className="h-6 w-auto" />
+      {/* Header */}
+      <header className="fixed top-0 w-full bg-background/90 backdrop-blur-lg border-b border-border z-50 transition-all duration-300">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 animate-slide-in">
+              <div className="p-2 rounded-2xl bg-primary/10">
+                <MessageSquare className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-lg font-semibold">SMS Marketing Angola</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105">
+                Features
+              </a>
+              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105">
+                Pricing
+              </a>
+              <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105">
+                Contact
+              </a>
+            </nav>
+            <div className="flex items-center space-x-4">
               <ThemeToggle />
-              <Button variant="ghost" size="sm" className="btn-ghost font-light" asChild>
-                <Link to="/login">Entrar</Link>
+              <Button variant="outline" size="sm" className="rounded-2xl transition-all duration-200 hover:scale-105">
+                Login
               </Button>
-              <Button size="sm" className="btn-minimal" asChild>
-                <Link to="/register">Começar</Link>
+              <Button size="sm" className="rounded-2xl transition-all duration-200 hover:scale-105">
+                Get Started
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Futuristic Hero Section */}
-      <section className="hero-futuristic section-modern pt-32">
-        <div className="container-futuristic">
-          <div className="text-center">
-            <h1 className="text-h1 md:text-6xl mb-8 animate-slide-up">
-              {settings.site_title || "SMS Marketing Angola"}
-            </h1>
-            <p className="text-body md:text-lg mb-12 text-muted-foreground max-w-2xl mx-auto animate-slide-up text-balance">
-              {settings.site_subtitle || "Conecte-se aos seus clientes através de SMS marketing eficiente e profissional."}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up">
-              <Link to="/register">
-                <Button size="lg" className="btn-minimal px-8 py-3 hover-scale">
-                  Começar Agora
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <a href="#features">
-                <Button size="lg" variant="ghost" className="btn-ghost px-8 py-3">
-                  Explorar Funcionalidades
-                </Button>
-              </a>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Sem mensalidade • Pague apenas pelo que usar
-            </div>
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-6">
+        <div className="container mx-auto text-center max-w-5xl">
+          <Badge className="mb-8 bg-primary/10 text-primary hover:bg-primary/20 rounded-full animate-scale-in">
+            Nova plataforma de SMS Marketing
+          </Badge>
+          <h1 className="text-5xl md:text-7xl font-light mb-8 tracking-tight animate-slide-up">
+            SMS Marketing para
+            <span className="block text-primary font-normal mt-2">Angola</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto font-light leading-relaxed animate-fade-in">
+            Conecte-se com seus clientes através de SMS profissional. 
+            Plataforma completa com múltiplos gateways e relatórios avançados.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center animate-slide-up">
+            <Button size="lg" className="text-base px-10 py-7 rounded-3xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              Começar Agora
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button variant="outline" size="lg" className="text-base px-10 py-7 rounded-3xl transition-all duration-300 hover:scale-105">
+              Ver Demo
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Modern Features Section */}
-      <section id="features" className="section-modern">
-        <div className="container-futuristic">
+      {/* Features Section */}
+      <section id="features" className="py-24 px-6 bg-muted/20">
+        <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-20">
-            <h2 className="text-h2 mb-6 animate-slide-up">
-              Funcionalidades Avançadas
+            <h2 className="text-4xl md:text-5xl font-light mb-6 tracking-tight">
+              Por que escolher nossa plataforma?
             </h2>
-            <p className="text-body text-muted-foreground max-w-xl mx-auto animate-slide-up">
-              Tudo que você precisa para campanhas de SMS marketing eficientes.
+            <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">
+              Tecnologia avançada para suas campanhas de SMS
             </p>
           </div>
-
-          <div className="grid-responsive">
-            {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className="card-modern p-8 hover-lift group animate-scale-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <feature.icon className="h-6 w-6" />
-                </div>
-                <h3 className="text-h3 mb-4">{feature.title}</h3>
-                <p className="text-body text-muted-foreground">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="section-padding">
-        <div className="container-custom">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              ⭐ O que nossos <span className="text-gradient">clientes dizem</span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Empresas angolanas que confiam na nossa plataforma para crescer seus negócios
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="card-elegant bg-gradient-to-br from-card to-primary/5 hover:shadow-lg transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-center space-x-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    ))}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: <MessageSquare className="h-8 w-8" />,
+                title: "Múltiplos Gateways",
+                description: "BulkSMS e BulkGate integrados para máxima confiabilidade"
+              },
+              {
+                icon: <BarChart3 className="h-8 w-8" />,
+                title: "Relatórios Avançados",
+                description: "Analytics completos sobre suas campanhas e resultados"
+              },
+              {
+                icon: <Shield className="h-8 w-8" />,
+                title: "Segurança Total",
+                description: "Dados protegidos com criptografia de ponta a ponta"
+              },
+              {
+                icon: <Users className="h-8 w-8" />,
+                title: "Gestão de Contactos",
+                description: "Organize e segmente sua base de clientes facilmente"
+              },
+              {
+                icon: <Clock className="h-8 w-8" />,
+                title: "Envio Agendado",
+                description: "Programe suas campanhas para o momento ideal"
+              },
+              {
+                icon: <Zap className="h-8 w-8" />,
+                title: "API Rápida",
+                description: "Integração simples e rápida com seus sistemas"
+              }
+            ].map((feature, index) => (
+              <Card key={index} className="border-0 shadow-minimal hover:shadow-hover transition-all duration-300 hover:scale-105 rounded-3xl group">
+                <CardHeader className="text-center pb-4">
+                  <div className="mx-auto mb-6 p-4 bg-primary/10 rounded-3xl w-fit group-hover:bg-primary/20 transition-all duration-300">
+                    {feature.icon}
                   </div>
-                  <CardDescription className="text-base italic leading-relaxed">
-                    "{testimonial.text}"
-                  </CardDescription>
+                  <CardTitle className="text-xl font-normal">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-12 w-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">{testimonial.name.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold">{testimonial.name}</p>
-                      <p className="text-sm text-muted-foreground">{testimonial.company}</p>
-                    </div>
-                  </div>
+                <CardContent className="text-center">
+                  <CardDescription className="text-base leading-relaxed">
+                    {feature.description}
+                  </CardDescription>
                 </CardContent>
               </Card>
             ))}
@@ -145,261 +129,113 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Modern Pricing Section */}
-      <section id="pricing" className="section-modern bg-muted/20">
-        <div className="container-futuristic">
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 px-6">
+        <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-20">
-            <h2 className="text-h2 mb-6 animate-slide-up">
-              Preços Simples e Transparentes
+            <h2 className="text-4xl md:text-5xl font-light mb-6 tracking-tight">
+              Preços Transparentes
             </h2>
-            <p className="text-body text-muted-foreground max-w-xl mx-auto animate-slide-up">
-              Sem mensalidade. Pague apenas pelos SMS que usar.
+            <p className="text-muted-foreground text-xl leading-relaxed">
+              Sem taxas ocultas. Pague apenas pelo que usar.
             </p>
           </div>
-
-          <div className="grid-responsive max-w-4xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <div 
-                key={index} 
-                className={`card-modern p-8 text-center hover-lift relative ${plan.popular ? 'border-primary' : ''}`}
-              >
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                name: "Starter",
+                price: "15.000",
+                description: "Perfeito para começar",
+                features: ["1.000 SMS", "1 Gateway", "Suporte básico", "Relatórios simples"]
+              },
+              {
+                name: "Professional",
+                price: "45.000",
+                description: "Para empresas em crescimento",
+                features: ["5.000 SMS", "2 Gateways", "Suporte prioritário", "Relatórios avançados", "API Access"],
+                popular: true
+              },
+              {
+                name: "Enterprise",
+                price: "Custom",
+                description: "Para grandes volumes",
+                features: ["SMS ilimitados", "Todos os Gateways", "Suporte 24/7", "Relatórios personalizados", "API Premium", "Manager dedicado"]
+              }
+            ].map((plan, index) => (
+              <Card key={index} className={`relative border-2 transition-all duration-300 hover:shadow-hover hover:scale-105 rounded-3xl ${
+                plan.popular ? 'border-primary scale-105' : 'border-border'
+              }`}>
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground text-xs px-3 py-1 rounded-full">
-                      Mais Popular
-                    </span>
-                  </div>
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-4 py-1">
+                    Mais Popular
+                  </Badge>
                 )}
-                <h3 className="text-h3 mb-4">{plan.name}</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-light">{plan.price}</span>
-                  <span className="text-body text-muted-foreground ml-1">Kz</span>
-                </div>
-                <p className="text-body text-muted-foreground mb-8">
-                  {plan.sms} SMS incluídos
-                </p>
-                <ul className="space-y-3 mb-8 text-left">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start text-sm">
-                      <Check className="h-4 w-4 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/register" className="w-full block">
+                <CardHeader className="text-center pb-6">
+                  <CardTitle className="text-2xl font-light">{plan.name}</CardTitle>
+                  <div className="mt-6">
+                    <span className="text-5xl font-light">{plan.price}</span>
+                    {plan.price !== "Custom" && <span className="text-muted-foreground"> AOA</span>}
+                  </div>
+                  <CardDescription className="mt-3 text-base">{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <ul className="space-y-4 mb-8">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-primary rounded-full mr-4"></div>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                   <Button 
-                    className={`w-full ${plan.popular ? 'btn-minimal' : 'btn-ghost'} hover-scale`}
+                    className={`w-full rounded-3xl transition-all duration-300 hover:scale-105 ${plan.popular ? '' : 'variant-outline'}`}
+                    variant={plan.popular ? 'default' : 'outline'}
+                    size="lg"
                   >
-                    Escolher Plano
+                    {plan.price === "Custom" ? "Contactar" : "Escolher Plano"}
                   </Button>
-                </Link>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Modern Stats Section */}
-      <section className="section-modern">
-        <div className="container-futuristic">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl font-light mb-2">{stat.value}</div>
-                <div className="text-body text-muted-foreground">{stat.label}</div>
+      {/* Stats Section */}
+      <section className="py-24 px-6 bg-muted/20">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid md:grid-cols-4 gap-12 text-center">
+            {[
+              { number: "50K+", label: "SMS Enviados" },
+              { number: "500+", label: "Clientes Ativos" },
+              { number: "99.9%", label: "Uptime" },
+              { number: "24/7", label: "Suporte" }
+            ].map((stat, index) => (
+              <div key={index} className="group cursor-default">
+                <div className="text-5xl md:text-6xl font-light text-primary mb-4 transition-all duration-300 group-hover:scale-110">{stat.number}</div>
+                <div className="text-muted-foreground text-lg">{stat.label}</div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="hero-gradient section-padding">
-        <div className="container-custom text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Pronto para Começar?
-          </h2>
-          <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">
-            Junte-se a centenas de empresas angolanas que já confiam na nossa plataforma para suas campanhas de SMS.
-          </p>
-          <Link to="/register">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6">
-              Criar Conta Grátis
-            </Button>
-          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-12">
-        <div className="container-custom">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div className="col-span-2">
-              <div className="flex items-center mb-4">
-                <BrandAwareLogo textClassName="font-bold text-lg" />
-              </div>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional.
-              </p>
+      <footer className="py-16 px-6 border-t border-border">
+        <div className="container mx-auto text-center max-w-4xl">
+          <div className="flex items-center justify-center space-x-3 mb-6">
+            <div className="p-2 rounded-2xl bg-primary/10">
+              <MessageSquare className="h-5 w-5 text-primary" />
             </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Suporte</h4>
-              <div className="space-y-2">
-                <a 
-                  href="https://wa.me/244933493788" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  📞 Contato WhatsApp
-                </a>
-                <a 
-                  href="https://wa.me/244933493788?text=Olá! Preciso de ajuda com a plataforma SMS Marketing Angola." 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  🎯 Central de Ajuda
-                </a>
-                <a 
-                  href="mailto:suporte@smsmarketing.ao" 
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  ✉️ Email Suporte
-                </a>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Links Rápidos</h4>
-              <div className="space-y-2">
-                <Link to="/register" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                  🚀 Criar Conta
-                </Link>
-                <Link to="/login" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                  🔐 Fazer Login
-                </Link>
-                <a href="#pricing" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                  💰 Ver Preços
-                </a>
-              </div>
-            </div>
+            <span className="font-semibold text-lg">SMS Marketing Angola</span>
           </div>
-          
-          <div className="border-t border-border pt-8 text-center">
-            <div className="text-sm text-muted-foreground">
-              © 2024 SMS Marketing Angola. Todos os direitos reservados. | 
-              <a href="mailto:legal@smsmarketing.ao" className="hover:text-primary ml-1">Termos de Uso</a> | 
-              <a href="mailto:legal@smsmarketing.ao" className="hover:text-primary ml-1">Política de Privacidade</a>
-            </div>
-          </div>
+          <p className="text-muted-foreground">
+            © 2024 SMS Marketing Angola. Todos os direitos reservados.
+          </p>
         </div>
       </footer>
     </div>
   );
 };
-
-const features = [
-  {
-    icon: Zap,
-    title: "Envio em Massa",
-    description: "Envie para milhares de contatos simultaneamente com alta taxa de entrega garantida e velocidade impressionante."
-  },
-  {
-    icon: MessageCircle,
-    title: "Personalização Avançada",
-    description: "Mensagens personalizadas com nome e dados do cliente para maior engajamento e conversão."
-  },
-  {
-    icon: Calendar,
-    title: "Agendamento Inteligente",
-    description: "Programe campanhas para o melhor momento e configure envios recorrentes automatizados."
-  },
-  {
-    icon: TrendingUp,
-    title: "Relatórios em Tempo Real",
-    description: "Acompanhe entregas, taxa de sucesso e engajamento com dashboards interativos e insights poderosos."
-  },
-  {
-    icon: Settings,
-    title: "API Completa",
-    description: "Integre facilmente com seus sistemas existentes usando nossa API REST robusta e bem documentada."
-  },
-  {
-    icon: Shield,
-    title: "Suporte Premium",
-    description: "Atendimento especializado em português com conhecimento profundo do mercado angolano."
-  }
-];
-
-const testimonials = [
-  {
-    name: "Carlos Mendes",
-    company: "Tech Solutions Luanda",
-    text: "Aumentamos nossa taxa de conversão em 300% após começar a usar a plataforma. O suporte é excepcional!"
-  },
-  {
-    name: "Ana Silva",
-    company: "Comercial Benguela",
-    text: "Interface muito intuitiva e preços justos. Conseguimos alcançar mais clientes com o mesmo orçamento."
-  },
-  {
-    name: "João Santos",
-    company: "Startup Huambo",
-    text: "A API é fantástica! Integramos em 2 dias e já estamos vendo resultados incríveis nas nossas campanhas."
-  }
-];
-
-const pricingPlans = [
-  {
-    name: "Básico",
-    price: "10.000",
-    sms: "100",
-    popular: false,
-    features: [
-      "100 SMS incluídos",
-      "Dashboard básico",
-      "Suporte por email",
-      "Validade: 90 dias",
-      "Relatórios básicos"
-    ]
-  },
-  {
-    name: "Intermediário",
-    price: "38.000",
-    sms: "400",
-    popular: true,
-    features: [
-      "400 SMS incluídos",
-      "Suporte prioritário",
-      "Relatórios avançados",
-      "Agendamento de campanhas",
-      "Validade: 120 dias",
-      "API básica"
-    ]
-  },
-  {
-    name: "Avançado",
-    price: "90.000",
-    sms: "1.000",
-    popular: false,
-    features: [
-      "1.000 SMS incluídos",
-      "API completa",
-      "Webhooks personalizados",
-      "Suporte por telefone",
-      "Validade: 180 dias",
-      "Relatórios premium"
-    ]
-  }
-];
-
-const stats = [
-  { value: "99.9%", label: "Uptime Garantido" },
-  { value: "95%+", label: "Taxa de Entrega" },
-  { value: "500+", label: "Empresas Confiam" },
-  { value: "24/7", label: "Monitoramento" }
-];
 
 export default Landing;
