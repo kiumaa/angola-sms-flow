@@ -205,43 +205,39 @@ export default function AdminSMSConfiguration() {
 
   return (
     <div className="space-y-6">
-      <SMSConfigurationHeader 
-        config={config}
-        onRefresh={refreshStatuses}
-        refreshing={refreshing}
-      />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Configuração SMS</h2>
+            <p className="text-muted-foreground">
+              Configuração do Africa's Talking como provedor SMS exclusivo
+            </p>
+          </div>
+          <Button
+            onClick={refreshStatuses}
+            disabled={refreshing}
+            variant="outline"
+            className="flex items-center space-x-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>Atualizar Status</span>
+          </Button>
+        </div>
 
-      <Tabs defaultValue="providers" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="providers" className="flex items-center space-x-2">
-            <MessageSquare className="h-4 w-4" />
-            <span>Provedores SMS</span>
-          </TabsTrigger>
-          <TabsTrigger value="senders" className="flex items-center space-x-2">
-            <Send className="h-4 w-4" />
-            <span>Sender IDs & Opções</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="providers" className="mt-6">
-          <AfricasTalkingConfigSection 
-            config={{
-              active: true,
-              username: 'kiumaf',
-              defaultSender: 'SHORTCODE',
-              status: 'disconnected'
-            }}
-            onSave={async (config) => {
-              console.log('Saving Africa\'s Talking config:', config);
-            }}
-            saving={saving}
-          />
-        </TabsContent>
-
-        <TabsContent value="senders" className="mt-6">
-          <SenderIDsSection />
-        </TabsContent>
-      </Tabs>
+        <AfricasTalkingConfigSection 
+          config={{
+            active: true,
+            username: 'kiumaf',
+            defaultSender: 'SHORTCODE',
+            status: 'disconnected'
+          }}
+          onSave={async (config) => {
+            console.log('Saving Africa\'s Talking config:', config);
+            await refreshStatuses();
+          }}
+          saving={saving}
+        />
+      </div>
     </div>
   );
 }
