@@ -229,11 +229,29 @@ export default function AdminSMSConfiguration() {
             active: true,
             username: 'kiumaf',
             defaultSender: 'SHORTCODE',
-            status: 'disconnected'
+            status: 'connected'
           }}
           onSave={async (config) => {
             console.log('Saving Africa\'s Talking config:', config);
+            // Atualizar gateway no banco como ativo
+            await supabase
+              .from('sms_gateways')
+              .upsert({
+                name: 'africastalking',
+                display_name: 'Africa\'s Talking',
+                api_endpoint: 'https://api.africastalking.com/version1',
+                auth_type: 'api_key',
+                is_active: config.active,
+                is_primary: true,
+                updated_at: new Date().toISOString()
+              });
+            
             await refreshStatuses();
+            
+            toast({
+              title: "Configuração Salva",
+              description: "Africa's Talking configurado com sucesso"
+            });
           }}
           saving={saving}
         />
