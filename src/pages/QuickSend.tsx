@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Send, Zap, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,27 +172,26 @@ const QuickSend = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 max-w-4xl">
-        {/* Header */}
-        <div className="glass-card p-6 bg-gradient-hero relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-          <div className="flex items-center gap-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-8 max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center space-y-4">
             <Button 
               variant="outline" 
               onClick={() => navigate("/dashboard")} 
-              className="glass-card border-glass-border hover:scale-105 transition-all duration-300"
+              className="mb-6 glass-card border-glass-border hover:scale-105 transition-all duration-300"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar ao Dashboard
             </Button>
             <div>
-              <h1 className="text-3xl font-light gradient-text">Envio Rápido</h1>
-              <p className="text-muted-foreground">
-                Envie SMS rapidamente para um número específico
+              <h1 className="text-5xl font-light gradient-text mb-2">Envio Rápido SMS</h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Envie mensagens SMS de forma rápida e direta para qualquer número
               </p>
             </div>
           </div>
-        </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Form */}
@@ -338,9 +337,10 @@ const QuickSend = () => {
               </CardContent>
             </Card>
           </div>
+          </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
