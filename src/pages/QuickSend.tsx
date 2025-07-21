@@ -12,7 +12,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-
 const QuickSend = () => {
   const [formData, setFormData] = useState({
     senderId: "",
@@ -23,61 +22,55 @@ const QuickSend = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user } = useAuth();
-
+  const {
+    toast
+  } = useToast();
+  const {
+    user
+  } = useAuth();
   const maxLength = 160;
   const smsCount = Math.ceil(messageLength / maxLength);
-
   useEffect(() => {
     fetchSenderIds();
   }, [user?.id]);
-
   const fetchSenderIds = async () => {
     if (!user?.id) return;
-    
     try {
-      const { data, error } = await supabase
-        .from('sender_ids')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'approved')
-        .order('is_default', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('sender_ids').select('*').eq('user_id', user.id).eq('status', 'approved').order('is_default', {
+        ascending: false
+      });
       if (error) throw error;
       setSenderIds(data || []);
-      
+
       // Set default sender ID if exists
       const defaultSender = data?.find(s => s.is_default);
       if (defaultSender) {
-        setFormData(prev => ({ ...prev, senderId: defaultSender.sender_id }));
+        setFormData(prev => ({
+          ...prev,
+          senderId: defaultSender.sender_id
+        }));
       }
     } catch (error) {
       console.error('Error fetching sender IDs:', error);
     }
   };
-
   const validateAngolanPhone = (phone: string): boolean => {
     const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    const patterns = [
-      /^\+244[9][0-9]{8}$/,
-      /^244[9][0-9]{8}$/,
-      /^[9][0-9]{8}$/,
-    ];
+    const patterns = [/^\+244[9][0-9]{8}$/, /^244[9][0-9]{8}$/, /^[9][0-9]{8}$/];
     return patterns.some(pattern => pattern.test(cleanPhone));
   };
-
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
     if (field === 'message') {
       setMessageLength(value.length);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -92,7 +85,6 @@ const QuickSend = () => {
       setIsLoading(false);
       return;
     }
-
     if (!formData.phoneNumber.trim()) {
       toast({
         title: "Número obrigatório",
@@ -102,7 +94,6 @@ const QuickSend = () => {
       setIsLoading(false);
       return;
     }
-
     if (!validateAngolanPhone(formData.phoneNumber)) {
       toast({
         title: "Número inválido",
@@ -112,7 +103,6 @@ const QuickSend = () => {
       setIsLoading(false);
       return;
     }
-
     if (!formData.message.trim()) {
       toast({
         title: "Mensagem obrigatória",
@@ -122,11 +112,11 @@ const QuickSend = () => {
       setIsLoading(false);
       return;
     }
-
     try {
       // Send SMS using Supabase edge function
-      const { data: authData } = await supabase.auth.getSession();
-      
+      const {
+        data: authData
+      } = await supabase.auth.getSession();
       const response = await fetch('https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/send-sms', {
         method: 'POST',
         headers: {
@@ -139,15 +129,13 @@ const QuickSend = () => {
           isTest: false
         })
       });
-
       const result = await response.json();
-
       if (result.success) {
         toast({
           title: "SMS enviado com sucesso!",
-          description: `Mensagem enviada para ${formData.phoneNumber}`,
+          description: `Mensagem enviada para ${formData.phoneNumber}`
         });
-        
+
         // Reset form
         setFormData(prev => ({
           ...prev,
@@ -158,7 +146,6 @@ const QuickSend = () => {
       } else {
         throw new Error(result.error || 'Falha no envio');
       }
-
     } catch (error: any) {
       console.error('SMS send error:', error);
       toast({
@@ -170,19 +157,13 @@ const QuickSend = () => {
       setIsLoading(false);
     }
   };
-
-  return (
-    <DashboardLayout>
-      <div className="space-y-8">
+  return <DashboardLayout>
+      <div className="space-y-8 max-w-4xl">
         {/* Header */}
         <div className="glass-card p-6 bg-gradient-hero relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
           <div className="flex items-center gap-4 relative">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/dashboard")} 
-              className="glass-card border-glass-border hover:scale-105 transition-all duration-300"
-            >
+            <Button variant="outline" onClick={() => navigate("/dashboard")} className="glass-card border-glass-border hover:scale-105 transition-all duration-300">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -218,41 +199,25 @@ const QuickSend = () => {
                         <SelectValue placeholder="Selecione um Sender ID" />
                       </SelectTrigger>
                       <SelectContent>
-                        {senderIds.length === 0 ? (
-                          <div className="p-2 text-sm text-muted-foreground">
+                        {senderIds.length === 0 ? <div className="p-2 text-sm text-muted-foreground">
                             Nenhum Sender ID aprovado disponível
-                          </div>
-                        ) : (
-                          senderIds.map((sender: any) => (
-                            <SelectItem key={sender.id} value={sender.sender_id}>
+                          </div> : senderIds.map((sender: any) => <SelectItem key={sender.id} value={sender.sender_id}>
                               <div className="flex items-center gap-2">
                                 {sender.sender_id}
-                                {sender.is_default && (
-                                  <Badge variant="secondary" className="text-xs">Padrão</Badge>
-                                )}
+                                {sender.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
                               </div>
-                            </SelectItem>
-                          ))
-                        )}
+                            </SelectItem>)}
                       </SelectContent>
                     </Select>
-                    {senderIds.length === 0 && (
-                      <p className="text-sm text-orange-500">
+                    {senderIds.length === 0 && <p className="text-sm text-orange-500">
                         Você precisa ter pelo menos um Sender ID aprovado. <a href="/sender-ids" className="text-primary hover:underline">Solicitar Sender ID</a>
-                      </p>
-                    )}
+                      </p>}
                   </div>
 
                   {/* Phone Number */}
                   <div className="space-y-2">
                     <Label htmlFor="phoneNumber" className="text-base">Número do Destinatário</Label>
-                    <Input 
-                      id="phoneNumber" 
-                      placeholder="+244 912 345 678" 
-                      value={formData.phoneNumber} 
-                      onChange={e => handleInputChange('phoneNumber', e.target.value)} 
-                      className="h-12 rounded-2xl glass-card border-glass-border bg-slate-50" 
-                    />
+                    <Input id="phoneNumber" placeholder="+244 912 345 678" value={formData.phoneNumber} onChange={e => handleInputChange('phoneNumber', e.target.value)} className="h-12 rounded-2xl glass-card border-glass-border bg-slate-50" />
                     <div className="text-sm text-muted-foreground">
                       Formatos aceitos: +244912345678, 912345678, 244912345678
                     </div>
@@ -261,14 +226,7 @@ const QuickSend = () => {
                   {/* Message */}
                   <div className="space-y-2">
                     <Label htmlFor="message" className="text-base">Mensagem</Label>
-                    <Textarea 
-                      id="message" 
-                      placeholder="Digite sua mensagem aqui..." 
-                      value={formData.message} 
-                      onChange={e => handleInputChange('message', e.target.value)} 
-                      maxLength={160} 
-                      className="min-h-32 rounded-2xl glass-card border-glass-border resize-none bg-slate-50" 
-                    />
+                    <Textarea id="message" placeholder="Digite sua mensagem aqui..." value={formData.message} onChange={e => handleInputChange('message', e.target.value)} maxLength={160} className="min-h-32 rounded-2xl glass-card border-glass-border resize-none bg-slate-50" />
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
                         Mensagem direta
@@ -280,11 +238,7 @@ const QuickSend = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <Button 
-                    type="submit" 
-                    className="w-full button-futuristic text-lg py-6" 
-                    disabled={isLoading || senderIds.length === 0}
-                  >
+                  <Button type="submit" className="w-full button-futuristic text-lg py-6" disabled={isLoading || senderIds.length === 0}>
                     {isLoading ? "Enviando..." : <>
                       <Send className="h-5 w-5 mr-2" />
                       Enviar SMS
@@ -304,22 +258,20 @@ const QuickSend = () => {
                 <CardDescription>Como sua mensagem aparecerá no celular</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted/20 rounded-2xl p-4 border-l-4 border-primary">
+                <div className="rounded-2xl p-4 border-l-4 border-primary bg-gray-200">
                   <div className="text-xs text-muted-foreground mb-1">De: {formData.senderId || "SENDER_ID"}</div>
                   <div className="text-xs text-muted-foreground mb-2">Para: {formData.phoneNumber || "+244 XXX XXX XXX"}</div>
                   <div className="font-mono text-sm">
                     {formData.message || "Digite sua mensagem para ver o preview..."}
                   </div>
-                  {messageLength > 0 && (
-                    <div className="mt-3 flex justify-between text-xs">
+                  {messageLength > 0 && <div className="mt-3 flex justify-between text-xs">
                       <span className="text-muted-foreground">
                         {smsCount} SMS • {messageLength} caracteres
                       </span>
                       <Badge variant={smsCount > 1 ? "destructive" : "default"}>
                         {smsCount > 1 ? `${smsCount}x créditos` : "1 crédito"}
                       </Badge>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </CardContent>
             </Card>
@@ -340,8 +292,6 @@ const QuickSend = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default QuickSend;
