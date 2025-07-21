@@ -1,4 +1,6 @@
+
 import { Suspense, lazy } from "react";
+import MessageSendingLoader from "./MessageSendingLoader";
 
 // Lazy load heavy components for better performance
 export const LazyAdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
@@ -22,15 +24,8 @@ export const LazyCheckout = lazy(() => import("@/pages/Checkout"));
 export const LazyTransactions = lazy(() => import("@/pages/Transactions"));
 export const LazySenderIDs = lazy(() => import("@/pages/SenderIDs"));
 
-// Loading fallback component
-export const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-      <p className="text-muted-foreground">Carregando...</p>
-    </div>
-  </div>
-);
+// Enhanced loading component with SMS theme
+export const PageLoader = () => <MessageSendingLoader />;
 
 // Wrapper for lazy components with suspense
 export const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
