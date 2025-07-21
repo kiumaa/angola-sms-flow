@@ -108,7 +108,6 @@ const Dashboard = () => {
       <div className="space-y-8">
         {/* Revolutionary Welcome Section */}
         <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
           <div className="flex items-center justify-between relative">
             <div>
               <h1 className="text-5xl font-light mb-4 gradient-text">
