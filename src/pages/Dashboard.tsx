@@ -4,13 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Mail, Users, Calendar, Settings, Plus, TrendingUp, Zap, BarChart3, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
 const Dashboard = () => {
   const [userEmail, setUserEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [smsCredits, setSmsCredits] = useState(0);
   const navigate = useNavigate();
-
   useEffect(() => {
     // Check authentication
     const isAuthenticated = localStorage.getItem("isAuthenticated");
@@ -24,96 +22,78 @@ const Dashboard = () => {
     setCompanyName(localStorage.getItem("companyName") || "");
     setSmsCredits(parseInt(localStorage.getItem("smsCredits") || "0"));
   }, [navigate]);
-
-  const stats = [
-    {
-      title: "Créditos Disponíveis",
-      value: smsCredits,
-      description: "SMS prontos para envio",
-      icon: Zap,
-      gradient: "from-blue-500 to-purple-600",
-      trend: "+5% vs mês anterior"
-    },
-    {
-      title: "Campanhas Enviadas",
-      value: "12",
-      description: "Este mês",
-      icon: MessageSquare,
-      gradient: "from-green-500 to-emerald-600",
-      trend: "+25% vs mês anterior"
-    },
-    {
-      title: "Contatos Ativos",
-      value: "1.2K",
-      description: "Total na base",
-      icon: Users,
-      gradient: "from-orange-500 to-red-600",
-      trend: "+8% vs mês anterior"
-    },
-    {
-      title: "Taxa de Entrega",
-      value: "98.5%",
-      description: "Média geral",
-      icon: TrendingUp,
-      gradient: "from-purple-500 to-indigo-600",
-      trend: "+2% vs mês anterior"
-    }
-  ];
-
-  const quickActions = [
-    {
-      title: "Enviar SMS",
-      description: "Criar e enviar nova campanha",
-      icon: Mail,
-      action: () => navigate("/campaigns/new"),
-      primary: true,
-      gradient: "from-blue-500 to-purple-600"
-    },
-    {
-      title: "Envio Rápido",
-      description: "SMS direto para números específicos",
-      icon: Zap,
-      action: () => navigate("/quick-send"),
-      primary: true,
-      gradient: "from-yellow-500 to-orange-600"
-    },
-    {
-      title: "Carregar Créditos",
-      description: "Comprar mais SMS",
-      icon: Plus,
-      action: () => navigate("/credits"),
-      primary: false,
-      gradient: "from-green-500 to-emerald-600"
-    },
-    {
-      title: "Importar Contatos",
-      description: "Adicionar nova lista",
-      icon: Users,
-      action: () => navigate("/contacts"),
-      primary: false,
-      gradient: "from-orange-500 to-red-600"
-    },
-    {
-      title: "Ver Relatórios",
-      description: "Analisar campanhas",
-      icon: BarChart3,
-      action: () => navigate("/reports"),
-      primary: false,
-      gradient: "from-indigo-500 to-blue-600"
-    }
-  ];
-
-  return (
-    <DashboardLayout>
+  const stats = [{
+    title: "Créditos Disponíveis",
+    value: smsCredits,
+    description: "SMS prontos para envio",
+    icon: Zap,
+    gradient: "from-blue-500 to-purple-600",
+    trend: "+5% vs mês anterior"
+  }, {
+    title: "Campanhas Enviadas",
+    value: "12",
+    description: "Este mês",
+    icon: MessageSquare,
+    gradient: "from-green-500 to-emerald-600",
+    trend: "+25% vs mês anterior"
+  }, {
+    title: "Contatos Ativos",
+    value: "1.2K",
+    description: "Total na base",
+    icon: Users,
+    gradient: "from-orange-500 to-red-600",
+    trend: "+8% vs mês anterior"
+  }, {
+    title: "Taxa de Entrega",
+    value: "98.5%",
+    description: "Média geral",
+    icon: TrendingUp,
+    gradient: "from-purple-500 to-indigo-600",
+    trend: "+2% vs mês anterior"
+  }];
+  const quickActions = [{
+    title: "Enviar SMS",
+    description: "Criar e enviar nova campanha",
+    icon: Mail,
+    action: () => navigate("/campaigns/new"),
+    primary: true,
+    gradient: "from-blue-500 to-purple-600"
+  }, {
+    title: "Envio Rápido",
+    description: "SMS direto para números específicos",
+    icon: Zap,
+    action: () => navigate("/quick-send"),
+    primary: true,
+    gradient: "from-yellow-500 to-orange-600"
+  }, {
+    title: "Carregar Créditos",
+    description: "Comprar mais SMS",
+    icon: Plus,
+    action: () => navigate("/credits"),
+    primary: false,
+    gradient: "from-green-500 to-emerald-600"
+  }, {
+    title: "Importar Contatos",
+    description: "Adicionar nova lista",
+    icon: Users,
+    action: () => navigate("/contacts"),
+    primary: false,
+    gradient: "from-orange-500 to-red-600"
+  }, {
+    title: "Ver Relatórios",
+    description: "Analisar campanhas",
+    icon: BarChart3,
+    action: () => navigate("/reports"),
+    primary: false,
+    gradient: "from-indigo-500 to-blue-600"
+  }];
+  return <DashboardLayout>
       <div className="space-y-8">
         {/* Enhanced Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <Card 
-              key={index} 
-              className="card-futuristic animate-slide-up-stagger cursor-default relative overflow-hidden"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
+          {stats.map((stat, index) => <Card key={index} className="card-futuristic animate-slide-up-stagger cursor-default relative overflow-hidden" style={{
+          animationDelay: `${index * 0.1}s`
+        }}>
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`}></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -133,23 +113,16 @@ const Dashboard = () => {
                   {stat.trend}
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
 
         {/* Revolutionary Quick Actions */}
         <div>
-          <h2 className="text-3xl font-light mb-8 gradient-text">🚀 Ações Rápidas</h2>
+          <h2 className="mb-8 gradient-text text-2xl font-medium">Ações Rápidas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {quickActions.map((action, index) => (
-              <Card 
-                key={index} 
-                className={`card-futuristic cursor-pointer group relative overflow-hidden animate-slide-up-stagger ${
-                  action.primary ? 'ring-2 ring-primary shadow-glow' : ''
-                }`}
-                style={{ animationDelay: `${index * 0.1 + 0.2}s` }}
-                onClick={action.action}
-              >
+            {quickActions.map((action, index) => <Card key={index} className={`card-futuristic cursor-pointer group relative overflow-hidden animate-slide-up-stagger ${action.primary ? 'ring-2 ring-primary shadow-glow' : ''}`} style={{
+            animationDelay: `${index * 0.1 + 0.2}s`
+          }} onClick={action.action}>
                 <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-10 transition-all duration-300`}></div>
                 <CardHeader className="text-center relative">
                   <div className={`h-20 w-20 rounded-3xl bg-gradient-to-br ${action.gradient} shadow-glow flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300`}>
@@ -158,14 +131,12 @@ const Dashboard = () => {
                   <CardTitle className="text-xl font-medium gradient-text">{action.title}</CardTitle>
                   <CardDescription className="text-base leading-relaxed">{action.description}</CardDescription>
                 </CardHeader>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
 
         {/* Welcome Bonus for New Users */}
-        {smsCredits === 50 && (
-          <Card className="card-futuristic border-primary bg-gradient-primary/5 relative overflow-hidden">
+        {smsCredits === 50 && <Card className="card-futuristic border-primary bg-gradient-primary/5 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
             <CardHeader className="relative">
               <CardTitle className="text-3xl gradient-text flex items-center">
@@ -178,28 +149,20 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="relative">
               <div className="flex gap-8">
-                <Button 
-                  className="button-futuristic text-xl px-12 py-8 rounded-3xl" 
-                  onClick={() => navigate("/campaigns/new")}
-                >
+                <Button className="button-futuristic text-xl px-12 py-8 rounded-3xl" onClick={() => navigate("/campaigns/new")}>
                   Enviar Primeira Campanha
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="glass-card border-glass-border text-xl px-12 py-8 rounded-3xl hover:scale-105 transition-all duration-300" 
-                  onClick={() => navigate("/contacts")}
-                >
+                <Button variant="outline" className="glass-card border-glass-border text-xl px-12 py-8 rounded-3xl hover:scale-105 transition-all duration-300" onClick={() => navigate("/contacts")}>
                   Importar Contatos
                 </Button>
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
         {/* Advanced Recent Activity */}
         <Card className="card-futuristic">
           <CardHeader>
-            <CardTitle className="text-3xl font-light gradient-text">📊 Atividade Recente</CardTitle>
+            <CardTitle className="gradient-text text-2xl font-medium">Atividade Recente</CardTitle>
             <CardDescription className="text-xl">
               Suas últimas ações na plataforma com analytics em tempo real
             </CardDescription>
@@ -215,10 +178,7 @@ const Dashboard = () => {
                 <br />
                 Você terá acesso a métricas avançadas, gráficos interativos e insights poderosos.
               </p>
-              <Button 
-                className="button-futuristic text-lg px-10 py-6 rounded-3xl" 
-                onClick={() => navigate("/campaigns/new")}
-              >
+              <Button className="button-futuristic text-lg px-10 py-6 rounded-3xl" onClick={() => navigate("/campaigns/new")}>
                 Criar Primeira Campanha
               </Button>
             </div>
@@ -270,8 +230,6 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Dashboard;
