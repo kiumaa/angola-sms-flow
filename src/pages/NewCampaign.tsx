@@ -10,6 +10,8 @@ import { ArrowLeft, Send, Calendar, Users, Zap, Clock, MessageSquare } from "luc
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 const NewCampaign = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -21,16 +23,45 @@ const NewCampaign = () => {
     recipientType: "list",
     // list, individual
     contactList: "",
-    phoneNumbers: ""
+    phoneNumbers: "",
+    senderId: ""
   });
+  const [senderIds, setSenderIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const maxLength = 160;
   const smsCount = Math.ceil(messageLength / maxLength);
+
+  useEffect(() => {
+    fetchSenderIds();
+  }, [user?.id]);
+
+  const fetchSenderIds = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('sender_ids')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'approved')
+        .order('is_default', { ascending: false });
+
+      if (error) throw error;
+      setSenderIds(data || []);
+      
+      // Set default sender ID if exists
+      const defaultSender = data?.find(s => s.is_default);
+      if (defaultSender) {
+        setFormData(prev => ({ ...prev, senderId: defaultSender.sender_id }));
+      }
+    } catch (error) {
+      console.error('Error fetching sender IDs:', error);
+    }
+  };
 
   // Helper function to count individual phone numbers
   const getIndividualPhoneCount = () => {
@@ -85,6 +116,16 @@ const NewCampaign = () => {
       toast({
         title: "Números de telefone obrigatórios",
         description: "Insira pelo menos um número de telefone válido.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.senderId) {
+      toast({
+        title: "Sender ID obrigatório",
+        description: "Selecione um Sender ID para enviar a campanha.",
         variant: "destructive"
       });
       setIsLoading(false);
@@ -197,6 +238,39 @@ const NewCampaign = () => {
                         Formatos aceitos: +244912345678, 912345678, 244912345678
                       </div>
                     </div>}
+
+                  {/* Sender ID Selection */}
+                  <div className="space-y-2">
+                    <Label className="text-base">Sender ID</Label>
+                    <Select onValueChange={value => handleInputChange('senderId', value)} value={formData.senderId}>
+                      <SelectTrigger className="h-12 rounded-2xl glass-card border-glass-border">
+                        <SelectValue placeholder="Selecione um Sender ID" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {senderIds.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground">
+                            Nenhum Sender ID aprovado disponível
+                          </div>
+                        ) : (
+                          senderIds.map((sender: any) => (
+                            <SelectItem key={sender.id} value={sender.sender_id}>
+                              <div className="flex items-center gap-2">
+                                {sender.sender_id}
+                                {sender.is_default && (
+                                  <Badge variant="secondary" className="text-xs">Padrão</Badge>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {senderIds.length === 0 && (
+                      <p className="text-sm text-orange-500">
+                        Você precisa ter pelo menos um Sender ID aprovado. <a href="/sender-ids" className="text-primary hover:underline">Solicitar Sender ID</a>
+                      </p>
+                    )}
+                  </div>
 
                   {/* Message */}
                   <div className="space-y-2">
@@ -314,6 +388,10 @@ const NewCampaign = () => {
                         {!formData.contactList && "—"}
                       </> : `${getIndividualPhoneCount()} números individuais`}
                   </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sender ID:</span>
+                  <span className="font-medium">{formData.senderId || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Créditos:</span>

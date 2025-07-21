@@ -18,6 +18,7 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Campaigns = lazy(() => import("./pages/Campaigns"));
 const NewCampaign = lazy(() => import("./pages/NewCampaign"));
+const QuickSend = lazy(() => import("./pages/QuickSend"));
 const Contacts = lazy(() => import("./pages/Contacts"));
 const Credits = lazy(() => import("./pages/Credits"));
 const Checkout = lazy(() => import("./pages/Checkout"));
@@ -87,6 +88,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <NewCampaign />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/quick-send"
+                element={
+                  <ProtectedRoute>
+                    <QuickSend />
                   </ProtectedRoute>
                 }
               />

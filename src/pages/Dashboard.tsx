@@ -70,6 +70,14 @@ const Dashboard = () => {
       gradient: "from-blue-500 to-purple-600"
     },
     {
+      title: "Envio Rápido",
+      description: "SMS direto para números específicos",
+      icon: Zap,
+      action: () => navigate("/quick-send"),
+      primary: true,
+      gradient: "from-yellow-500 to-orange-600"
+    },
+    {
       title: "Carregar Créditos",
       description: "Comprar mais SMS",
       icon: Plus,
