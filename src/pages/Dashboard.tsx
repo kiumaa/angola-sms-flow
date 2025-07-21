@@ -220,11 +220,11 @@ const Dashboard = () => {
               <div className="p-4 rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 shadow-glow w-fit mx-auto mb-4">
                 <Settings className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="gradient-text">Suporte Dedicado</CardTitle>
+              <CardTitle className="gradient-text">Entrega Garantida</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <CardDescription className="text-base leading-relaxed">
-                Tenha acesso ao nosso suporte especializado para maximizar seus resultados em Angola.
+                Alcance seus clientes com alta taxa de entrega e redundância entre múltiplos gateways SMS.
               </CardDescription>
             </CardContent>
           </Card>
