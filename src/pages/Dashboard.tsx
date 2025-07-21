@@ -218,7 +218,7 @@ const Dashboard = () => {
           <Card className="card-futuristic cursor-default">
             <CardHeader className="text-center">
               <div className="p-4 rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 shadow-glow w-fit mx-auto mb-4">
-                <Settings className="h-8 w-8 text-white" />
+                <TrendingUp className="h-8 w-8 text-white" />
               </div>
               <CardTitle className="gradient-text">Entrega Garantida</CardTitle>
             </CardHeader>
