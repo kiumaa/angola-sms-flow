@@ -191,7 +191,7 @@ const SenderIDs = () => {
                   Máximo 11 caracteres, apenas letras e números
                 </p>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-center">
                 <Button 
                   onClick={addSenderId}
                   disabled={loading}
