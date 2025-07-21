@@ -77,7 +77,7 @@ const Checkout = () => {
         .from('credit_requests')
         .insert({
           user_id: user.id,
-          package_id: selectedPackage.id,
+          package_id: null, // Set to null since we're using predefined packages with string IDs
           amount_kwanza: selectedPackage.price,
           credits_requested: selectedPackage.credits,
           status: 'pending',
