@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./hooks/useAuth";
 import AdminLayout from "./components/layout/AdminLayout";
+import MessageSendingLoader from "./components/shared/MessageSendingLoader";
 
 const queryClient = new QueryClient();
 
@@ -50,16 +51,7 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-          <Suspense fallback={
-            <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
-              <div className="text-center">
-                <div className="p-6 rounded-3xl bg-gradient-primary shadow-glow w-fit mx-auto mb-6 animate-glow">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                </div>
-                <p className="gradient-text text-lg">Carregando plataforma...</p>
-              </div>
-            </div>
-          }>
+          <Suspense fallback={<MessageSendingLoader />}>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
