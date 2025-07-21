@@ -18,7 +18,9 @@ const NewCampaign = () => {
     sendType: "immediate", // immediate, scheduled
     scheduledDate: "",
     scheduledTime: "",
-    contactList: ""
+    recipientType: "list", // list, individual
+    contactList: "",
+    phoneNumbers: ""
   });
   const [isLoading, setIsLoading] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
@@ -27,6 +29,15 @@ const NewCampaign = () => {
 
   const maxLength = 160;
   const smsCount = Math.ceil(messageLength / maxLength);
+
+  // Helper function to count individual phone numbers
+  const getIndividualPhoneCount = () => {
+    if (!formData.phoneNumbers.trim()) return 0;
+    const numbers = formData.phoneNumbers
+      .split(/[,\n\s]+/)
+      .filter(num => num.trim().length > 0);
+    return numbers.length;
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -61,10 +72,21 @@ const NewCampaign = () => {
       return;
     }
 
-    if (!formData.contactList) {
+    // Validate recipients based on type
+    if (formData.recipientType === 'list' && !formData.contactList) {
       toast({
         title: "Lista de contatos obrigatória",
         description: "Selecione uma lista de contatos para enviar.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.recipientType === 'individual' && getIndividualPhoneCount() === 0) {
+      toast({
+        title: "Números de telefone obrigatórios",
+        description: "Insira pelo menos um número de telefone válido.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -144,21 +166,80 @@ const NewCampaign = () => {
                     />
                   </div>
 
-                  {/* Contact List */}
-                  <div className="space-y-2">
-                    <Label className="text-base">Lista de Contatos</Label>
-                    <Select onValueChange={(value) => handleInputChange('contactList', value)}>
-                      <SelectTrigger className="h-12 rounded-2xl glass-card border-glass-border">
-                        <SelectValue placeholder="Selecione uma lista de contatos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos os Contatos (1.2K)</SelectItem>
-                        <SelectItem value="customers">Clientes Ativos (850)</SelectItem>
-                        <SelectItem value="prospects">Prospects (350)</SelectItem>
-                        <SelectItem value="vip">Clientes VIP (120)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {/* Recipient Type Selection */}
+                  <div className="space-y-4">
+                    <Label className="text-base">Destinatários</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card 
+                        className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                          formData.recipientType === 'list' 
+                            ? 'ring-2 ring-primary bg-primary/5' 
+                            : 'glass-card border-glass-border'
+                        }`}
+                        onClick={() => handleInputChange('recipientType', 'list')}
+                      >
+                        <CardContent className="p-4 text-center">
+                          <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow w-fit mx-auto mb-3">
+                            <Users className="h-6 w-6 text-white" />
+                          </div>
+                          <h3 className="font-medium">Lista de Contatos</h3>
+                          <p className="text-sm text-muted-foreground">Usar listas existentes</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card 
+                        className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                          formData.recipientType === 'individual' 
+                            ? 'ring-2 ring-primary bg-primary/5' 
+                            : 'glass-card border-glass-border'
+                        }`}
+                        onClick={() => handleInputChange('recipientType', 'individual')}
+                      >
+                        <CardContent className="p-4 text-center">
+                          <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow w-fit mx-auto mb-3">
+                            <MessageSquare className="h-6 w-6 text-white" />
+                          </div>
+                          <h3 className="font-medium">Números Específicos</h3>
+                          <p className="text-sm text-muted-foreground">Inserir números individuais</p>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
+
+                  {/* Contact List - when using lists */}
+                  {formData.recipientType === 'list' && (
+                    <div className="space-y-2">
+                      <Label className="text-base">Lista de Contatos</Label>
+                      <Select onValueChange={(value) => handleInputChange('contactList', value)}>
+                        <SelectTrigger className="h-12 rounded-2xl glass-card border-glass-border">
+                          <SelectValue placeholder="Selecione uma lista de contatos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os Contatos (1.2K)</SelectItem>
+                          <SelectItem value="customers">Clientes Ativos (850)</SelectItem>
+                          <SelectItem value="prospects">Prospects (350)</SelectItem>
+                          <SelectItem value="vip">Clientes VIP (120)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Individual Phone Numbers */}
+                  {formData.recipientType === 'individual' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumbers" className="text-base">Números de Telefone</Label>
+                      <Textarea
+                        id="phoneNumbers"
+                        placeholder="Insira os números separados por vírgula, quebra de linha ou espaço:&#10;+244 912 345 678&#10;+244 923 456 789&#10;912345678, 923456789"
+                        value={formData.phoneNumbers}
+                        onChange={(e) => handleInputChange('phoneNumbers', e.target.value)}
+                        className="min-h-32 rounded-2xl glass-card border-glass-border resize-none"
+                      />
+                      <div className="text-sm text-muted-foreground">
+                        Formatos aceitos: +244912345678, 912345678, 244912345678
+                      </div>
+                    </div>
+                  )}
 
                   {/* Message */}
                   <div className="space-y-2">
@@ -316,38 +397,33 @@ const NewCampaign = () => {
                   <span className="font-medium">{formData.name || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lista:</span>
+                  <span className="text-muted-foreground">Destinatários:</span>
                   <span className="font-medium">
-                    {formData.contactList === 'all' && "Todos (1.2K)"}
-                    {formData.contactList === 'customers' && "Clientes (850)"}
-                    {formData.contactList === 'prospects' && "Prospects (350)"}
-                    {formData.contactList === 'vip' && "VIP (120)"}
-                    {!formData.contactList && "—"}
+                    {formData.recipientType === 'list' ? (
+                      <>
+                        {formData.contactList === 'all' && "Todos (1.2K)"}
+                        {formData.contactList === 'customers' && "Clientes (850)"}
+                        {formData.contactList === 'prospects' && "Prospects (350)"}
+                        {formData.contactList === 'vip' && "VIP (120)"}
+                        {!formData.contactList && "—"}
+                      </>
+                    ) : (
+                      `${getIndividualPhoneCount()} números individuais`
+                    )}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tipo:</span>
-                  <span className="font-medium">
-                    {formData.sendType === 'immediate' ? "Imediato" : "Agendado"}
-                  </span>
-                </div>
-                {formData.sendType === 'scheduled' && formData.scheduledDate && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Data/Hora:</span>
-                    <span className="font-medium text-sm">
-                      {new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toLocaleString('pt-BR')}
-                    </span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Créditos:</span>
                   <span className="font-medium text-primary">
-                    {smsCount * (
-                      formData.contactList === 'all' ? 1200 :
-                      formData.contactList === 'customers' ? 850 :
-                      formData.contactList === 'prospects' ? 350 :
-                      formData.contactList === 'vip' ? 120 : 0
-                    )} SMS
+                    {formData.recipientType === 'list' ? 
+                      smsCount * (
+                        formData.contactList === 'all' ? 1200 :
+                        formData.contactList === 'customers' ? 850 :
+                        formData.contactList === 'prospects' ? 350 :
+                        formData.contactList === 'vip' ? 120 : 0
+                      ) :
+                      smsCount * getIndividualPhoneCount()
+                    } SMS
                   </span>
                 </div>
               </CardContent>
