@@ -220,11 +220,11 @@ const Dashboard = () => {
               <div className="p-4 rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 shadow-glow w-fit mx-auto mb-4">
                 <Settings className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="gradient-text">API Completa</CardTitle>
+              <CardTitle className="gradient-text">Suporte Dedicado</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <CardDescription className="text-base leading-relaxed">
-                Integre facilmente com seus sistemas existentes usando nossa API REST robusta.
+                Tenha acesso ao nosso suporte especializado para maximizar seus resultados em Angola.
               </CardDescription>
             </CardContent>
           </Card>
