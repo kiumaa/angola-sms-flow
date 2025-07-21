@@ -10,43 +10,43 @@ import { ArrowLeft, Send, Calendar, Users, Zap, Clock, MessageSquare } from "luc
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
-
 const NewCampaign = () => {
   const [formData, setFormData] = useState({
     name: "",
     message: "",
-    sendType: "immediate", // immediate, scheduled
+    sendType: "immediate",
+    // immediate, scheduled
     scheduledDate: "",
     scheduledTime: "",
-    recipientType: "list", // list, individual
+    recipientType: "list",
+    // list, individual
     contactList: "",
     phoneNumbers: ""
   });
   const [isLoading, setIsLoading] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const maxLength = 160;
   const smsCount = Math.ceil(messageLength / maxLength);
 
   // Helper function to count individual phone numbers
   const getIndividualPhoneCount = () => {
     if (!formData.phoneNumbers.trim()) return 0;
-    const numbers = formData.phoneNumbers
-      .split(/[,\n\s]+/)
-      .filter(num => num.trim().length > 0);
+    const numbers = formData.phoneNumbers.split(/[,\n\s]+/).filter(num => num.trim().length > 0);
     return numbers.length;
   };
-
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
     if (field === 'message') {
       setMessageLength(value.length);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -56,17 +56,16 @@ const NewCampaign = () => {
       toast({
         title: "Nome obrigatório",
         description: "Por favor, insira um nome para a campanha.",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
       return;
     }
-
     if (!formData.message.trim()) {
       toast({
         title: "Mensagem obrigatória",
         description: "Por favor, escreva a mensagem da campanha.",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
       return;
@@ -77,57 +76,45 @@ const NewCampaign = () => {
       toast({
         title: "Lista de contatos obrigatória",
         description: "Selecione uma lista de contatos para enviar.",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
       return;
     }
-
     if (formData.recipientType === 'individual' && getIndividualPhoneCount() === 0) {
       toast({
         title: "Números de telefone obrigatórios",
         description: "Insira pelo menos um número de telefone válido.",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
       return;
     }
-
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
       toast({
         title: "Campanha criada com sucesso!",
-        description: formData.sendType === 'immediate' 
-          ? "Sua campanha foi enviada e está sendo processada."
-          : "Sua campanha foi agendada com sucesso.",
+        description: formData.sendType === 'immediate' ? "Sua campanha foi enviada e está sendo processada." : "Sua campanha foi agendada com sucesso."
       });
-      
       navigate("/campaigns");
     } catch (error) {
       toast({
         title: "Erro ao criar campanha",
         description: "Tente novamente mais tarde.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
         <div className="glass-card p-6 bg-gradient-hero relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
           <div className="flex items-center gap-4 relative">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/campaigns")}
-              className="glass-card border-glass-border hover:scale-105 transition-all duration-300"
-            >
+            <Button variant="outline" onClick={() => navigate("/campaigns")} className="glass-card border-glass-border hover:scale-105 transition-all duration-300">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -157,27 +144,14 @@ const NewCampaign = () => {
                   {/* Campaign Name */}
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-base">Nome da Campanha</Label>
-                    <Input
-                      id="name"
-                      placeholder="Ex: Promoção Black Friday 2024"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="h-12 rounded-2xl glass-card border-glass-border"
-                    />
+                    <Input id="name" placeholder="Ex: Promoção Black Friday 2024" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} className="h-12 rounded-2xl glass-card border-glass-border bg-slate-50" />
                   </div>
 
                   {/* Recipient Type Selection */}
                   <div className="space-y-4">
                     <Label className="text-base">Destinatários</Label>
                     <div className="grid grid-cols-2 gap-4">
-                      <Card 
-                        className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
-                          formData.recipientType === 'list' 
-                            ? 'ring-2 ring-primary bg-primary/5' 
-                            : 'glass-card border-glass-border'
-                        }`}
-                        onClick={() => handleInputChange('recipientType', 'list')}
-                      >
+                      <Card className={`cursor-pointer transition-all duration-300 hover:scale-105 ${formData.recipientType === 'list' ? 'ring-2 ring-primary bg-primary/5' : 'glass-card border-glass-border'}`} onClick={() => handleInputChange('recipientType', 'list')}>
                         <CardContent className="p-4 text-center">
                           <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow w-fit mx-auto mb-3">
                             <Users className="h-6 w-6 text-white" />
@@ -187,14 +161,7 @@ const NewCampaign = () => {
                         </CardContent>
                       </Card>
                       
-                      <Card 
-                        className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
-                          formData.recipientType === 'individual' 
-                            ? 'ring-2 ring-primary bg-primary/5' 
-                            : 'glass-card border-glass-border'
-                        }`}
-                        onClick={() => handleInputChange('recipientType', 'individual')}
-                      >
+                      <Card className={`cursor-pointer transition-all duration-300 hover:scale-105 ${formData.recipientType === 'individual' ? 'ring-2 ring-primary bg-primary/5' : 'glass-card border-glass-border'}`} onClick={() => handleInputChange('recipientType', 'individual')}>
                         <CardContent className="p-4 text-center">
                           <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow w-fit mx-auto mb-3">
                             <MessageSquare className="h-6 w-6 text-white" />
@@ -207,10 +174,9 @@ const NewCampaign = () => {
                   </div>
 
                   {/* Contact List - when using lists */}
-                  {formData.recipientType === 'list' && (
-                    <div className="space-y-2">
+                  {formData.recipientType === 'list' && <div className="space-y-2">
                       <Label className="text-base">Lista de Contatos</Label>
-                      <Select onValueChange={(value) => handleInputChange('contactList', value)}>
+                      <Select onValueChange={value => handleInputChange('contactList', value)}>
                         <SelectTrigger className="h-12 rounded-2xl glass-card border-glass-border">
                           <SelectValue placeholder="Selecione uma lista de contatos" />
                         </SelectTrigger>
@@ -221,37 +187,21 @@ const NewCampaign = () => {
                           <SelectItem value="vip">Clientes VIP (120)</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Individual Phone Numbers */}
-                  {formData.recipientType === 'individual' && (
-                    <div className="space-y-2">
+                  {formData.recipientType === 'individual' && <div className="space-y-2">
                       <Label htmlFor="phoneNumbers" className="text-base">Números de Telefone</Label>
-                      <Textarea
-                        id="phoneNumbers"
-                        placeholder="Insira os números separados por vírgula, quebra de linha ou espaço:&#10;+244 912 345 678&#10;+244 923 456 789&#10;912345678, 923456789"
-                        value={formData.phoneNumbers}
-                        onChange={(e) => handleInputChange('phoneNumbers', e.target.value)}
-                        className="min-h-32 rounded-2xl glass-card border-glass-border resize-none"
-                      />
+                      <Textarea id="phoneNumbers" placeholder="Insira os números separados por vírgula, quebra de linha ou espaço:&#10;+244 912 345 678&#10;+244 923 456 789&#10;912345678, 923456789" value={formData.phoneNumbers} onChange={e => handleInputChange('phoneNumbers', e.target.value)} className="min-h-32 rounded-2xl glass-card border-glass-border resize-none bg-slate-50" />
                       <div className="text-sm text-muted-foreground">
                         Formatos aceitos: +244912345678, 912345678, 244912345678
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Message */}
                   <div className="space-y-2">
                     <Label htmlFor="message" className="text-base">Mensagem</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Digite sua mensagem aqui... Use {nome} para personalizar com o nome do contato."
-                      value={formData.message}
-                      onChange={(e) => handleInputChange('message', e.target.value)}
-                      className="min-h-32 rounded-2xl glass-card border-glass-border resize-none"
-                      maxLength={480}
-                    />
+                    <Textarea id="message" placeholder="Digite sua mensagem aqui... Use {nome} para personalizar com o nome do contato." value={formData.message} onChange={e => handleInputChange('message', e.target.value)} maxLength={480} className="min-h-32 rounded-2xl glass-card border-glass-border resize-none bg-slate-50" />
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
                         Use variáveis: {"{nome}"}, {"{empresa}"}, {"{telefone}"}
@@ -266,14 +216,7 @@ const NewCampaign = () => {
                   <div className="space-y-4">
                     <Label className="text-base">Tipo de Envio</Label>
                     <div className="grid grid-cols-2 gap-4">
-                      <Card 
-                        className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
-                          formData.sendType === 'immediate' 
-                            ? 'ring-2 ring-primary bg-primary/5' 
-                            : 'glass-card border-glass-border'
-                        }`}
-                        onClick={() => handleInputChange('sendType', 'immediate')}
-                      >
+                      <Card className={`cursor-pointer transition-all duration-300 hover:scale-105 ${formData.sendType === 'immediate' ? 'ring-2 ring-primary bg-primary/5' : 'glass-card border-glass-border'}`} onClick={() => handleInputChange('sendType', 'immediate')}>
                         <CardContent className="p-4 text-center">
                           <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow w-fit mx-auto mb-3">
                             <Zap className="h-6 w-6 text-white" />
@@ -283,14 +226,7 @@ const NewCampaign = () => {
                         </CardContent>
                       </Card>
                       
-                      <Card 
-                        className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
-                          formData.sendType === 'scheduled' 
-                            ? 'ring-2 ring-primary bg-primary/5' 
-                            : 'glass-card border-glass-border'
-                        }`}
-                        onClick={() => handleInputChange('sendType', 'scheduled')}
-                      >
+                      <Card className={`cursor-pointer transition-all duration-300 hover:scale-105 ${formData.sendType === 'scheduled' ? 'ring-2 ring-primary bg-primary/5' : 'glass-card border-glass-border'}`} onClick={() => handleInputChange('sendType', 'scheduled')}>
                         <CardContent className="p-4 text-center">
                           <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow w-fit mx-auto mb-3">
                             <Calendar className="h-6 w-6 text-white" />
@@ -303,55 +239,28 @@ const NewCampaign = () => {
                   </div>
 
                   {/* Schedule Fields */}
-                  {formData.sendType === 'scheduled' && (
-                    <div className="grid grid-cols-2 gap-4">
+                  {formData.sendType === 'scheduled' && <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="scheduledDate">Data</Label>
-                        <Input
-                          id="scheduledDate"
-                          type="date"
-                          value={formData.scheduledDate}
-                          onChange={(e) => handleInputChange('scheduledDate', e.target.value)}
-                          className="h-12 rounded-2xl glass-card border-glass-border"
-                          min={new Date().toISOString().split('T')[0]}
-                        />
+                        <Input id="scheduledDate" type="date" value={formData.scheduledDate} onChange={e => handleInputChange('scheduledDate', e.target.value)} className="h-12 rounded-2xl glass-card border-glass-border" min={new Date().toISOString().split('T')[0]} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="scheduledTime">Hora</Label>
-                        <Input
-                          id="scheduledTime"
-                          type="time"
-                          value={formData.scheduledTime}
-                          onChange={(e) => handleInputChange('scheduledTime', e.target.value)}
-                          className="h-12 rounded-2xl glass-card border-glass-border"
-                        />
+                        <Input id="scheduledTime" type="time" value={formData.scheduledTime} onChange={e => handleInputChange('scheduledTime', e.target.value)} className="h-12 rounded-2xl glass-card border-glass-border" />
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Submit Button */}
-                  <Button 
-                    type="submit" 
-                    className="w-full button-futuristic text-lg py-6" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      "Processando..."
-                    ) : (
-                      <>
-                        {formData.sendType === 'immediate' ? (
-                          <>
+                  <Button type="submit" className="w-full button-futuristic text-lg py-6" disabled={isLoading}>
+                    {isLoading ? "Processando..." : <>
+                        {formData.sendType === 'immediate' ? <>
                             <Send className="h-5 w-5 mr-2" />
                             Enviar Campanha
-                          </>
-                        ) : (
-                          <>
+                          </> : <>
                             <Clock className="h-5 w-5 mr-2" />
                             Agendar Campanha
-                          </>
-                        )}
-                      </>
-                    )}
+                          </>}
+                      </>}
                   </Button>
                 </form>
               </CardContent>
@@ -372,16 +281,14 @@ const NewCampaign = () => {
                   <div className="font-mono text-sm">
                     {formData.message || "Digite sua mensagem para ver o preview..."}
                   </div>
-                  {messageLength > 0 && (
-                    <div className="mt-3 flex justify-between text-xs">
+                  {messageLength > 0 && <div className="mt-3 flex justify-between text-xs">
                       <span className="text-muted-foreground">
                         {smsCount} SMS • {messageLength} caracteres
                       </span>
                       <Badge variant={smsCount > 1 ? "destructive" : "default"}>
                         {smsCount > 1 ? `${smsCount}x créditos` : "1 crédito"}
                       </Badge>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </CardContent>
             </Card>
@@ -399,31 +306,19 @@ const NewCampaign = () => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Destinatários:</span>
                   <span className="font-medium">
-                    {formData.recipientType === 'list' ? (
-                      <>
+                    {formData.recipientType === 'list' ? <>
                         {formData.contactList === 'all' && "Todos (1.2K)"}
                         {formData.contactList === 'customers' && "Clientes (850)"}
                         {formData.contactList === 'prospects' && "Prospects (350)"}
                         {formData.contactList === 'vip' && "VIP (120)"}
                         {!formData.contactList && "—"}
-                      </>
-                    ) : (
-                      `${getIndividualPhoneCount()} números individuais`
-                    )}
+                      </> : `${getIndividualPhoneCount()} números individuais`}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Créditos:</span>
                   <span className="font-medium text-primary">
-                    {formData.recipientType === 'list' ? 
-                      smsCount * (
-                        formData.contactList === 'all' ? 1200 :
-                        formData.contactList === 'customers' ? 850 :
-                        formData.contactList === 'prospects' ? 350 :
-                        formData.contactList === 'vip' ? 120 : 0
-                      ) :
-                      smsCount * getIndividualPhoneCount()
-                    } SMS
+                    {formData.recipientType === 'list' ? smsCount * (formData.contactList === 'all' ? 1200 : formData.contactList === 'customers' ? 850 : formData.contactList === 'prospects' ? 350 : formData.contactList === 'vip' ? 120 : 0) : smsCount * getIndividualPhoneCount()} SMS
                   </span>
                 </div>
               </CardContent>
@@ -445,8 +340,6 @@ const NewCampaign = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default NewCampaign;
