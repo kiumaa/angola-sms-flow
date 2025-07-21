@@ -4,10 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap, Star, CheckCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Link } from "react-router-dom";
-
 const Landing = () => {
-  return (
-    <div className="min-h-screen bg-gradient-hero">
+  return <div className="min-h-screen bg-gradient-hero">
       {/* Advanced Header with Glassmorphism */}
       <header className="fixed top-0 w-full glass backdrop-blur-glass border-b border-glass-border z-50 transition-all duration-300">
         <div className="container-futuristic">
@@ -87,49 +85,39 @@ const Landing = () => {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {[
-              {
-                icon: <Zap className="h-10 w-10" />,
-                title: "Envio em Massa",
-                description: "Envie para milhares de contatos simultaneamente com alta taxa de entrega garantida e velocidade impressionante.",
-                gradient: "from-blue-500 to-purple-600"
-              },
-              {
-                icon: <MessageSquare className="h-10 w-10" />,
-                title: "Personalização Avançada",
-                description: "Mensagens personalizadas com nome e dados do cliente para maior engajamento e conversão.",
-                gradient: "from-green-500 to-emerald-600"
-              },
-              {
-                icon: <Clock className="h-10 w-10" />,
-                title: "Agendamento Inteligente",
-                description: "Programe campanhas para o melhor momento e configure envios recorrentes automatizados.",
-                gradient: "from-orange-500 to-red-600"
-              },
-              {
-                icon: <BarChart3 className="h-10 w-10" />,
-                title: "Relatórios em Tempo Real",
-                description: "Acompanhe entregas, taxa de sucesso e engajamento com dashboards interativos e insights poderosos.",
-                gradient: "from-purple-500 to-indigo-600"
-              },
-              {
-                icon: <Shield className="h-10 w-10" />,
-                title: "API Completa",
-                description: "Integre facilmente com seus sistemas existentes usando nossa API REST robusta e bem documentada.",
-                gradient: "from-indigo-500 to-blue-600"
-              },
-              {
-                icon: <Users className="h-10 w-10" />,
-                title: "Suporte Premium",
-                description: "Atendimento especializado em português com conhecimento profundo do mercado angolano.",
-                gradient: "from-pink-500 to-red-600"
-              }
-            ].map((feature, index) => (
-              <Card 
-                key={index} 
-                className="card-futuristic group animate-slide-up-stagger cursor-default relative overflow-hidden" 
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
+            {[{
+            icon: <Zap className="h-10 w-10" />,
+            title: "Envio em Massa",
+            description: "Envie para milhares de contatos simultaneamente com alta taxa de entrega garantida e velocidade impressionante.",
+            gradient: "from-blue-500 to-purple-600"
+          }, {
+            icon: <MessageSquare className="h-10 w-10" />,
+            title: "Personalização Avançada",
+            description: "Mensagens personalizadas com nome e dados do cliente para maior engajamento e conversão.",
+            gradient: "from-green-500 to-emerald-600"
+          }, {
+            icon: <Clock className="h-10 w-10" />,
+            title: "Agendamento Inteligente",
+            description: "Programe campanhas para o melhor momento e configure envios recorrentes automatizados.",
+            gradient: "from-orange-500 to-red-600"
+          }, {
+            icon: <BarChart3 className="h-10 w-10" />,
+            title: "Relatórios em Tempo Real",
+            description: "Acompanhe entregas, taxa de sucesso e engajamento com dashboards interativos e insights poderosos.",
+            gradient: "from-purple-500 to-indigo-600"
+          }, {
+            icon: <Shield className="h-10 w-10" />,
+            title: "API Completa",
+            description: "Integre facilmente com seus sistemas existentes usando nossa API REST robusta e bem documentada.",
+            gradient: "from-indigo-500 to-blue-600"
+          }, {
+            icon: <Users className="h-10 w-10" />,
+            title: "Suporte Premium",
+            description: "Atendimento especializado em português com conhecimento profundo do mercado angolano.",
+            gradient: "from-pink-500 to-red-600"
+          }].map((feature, index) => <Card key={index} className="card-futuristic group animate-slide-up-stagger cursor-default relative overflow-hidden" style={{
+            animationDelay: `${index * 0.1}s`
+          }}>
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-all duration-300`}></div>
                 <CardHeader className="text-center pb-6 relative">
                   <div className={`mx-auto mb-8 p-6 bg-gradient-to-br ${feature.gradient} rounded-3xl w-fit group-hover:shadow-glow transition-all duration-500 group-hover:scale-110`}>
@@ -144,8 +132,7 @@ const Landing = () => {
                     {feature.description}
                   </CardDescription>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -163,36 +150,27 @@ const Landing = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-10">
-            {[
-              {
-                name: "Carlos Mendes",
-                company: "Tech Solutions Luanda",
-                text: "Aumentamos nossa taxa de conversão em 300% após começar a usar a plataforma. O suporte é excepcional!",
-                rating: 5
-              },
-              {
-                name: "Ana Silva",
-                company: "Comercial Benguela",
-                text: "Interface muito intuitiva e preços justos. Conseguimos alcançar mais clientes com o mesmo orçamento.",
-                rating: 5
-              },
-              {
-                name: "João Santos",
-                company: "Startup Huambo",
-                text: "A API é fantástica! Integramos em 2 dias e já estamos vendo resultados incríveis nas nossas campanhas.",
-                rating: 5
-              }
-            ].map((testimonial, index) => (
-              <Card 
-                key={index} 
-                className="card-futuristic animate-slide-up-stagger" 
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
+            {[{
+            name: "Carlos Mendes",
+            company: "Tech Solutions Luanda",
+            text: "Aumentamos nossa taxa de conversão em 300% após começar a usar a plataforma. O suporte é excepcional!",
+            rating: 5
+          }, {
+            name: "Ana Silva",
+            company: "Comercial Benguela",
+            text: "Interface muito intuitiva e preços justos. Conseguimos alcançar mais clientes com o mesmo orçamento.",
+            rating: 5
+          }, {
+            name: "João Santos",
+            company: "Startup Huambo",
+            text: "A API é fantástica! Integramos em 2 dias e já estamos vendo resultados incríveis nas nossas campanhas.",
+            rating: 5
+          }].map((testimonial, index) => <Card key={index} className="card-futuristic animate-slide-up-stagger" style={{
+            animationDelay: `${index * 0.2}s`
+          }}>
                 <CardHeader>
                   <div className="flex space-x-1 mb-6">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-                    ))}
+                    {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />)}
                   </div>
                   <CardDescription className="italic leading-relaxed text-lg font-light">
                     "{testimonial.text}"
@@ -209,8 +187,7 @@ const Landing = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -230,52 +207,38 @@ const Landing = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto pt-12">
-            {[
-              {
-                name: "Básico",
-                price: "10.000",
-                sms: "100",
-                description: "100 SMS incluídos",
-                features: ["100 SMS incluídos", "Dashboard básico", "Suporte por email", "Validade: 90 dias", "Relatórios básicos"],
-                highlight: false,
-                gradient: "from-blue-500 to-purple-600"
-              },
-              {
-                name: "Intermediário",
-                price: "38.000",
-                sms: "400",
-                description: "400 SMS incluídos",
-                features: ["400 SMS incluídos", "Suporte prioritário", "Relatórios avançados", "Agendamento de campanhas", "Validade: 120 dias", "API básica"],
-                highlight: true,
-                gradient: "from-green-500 to-emerald-600"
-              },
-              {
-                name: "Avançado",
-                price: "90.000",
-                sms: "1.000",
-                description: "1.000 SMS incluídos",
-                features: ["1.000 SMS incluídos", "API completa", "Webhooks personalizados", "Suporte por telefone", "Validade: 180 dias", "Relatórios premium"],
-                highlight: false,
-                gradient: "from-orange-500 to-red-600"
-              }
-            ].map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden ${
-                  plan.highlight 
-                    ? 'card-futuristic border-2 border-primary shadow-glow scale-105' 
-                    : 'card-futuristic border-glass-border'
-                }`}
-              >
+            {[{
+            name: "Básico",
+            price: "10.000",
+            sms: "100",
+            description: "100 SMS incluídos",
+            features: ["100 SMS incluídos", "Dashboard básico", "Suporte por email", "Validade: 90 dias", "Relatórios básicos"],
+            highlight: false,
+            gradient: "from-blue-500 to-purple-600"
+          }, {
+            name: "Intermediário",
+            price: "38.000",
+            sms: "400",
+            description: "400 SMS incluídos",
+            features: ["400 SMS incluídos", "Suporte prioritário", "Relatórios avançados", "Agendamento de campanhas", "Validade: 120 dias", "API básica"],
+            highlight: true,
+            gradient: "from-green-500 to-emerald-600"
+          }, {
+            name: "Avançado",
+            price: "90.000",
+            sms: "1.000",
+            description: "1.000 SMS incluídos",
+            features: ["1.000 SMS incluídos", "API completa", "Webhooks personalizados", "Suporte por telefone", "Validade: 180 dias", "Relatórios premium"],
+            highlight: false,
+            gradient: "from-orange-500 to-red-600"
+          }].map((plan, index) => <Card key={index} className={`relative transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden ${plan.highlight ? 'card-futuristic border-2 border-primary shadow-glow scale-105' : 'card-futuristic border-glass-border'}`}>
                 {plan.highlight && <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>}
                 
-                {plan.highlight && (
-                  <div className="flex justify-center mb-4">
+                {plan.highlight && <div className="flex justify-center mb-4">
                     <Badge className="bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow">
                       ⭐ Mais Popular
                     </Badge>
-                  </div>
-                )}
+                  </div>}
                 
                 <CardHeader className="text-center pb-8 relative">
                   <div className={`p-4 rounded-3xl bg-gradient-to-br ${plan.gradient} shadow-glow w-fit mx-auto mb-6`}>
@@ -291,29 +254,18 @@ const Landing = () => {
                 
                 <CardContent className="pt-0 relative">
                   <ul className="space-y-5 mb-10">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start text-base">
+                    {plan.features.map((feature, featureIndex) => <li key={featureIndex} className="flex items-start text-base">
                         <CheckCircle className="w-6 h-6 text-primary mr-4 mt-0.5 flex-shrink-0" />
                         <span>{feature}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
-                  <Button 
-                    asChild 
-                    className={`w-full rounded-3xl transition-all duration-300 hover:scale-105 text-lg py-6 ${
-                      plan.highlight 
-                        ? 'button-futuristic' 
-                        : 'glass-card border-glass-border hover:bg-primary hover:text-white'
-                    }`} 
-                    size="lg"
-                  >
+                  <Button asChild className={`w-full rounded-3xl transition-all duration-300 hover:scale-105 text-lg py-6 ${plan.highlight ? 'button-futuristic' : 'glass-card border-glass-border hover:bg-primary hover:text-white'}`} size="lg">
                     <Link to="/register">
                       Escolher Plano
                     </Link>
                   </Button>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -322,31 +274,24 @@ const Landing = () => {
       <section className="section-padding relative">
         <div className="container-futuristic">
           <div className="grid md:grid-cols-4 gap-12 text-center">
-            {[
-              {
-                number: "99.9%",
-                label: "Uptime Garantido"
-              },
-              {
-                number: "95%+",
-                label: "Taxa de Entrega"
-              },
-              {
-                number: "500+",
-                label: "Empresas Confiam"
-              },
-              {
-                number: "24/7",
-                label: "Monitoramento"
-              }
-            ].map((stat, index) => (
-              <div key={index} className="group cursor-default">
+            {[{
+            number: "99.9%",
+            label: "Uptime Garantido"
+          }, {
+            number: "95%+",
+            label: "Taxa de Entrega"
+          }, {
+            number: "500+",
+            label: "Empresas Confiam"
+          }, {
+            number: "24/7",
+            label: "Monitoramento"
+          }].map((stat, index) => <div key={index} className="group cursor-default">
                 <div className="text-5xl md:text-6xl font-light text-primary mb-4 transition-all duration-300 group-hover:scale-110">
                   {stat.number}
                 </div>
                 <div className="text-muted-foreground text-lg">{stat.label}</div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -418,14 +363,10 @@ const Landing = () => {
           </div>
           
           <div className="border-t border-glass-border pt-8 text-center">
-            <p className="text-muted-foreground">
-              © 2024 SMS.AO. Todos os direitos reservados. Plataforma desenvolvida em Angola para empresas angolanas.
-            </p>
+            <p className="text-muted-foreground text-base font-normal"> KB Agency © 2025 Todos os direitos reservados</p>
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
