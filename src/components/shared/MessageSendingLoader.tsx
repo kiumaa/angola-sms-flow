@@ -1,5 +1,5 @@
 
-import { Player } from '@lottiefiles/react-lottie-player';
+import Player from 'react-lottie-player';
 
 const MessageSendingLoader = () => {
   // Animação Lottie inline de envio de mensagem (JSON otimizado)
@@ -123,9 +123,9 @@ const MessageSendingLoader = () => {
       <div className="text-center space-y-6">
         <div className="flex justify-center">
           <Player
-            autoplay
+            play
             loop
-            src={messageAnimation}
+            animationData={messageAnimation}
             style={{ height: '120px', width: '120px' }}
             className="opacity-80 hover:opacity-100 transition-opacity duration-300"
           />
