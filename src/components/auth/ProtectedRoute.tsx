@@ -1,6 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useLocation } from 'react-router-dom';
+import MessageSendingLoader from '@/components/shared/MessageSendingLoader';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,11 +13,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full border-2 border-primary border-t-transparent h-8 w-8"></div>
-      </div>
-    );
+    return <MessageSendingLoader />;
   }
 
   if (!user) {
