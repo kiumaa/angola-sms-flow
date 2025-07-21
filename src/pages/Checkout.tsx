@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, CreditCard, Building2, CheckCircle, Clock } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ProgressSteps } from "@/components/ui/progress-steps";
@@ -19,6 +20,7 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [receipt, setReceipt] = useState<File | null>(null);
   const [notes, setNotes] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -84,10 +86,8 @@ const Checkout = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Solicitação de créditos enviada!",
-        description: "Aguarde aprovação do administrador após confirmação do pagamento.",
-      });
+      // Show confirmation popup
+      setShowConfirmDialog(true);
 
     } catch (error) {
       console.error('Error creating credit request:', error);
@@ -427,6 +427,33 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-green-100">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+            <DialogTitle className="text-center text-lg font-semibold">
+              Pedido Recebido!
+            </DialogTitle>
+            <DialogDescription className="text-center space-y-2">
+              <p className="text-base">
+                Recebemos o seu pedido e está em processamento.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Receberá os seus créditos assim que confirmarmos o seu pagamento.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center mt-6">
+            <Button onClick={() => setShowConfirmDialog(false)} className="px-8">
+              Entendido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
