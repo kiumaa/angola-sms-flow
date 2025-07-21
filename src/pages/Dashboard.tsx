@@ -106,27 +106,6 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Revolutionary Welcome Section */}
-        <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
-          <div className="flex items-center justify-between relative">
-            <div>
-              <h1 className="text-5xl font-light mb-4 gradient-text">
-                Bem-vindo, {companyName || userEmail}! 
-              </h1>
-              <p className="text-muted-foreground text-xl leading-relaxed">
-                Gerencie suas campanhas de SMS com inteligência artificial e analytics avançados.
-                <br />
-                <span className="text-primary">Transforme cada mensagem em resultados reais.</span>
-              </p>
-            </div>
-            <div className="hidden md:block">
-              <div className="p-6 rounded-3xl bg-gradient-primary shadow-glow animate-float">
-                <Zap className="h-12 w-12 text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Enhanced Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
