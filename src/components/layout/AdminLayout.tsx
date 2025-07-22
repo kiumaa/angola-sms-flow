@@ -55,15 +55,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
     {
       name: "Campanhas",
-      href: "/admin/credit-requests",
+      href: "/admin/reports",
       icon: MessageSquare,
-      current: location.pathname.startsWith("/admin/credit-requests")
+      current: location.pathname.startsWith("/admin/reports")
     },
     {
       name: "Contatos",
-      href: "/admin/sender-ids",
+      href: "/admin/users",
       icon: Users,
-      current: location.pathname.startsWith("/admin/sender-ids")
+      current: location.pathname.startsWith("/admin/users")
     },
     {
       name: "Relatórios",
@@ -73,9 +73,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
     {
       name: "Configurações",
-      href: "/admin/settings",
+      href: "/admin/sms-configuration",
       icon: Settings,
-      current: location.pathname.startsWith("/admin/settings")
+      current: location.pathname.startsWith("/admin/sms-configuration")
     },
     {
       name: "Personalização",

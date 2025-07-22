@@ -8,10 +8,12 @@ export class AfricasTalkingGateway implements SMSGateway {
   private username: string;
   private apiKey: string;
   private baseUrl = 'https://api.africastalking.com/version1';
+  private sandboxUrl = 'https://api.sandbox.africastalking.com/version1';
 
-  constructor(username: string, apiKey: string) {
+  constructor(username: string, apiKey: string, sandbox: boolean = false) {
     this.username = username;
     this.apiKey = apiKey;
+    this.baseUrl = sandbox ? this.sandboxUrl : this.baseUrl;
   }
 
   private getHeaders(): Record<string, string> {
@@ -30,11 +32,14 @@ export class AfricasTalkingGateway implements SMSGateway {
 
   async sendSingle(message: SMSMessage): Promise<SMSResult> {
     try {
+      // Garantir que números incluem código do país para Angola (+244)
+      const formattedPhone = this.formatAngolanPhone(message.to);
+
       const payload = {
         username: this.username,
-        to: message.to,
+        to: formattedPhone,
         message: message.text,
-        from: message.from || undefined // Optional sender ID
+        from: message.from || 'SMSao'
       };
 
       const response = await fetch(`${this.baseUrl}/messaging`, {
@@ -195,28 +200,11 @@ export class AfricasTalkingGateway implements SMSGateway {
   }
 
   async validateSenderID(senderId: string): Promise<boolean> {
-    try {
-      // Africa's Talking permite validar sender IDs através de um teste
-      const payload = {
-        username: this.username,
-        to: '+254700000000', // Número de teste
-        message: 'Test sender ID validation',
-        from: senderId
-      };
-
-      const response = await fetch(`${this.baseUrl}/messaging`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: this.encodeFormData(payload)
-      });
-
-      const result = await response.json();
-      
-      // Se não houver erro relacionado ao sender ID, consideramos válido
-      return response.ok && !result.SMSMessageData?.Message?.includes('sender');
-    } catch {
-      return false;
-    }
+    // Africa's Talking permite qualquer sender ID alfanumérico
+    const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(senderId);
+    const hasValidLength = senderId.length >= 3 && senderId.length <= 11;
+    
+    return isAlphanumeric && hasValidLength;
   }
 
   async isConfigured(): Promise<boolean> {
@@ -236,5 +224,28 @@ export class AfricasTalkingGateway implements SMSGateway {
     } catch {
       return false;
     }
+  }
+
+  private formatAngolanPhone(phone: string): string {
+    // Remove espaços e caracteres especiais
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // Se já tem +244, retorna como está
+    if (cleanPhone.startsWith('+244')) {
+      return cleanPhone;
+    }
+    
+    // Se tem 244 sem +, adiciona o +
+    if (cleanPhone.startsWith('244')) {
+      return '+' + cleanPhone;
+    }
+    
+    // Se começa com 9 e tem 9 dígitos, é um número angolano
+    if (cleanPhone.startsWith('9') && cleanPhone.length === 9) {
+      return '+244' + cleanPhone;
+    }
+    
+    // Se não tem código do país, assumir Angola
+    return '+244' + cleanPhone.replace(/^0+/, '');
   }
 }
