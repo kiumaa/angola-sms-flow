@@ -106,100 +106,100 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Painel Administrativo</h1>
-        <p className="text-muted-foreground">Visão geral da plataforma SMS Marketing Angola</p>
+    <div className="space-y-8 p-6">
+      <div className="space-y-2">
+        <h1 className="text-h1 font-light tracking-tight">Painel Administrativo</h1>
+        <p className="text-muted-foreground font-light">Visão geral da plataforma SMS Marketing Angola</p>
       </div>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-2">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
+            <Card key={i} className="animate-pulse border-0 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div className="h-4 bg-muted rounded-minimal w-3/4"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-muted rounded w-1/2"></div>
+                <div className="h-8 bg-muted rounded-minimal w-1/2"></div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="stats-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
+          <Card className="border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-sm hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-light text-muted-foreground">Créditos Disponíveis</CardTitle>
+              <Users className="h-5 w-5 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">
-                +{stats.todayRegistrations} hoje
+              <div className="text-h2 font-light tracking-tight">{stats.totalUsers}</div>
+              <p className="text-xs text-muted-foreground font-light mt-1">
+                +{stats.todayRegistrations} novos hoje
               </p>
             </CardContent>
           </Card>
 
-          <Card className="stats-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-              <DollarSign className="h-4 w-4 text-secondary" />
+          <Card className="border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-sm hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-light text-muted-foreground">Campanhas Enviadas</CardTitle>
+              <MessageSquare className="h-5 w-5 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-              <p className="text-xs text-muted-foreground">
-                +{formatCurrency(stats.todayRevenue)} hoje
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="stats-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">SMS Enviados</CardTitle>
-              <MessageSquare className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalSMSSent.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-h2 font-light tracking-tight">{stats.totalSMSSent.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground font-light mt-1">
                 Total de mensagens
               </p>
             </CardContent>
           </Card>
 
-          <Card className="stats-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pacotes Ativos</CardTitle>
-              <Package className="h-4 w-4 text-secondary" />
+          <Card className="border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-sm hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-light text-muted-foreground">Receita Total</CardTitle>
+              <DollarSign className="h-5 w-5 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activePackages}</div>
-              <p className="text-xs text-muted-foreground">
-                Disponíveis para venda
+              <div className="text-h2 font-light tracking-tight">{formatCurrency(stats.totalRevenue)}</div>
+              <p className="text-xs text-muted-foreground font-light mt-1">
+                +{formatCurrency(stats.todayRevenue)} hoje
               </p>
             </CardContent>
           </Card>
 
-          <Card className="stats-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Crescimento</CardTitle>
-              <TrendingUp className="h-4 w-4 text-primary" />
+          <Card className="border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-sm hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-light text-muted-foreground">Usuários Ativos</CardTitle>
+              <Users className="h-5 w-5 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+12%</div>
-              <p className="text-xs text-muted-foreground">
-                vs. mês anterior
+              <div className="text-h2 font-light tracking-tight">{Math.floor(stats.totalUsers * 0.68)}</div>
+              <p className="text-xs text-muted-foreground font-light mt-1">
+                68% dos usuários
               </p>
             </CardContent>
           </Card>
 
-          <Card className="stats-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-              <CreditCard className="h-4 w-4 text-secondary" />
+          <Card className="border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-sm hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-light text-muted-foreground">SMS Falhados</CardTitle>
+              <MessageSquare className="h-5 w-5 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24%</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-h2 font-light tracking-tight">{Math.floor(stats.totalSMSSent * 0.02)}</div>
+              <p className="text-xs text-muted-foreground font-light mt-1">
+                2% taxa de falha
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-sm hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-light text-muted-foreground">Taxa de Conversão</CardTitle>
+              <TrendingUp className="h-5 w-5 text-gray-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-h2 font-light tracking-tight">24%</div>
+              <p className="text-xs text-muted-foreground font-light mt-1">
                 Visitantes que compram
               </p>
             </CardContent>

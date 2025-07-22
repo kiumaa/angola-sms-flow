@@ -9,6 +9,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./hooks/useAuth";
 import AdminLayout from "./components/layout/AdminLayout";
 import MessageSendingLoader from "./components/shared/MessageSendingLoader";
+import { ThemeProvider } from "next-themes";
 
 const queryClient = new QueryClient();
 
@@ -47,10 +48,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <ThemeProvider 
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange={false}
+        >
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
           <Suspense fallback={<MessageSendingLoader />}>
             <Routes>
               {/* Public routes */}
@@ -256,6 +263,7 @@ function App() {
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

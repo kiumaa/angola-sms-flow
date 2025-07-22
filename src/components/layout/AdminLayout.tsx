@@ -1,11 +1,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText, Wifi } from "lucide-react";
+import { Home, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText, Wifi, Palette } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -29,19 +30,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const navigation = [
     {
-      name: "Dashboard Admin",
+      name: "Home",
       href: "/admin",
-      icon: BarChart3,
+      icon: Home,
       current: location.pathname === "/admin"
     },
     {
-      name: "Gestão de Usuários",
+      name: "Usuários",
       href: "/admin/users",
       icon: Users,
       current: location.pathname.startsWith("/admin/users")
     },
     {
-      name: "Gestão de Pacotes",
+      name: "Pacotes",
       href: "/admin/packages",
       icon: Package,
       current: location.pathname.startsWith("/admin/packages")
@@ -53,22 +54,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       current: location.pathname.startsWith("/admin/transactions")
     },
     {
-      name: "Solicitações de Crédito",
+      name: "Campanhas",
       href: "/admin/credit-requests",
-      icon: FileText,
+      icon: MessageSquare,
       current: location.pathname.startsWith("/admin/credit-requests")
     },
     {
-      name: "Sender IDs",
+      name: "Contatos",
       href: "/admin/sender-ids",
-      icon: Send,
+      icon: Users,
       current: location.pathname.startsWith("/admin/sender-ids")
-    },
-    {
-      name: "Configurações SMS",
-      href: "/admin/sms-configuration",
-      icon: Wifi,
-      current: location.pathname.startsWith("/admin/sms-configuration")
     },
     {
       name: "Relatórios",
@@ -85,15 +80,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     {
       name: "Personalização",
       href: "/admin/brand",
-      icon: Settings,
+      icon: Palette,
       current: location.pathname.startsWith("/admin/brand")
     }
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Top Navigation */}
-      <nav className="bg-card border-b border-border sticky top-0 z-50">
+      <nav className="bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -114,16 +109,17 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
 
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <div className="text-sm">
                 <span className="text-muted-foreground">Admin:</span>
-                <span className="font-bold text-primary ml-1">{user?.email}</span>
+                <span className="font-medium text-foreground ml-1">{user?.email}</span>
               </div>
               <Link to="/dashboard">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="rounded-minimal">
                   Ver Site
                 </Button>
               </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-minimal">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </Button>
@@ -136,20 +132,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Sidebar */}
         <aside className={`${
           isSidebarOpen ? "w-64" : "w-16"
-        } bg-card border-r border-border transition-all duration-300 min-h-[calc(100vh-64px)]`}>
-          <nav className="p-4 space-y-2">
+        } bg-card/30 backdrop-blur-sm border-r border-border transition-all duration-300 min-h-[calc(100vh-64px)]`}>
+          <nav className="p-4 space-y-1">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center px-3 py-3 rounded-minimal text-sm font-normal transition-all duration-300 ${
                   item.current
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
-                <item.icon className="h-5 w-5" />
-                {isSidebarOpen && <span className="ml-3">{item.name}</span>}
+                <item.icon className="h-4 w-4" />
+                {isSidebarOpen && <span className="ml-3 font-light">{item.name}</span>}
               </Link>
             ))}
           </nav>

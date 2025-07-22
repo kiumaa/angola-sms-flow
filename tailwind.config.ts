@@ -19,14 +19,15 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				'sans': ['Inter', 'Sora', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
 				'inter': ['Inter', 'sans-serif'],
+				'sora': ['Sora', 'sans-serif'],
 			},
 			fontSize: {
-				'h1': ['2rem', { lineHeight: '2.25rem', fontWeight: '300' }],
-				'h2': ['1.5rem', { lineHeight: '1.75rem', fontWeight: '300' }],
-				'h3': ['1.25rem', { lineHeight: '1.5rem', fontWeight: '400' }],
-				'body': ['0.875rem', { lineHeight: '1.5rem', fontWeight: '300' }],
+				'h1': ['1.75rem', { lineHeight: '2rem', fontWeight: '300' }],
+				'h2': ['1.25rem', { lineHeight: '1.5rem', fontWeight: '300' }],
+				'h3': ['1rem', { lineHeight: '1.25rem', fontWeight: '400' }],
+				'body': ['1rem', { lineHeight: '1.5rem', fontWeight: '300' }],
 			},
 			letterSpacing: {
 				'tighter': '-0.02em',
@@ -76,10 +77,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom Futuristic Colors
+				// Custom Sophisticated Grays
 				gray: {
 					100: 'hsl(var(--gray-100))',
-					300: 'hsl(var(--gray-300))'
+					200: 'hsl(var(--gray-200))',
+					300: 'hsl(var(--gray-300))',
+					400: 'hsl(var(--gray-400))',
+					500: 'hsl(var(--gray-500))',
+					600: 'hsl(var(--gray-600))',
+					700: 'hsl(var(--gray-700))',
+					800: 'hsl(var(--gray-800))',
+					900: 'hsl(var(--gray-900))'
 				},
 				// Glass & Gradient Effects
 				glass: {
@@ -106,7 +114,8 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)',
 				'2xl': 'var(--radius-lg)',
-				'3xl': 'var(--radius-xl)'
+				'3xl': 'var(--radius-xl)',
+				'minimal': '4px'
 			},
 			spacing: {
 				'18': '4.5rem',
