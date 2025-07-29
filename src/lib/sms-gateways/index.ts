@@ -1,8 +1,10 @@
 // Main exports for SMS Gateway system
 export { SMSGatewayManager } from './manager/SMSGatewayManager';
-export { BulkSMSGateway } from './gateways/BulkSMSGateway';
-export { BulkGateGateway } from './gateways/BulkGateGateway';
-export { AfricasTalkingGateway } from './gateways/AfricasTalkingGateway';
+export { RouteeGateway } from './gateways/RouteeGateway';
+// Legacy gateways (archived)
+// export { BulkSMSGateway } from './gateways/BulkSMSGateway';
+// export { BulkGateGateway } from './gateways/BulkGateGateway';
+// export { AfricasTalkingGateway } from './gateways/AfricasTalkingGateway';
 
 export type { SMSGateway } from './interfaces/SMSGateway';
 export type { 
@@ -20,13 +22,9 @@ export async function createSMSGatewayManager(env: Record<string, string | undef
   const { SMSGatewayManager } = await import('./manager/SMSGatewayManager');
   const manager = new SMSGatewayManager();
   
-  // Initialize with available credentials
+  // Initialize with Routee credentials only
   await manager.initialize({
-    bulksmsTokenId: env.BULKSMS_TOKEN_ID,
-    bulksmsTokenSecret: env.BULKSMS_TOKEN_SECRET,
-    bulkgateApiKey: env.BULKGATE_API_KEY,
-    atUsername: env.AT_USERNAME,
-    atApiKey: env.AT_API_KEY
+    routeeApiToken: env.ROUTEE_API_TOKEN
   });
   
   return manager;

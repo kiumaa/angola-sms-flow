@@ -1,8 +1,6 @@
 import { SMSGateway } from '../interfaces/SMSGateway';
 import { SMSMessage, SMSResult, SMSBulkResult, FallbackResult, GatewayConfig } from '../interfaces/SMSTypes';
-import { BulkSMSGateway } from '../gateways/BulkSMSGateway';
-import { BulkGateGateway } from '../gateways/BulkGateGateway';
-import { AfricasTalkingGateway } from '../gateways/AfricasTalkingGateway';
+import { RouteeGateway } from '../gateways/RouteeGateway';
 
 export class SMSGatewayManager {
   private gateways: Map<string, SMSGateway> = new Map();
@@ -13,37 +11,18 @@ export class SMSGatewayManager {
   }
 
   /**
-   * Inicializa os gateways com as credenciais fornecidas
+   * Inicializa gateways com credenciais - usando apenas Routee
    */
   async initialize(credentials: {
-    bulksmsTokenId?: string;
-    bulksmsTokenSecret?: string;
-    bulkgateApiKey?: string;
-    atUsername?: string;
-    atApiKey?: string;
+    routeeApiToken?: string;
   }): Promise<void> {
     // Limpar gateways existentes
     this.gateways.clear();
 
-    // Inicializar BulkSMS se as credenciais estiverem disponíveis
-    if (credentials.bulksmsTokenId && credentials.bulksmsTokenSecret) {
-      const bulkSMSGateway = new BulkSMSGateway(
-        credentials.bulksmsTokenId,
-        credentials.bulksmsTokenSecret
-      );
-      this.gateways.set('bulksms', bulkSMSGateway);
-    }
-
-    // Inicializar BulkGate se a API key estiver disponível
-    if (credentials.bulkgateApiKey) {
-      const bulkGateGateway = new BulkGateGateway(credentials.bulkgateApiKey);
-      this.gateways.set('bulkgate', bulkGateGateway);
-    }
-
-    // Inicializar Africa's Talking se as credenciais estiverem disponíveis
-    if (credentials.atUsername && credentials.atApiKey) {
-      const atGateway = new AfricasTalkingGateway(credentials.atUsername, credentials.atApiKey);
-      this.gateways.set('africastalking', atGateway);
+    // Inicializar Routee como gateway exclusivo
+    if (credentials.routeeApiToken) {
+      const routeeGateway = new RouteeGateway(credentials.routeeApiToken);
+      this.gateways.set('routee', routeeGateway);
     }
   }
 

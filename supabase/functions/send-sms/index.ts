@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -15,17 +14,14 @@ interface SMSRequest {
   isTest?: boolean
 }
 
-interface AfricasTalkingResponse {
-  SMSMessageData: {
-    Message: string
-    Recipients: Array<{
-      statusCode: number
-      number: string
-      status: string
-      cost: string
-      messageId: string
-    }>
-  }
+interface RouteeResponse {
+  trackingId: string
+  to: string
+  from: string
+  body: string
+  status: string
+  parts: number
+  cost: number
 }
 
 serve(async (req) => {
@@ -52,7 +48,7 @@ serve(async (req) => {
       throw new Error('Invalid authorization')
     }
 
-    const { contacts, message, senderId = 'SMSao', campaignId, isTest = false }: SMSRequest = await req.json()
+    const { contacts, message, senderId = 'SMS.AO', campaignId, isTest = false }: SMSRequest = await req.json()
 
     if (!contacts || contacts.length === 0) {
       throw new Error('No contacts provided')
@@ -62,45 +58,42 @@ serve(async (req) => {
       throw new Error('No message provided')
     }
 
-    // Get Africa's Talking credentials from secrets
-    const atUsername = Deno.env.get('AT_USERNAME')
-    const atApiKey = Deno.env.get('AT_API_KEY')
+    // Get Routee API token from secrets
+    const routeeApiToken = Deno.env.get('ROUTEE_API_TOKEN')
 
-    if (!atUsername || !atApiKey) {
-      throw new Error('Africa\'s Talking credentials not configured')
+    if (!routeeApiToken) {
+      throw new Error('Routee API token not configured')
     }
 
-    // Send SMS via Africa's Talking
-    const atResponse = await sendViaAfricasTalking(
+    // Send SMS via Routee
+    const routeeResponse = await sendViaRoutee(
       contacts,
       message,
       senderId,
-      atUsername,
-      atApiKey,
+      routeeApiToken,
       isTest
     )
 
-    // Parse response
-    const recipients = atResponse.SMSMessageData?.Recipients || []
-    const totalSent = recipients.filter(r => r.status === 'Success').length
-    const totalFailed = recipients.filter(r => r.status !== 'Success').length
-    const totalCost = recipients.reduce((acc, r) => acc + (parseFloat(r.cost) || 0), 0)
+    // Parse response and calculate totals
+    const totalSent = routeeResponse.filter(r => r.status === 'Queued' || r.status === 'Sent').length
+    const totalFailed = routeeResponse.filter(r => r.status !== 'Queued' && r.status !== 'Sent').length
+    const totalCost = routeeResponse.reduce((acc, r) => acc + (r.cost || 1), 0)
 
     // Log SMS records
-    for (const recipient of recipients) {
+    for (const result of routeeResponse) {
       await supabase
         .from('sms_logs')
         .insert({
           campaign_id: campaignId,
           user_id: user.id,
-          phone_number: recipient.number,
+          phone_number: result.to,
           message: message,
-          status: recipient.status === 'Success' ? 'sent' : 'failed',
-          gateway_used: 'africastalking',
-          gateway_message_id: recipient.messageId,
-          cost_credits: Math.ceil(parseFloat(recipient.cost) || 1),
-          error_message: recipient.status !== 'Success' ? recipient.status : null,
-          sent_at: recipient.status === 'Success' ? new Date().toISOString() : null
+          status: result.status === 'Queued' || result.status === 'Sent' ? 'sent' : 'failed',
+          gateway_used: 'routee',
+          gateway_message_id: result.trackingId,
+          cost_credits: Math.ceil(result.cost || 1),
+          error_message: result.status !== 'Queued' && result.status !== 'Sent' ? result.status : null,
+          sent_at: result.status === 'Queued' || result.status === 'Sent' ? new Date().toISOString() : null
         })
     }
 
@@ -119,8 +112,8 @@ serve(async (req) => {
         totalSent,
         totalFailed,
         creditsUsed: isTest ? 0 : Math.ceil(totalCost),
-        messageIds: recipients.map(r => r.messageId),
-        gateway: 'africastalking'
+        messageIds: routeeResponse.map(r => r.trackingId),
+        gateway: 'routee'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -143,52 +136,85 @@ serve(async (req) => {
   }
 })
 
-async function sendViaAfricasTalking(
+async function sendViaRoutee(
   contacts: string[],
   message: string,
   senderId: string,
-  username: string,
-  apiKey: string,
+  apiToken: string,
   isTest: boolean = false
-): Promise<AfricasTalkingResponse> {
+): Promise<RouteeResponse[]> {
   
   // Format phone numbers for Angola (+244)
   const formattedContacts = contacts.map(contact => {
     if (!contact.startsWith('+244') && !contact.startsWith('244')) {
       return `+244${contact.replace(/^0+/, '')}`
     }
-    return contact
+    return contact.startsWith('+') ? contact : `+${contact}`
   })
 
-  const baseUrl = isTest 
-    ? 'https://api.sandbox.africastalking.com/version1'
-    : 'https://api.africastalking.com/version1'
+  const results: RouteeResponse[] = []
 
-  const response = await fetch(`${baseUrl}/messaging`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'apiKey': apiKey,
-      'Accept': 'application/json'
-    },
-    body: new URLSearchParams({
-      username: username,
-      to: formattedContacts.join(','),
-      from: senderId,
-      message: message
-    })
-  })
+  // Send SMS to each contact (Routee doesn't have bulk endpoint)
+  for (const contact of formattedContacts) {
+    try {
+      const payload = {
+        body: message,
+        to: [contact],
+        from: senderId
+      }
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Africa's Talking API error: ${response.status} - ${errorText}`)
+      const response = await fetch('https://connect.routee.net/sms', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Routee API error for ${contact}:`, response.status, errorText)
+        
+        results.push({
+          trackingId: `error_${Date.now()}_${Math.random()}`,
+          to: contact,
+          from: senderId,
+          body: message,
+          status: 'Failed',
+          parts: 1,
+          cost: 0
+        })
+        continue
+      }
+
+      const data = await response.json()
+      
+      // Handle successful response
+      results.push({
+        trackingId: data.trackingId || `routee_${Date.now()}_${Math.random()}`,
+        to: contact,
+        from: senderId,
+        body: message,
+        status: data.status || 'Queued',
+        parts: data.parts || 1,
+        cost: data.cost || 1
+      })
+
+    } catch (error) {
+      console.error(`Error sending SMS to ${contact}:`, error)
+      
+      results.push({
+        trackingId: `error_${Date.now()}_${Math.random()}`,
+        to: contact,
+        from: senderId,
+        body: message,
+        status: 'Failed',
+        parts: 1,
+        cost: 0
+      })
+    }
   }
 
-  const data = await response.json()
-  
-  if (!data.SMSMessageData) {
-    throw new Error('Invalid response from Africa\'s Talking')
-  }
-
-  return data
+  return results
 }
