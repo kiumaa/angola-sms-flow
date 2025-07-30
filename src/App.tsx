@@ -262,7 +262,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminSMSConfiguration />
+                      <AdminRouteeConfiguration />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
