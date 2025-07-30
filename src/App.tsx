@@ -257,6 +257,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/admin/sms-configuration"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminLayout>
+                      <AdminSMSConfiguration />
+                    </AdminLayout>
+                  </ProtectedRoute>
+                }
+              />
 
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />
