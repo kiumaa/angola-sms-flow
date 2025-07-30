@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Settings, Send, CheckCircle, AlertCircle, Wifi, Euro } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import RouteeProductionStatus from "@/components/admin/RouteeProductionStatus";
 
 interface RouteeConfig {
   isActive: boolean;
@@ -45,8 +46,26 @@ export default function AdminRouteeConfiguration() {
 
   const loadConfiguration = async () => {
     try {
-      // Carregar configurações salvas do banco
-      // Por enquanto, usar valores padrão
+      const { data: settings, error } = await supabase
+        .from('routee_settings')
+        .select('*')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading configuration:', error);
+        return;
+      }
+
+      if (settings) {
+        setConfig(prev => ({
+          ...prev,
+          isActive: settings.is_active,
+          status: settings.test_status === 'success' ? 'connected' : 
+                 settings.test_status === 'error' ? 'error' : 'disconnected',
+          balance: settings.balance_eur,
+          lastTested: settings.last_tested_at
+        }));
+      }
     } catch (error) {
       console.error('Error loading configuration:', error);
     }
@@ -55,7 +74,16 @@ export default function AdminRouteeConfiguration() {
   const handleSaveConfig = async () => {
     setIsLoading(true);
     try {
-      // Salvar configuração no banco de dados
+      const { error } = await supabase
+        .from('routee_settings')
+        .upsert({
+          is_active: config.isActive,
+          api_token_encrypted: config.apiToken ? btoa(config.apiToken) : null,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Configuração salva",
         description: "Configurações do Routee atualizadas com sucesso.",
@@ -91,9 +119,20 @@ export default function AdminRouteeConfiguration() {
 
       if (error) throw error;
 
+      const newStatus = data.success ? 'connected' : 'error';
+      
+      // Salvar resultado do teste no banco
+      await supabase
+        .from('routee_settings')
+        .upsert({
+          test_status: data.success ? 'success' : 'error',
+          last_tested_at: new Date().toISOString(),
+          balance_eur: data.balance || 0
+        });
+
       setConfig(prev => ({
         ...prev,
-        status: data.success ? 'connected' : 'error',
+        status: newStatus,
         balance: data.balance,
         lastTested: new Date().toISOString()
       }));
@@ -379,6 +418,9 @@ export default function AdminRouteeConfiguration() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Status de Produção */}
+      <RouteeProductionStatus />
     </div>
   );
 }

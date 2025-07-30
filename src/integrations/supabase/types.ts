@@ -391,6 +391,45 @@ export type Database = {
         }
         Relationships: []
       }
+      routee_settings: {
+        Row: {
+          api_token_encrypted: string | null
+          balance_eur: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          last_tested_at: string | null
+          test_status: string | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          api_token_encrypted?: string | null
+          balance_eur?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_tested_at?: string | null
+          test_status?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          api_token_encrypted?: string | null
+          balance_eur?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_tested_at?: string | null
+          test_status?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       sender_ids: {
         Row: {
           bulkgate_status: string | null
