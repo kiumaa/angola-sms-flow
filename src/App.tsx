@@ -39,6 +39,7 @@ const AdminSenderIDs = lazy(() => import("./pages/AdminSenderIDs"));
 const AdminReports = lazy(() => import("./pages/AdminReports"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const AdminBrand = lazy(() => import("./pages/AdminBrand"));
+const AdminSMSConfiguration = lazy(() => import("./pages/AdminSMSConfiguration"));
 const AdminRouteeConfiguration = lazy(() => import("./pages/AdminRouteeConfiguration"));
 
 // 404 page
