@@ -5,16 +5,54 @@ export class RouteeGateway implements SMSGateway {
   name = 'routee';
   displayName = 'Routee (AMD Telecom)';
   
-  private apiToken: string;
+  private applicationId: string;
+  private applicationSecret: string;
+  private accessToken: string | null = null;
+  private tokenExpiresAt: Date | null = null;
   private baseUrl = 'https://connect.routee.net';
 
-  constructor(apiToken: string) {
-    this.apiToken = apiToken;
+  constructor(applicationId: string, applicationSecret: string) {
+    this.applicationId = applicationId;
+    this.applicationSecret = applicationSecret;
   }
 
-  private getHeaders(): Record<string, string> {
+  private async getAccessToken(): Promise<string> {
+    // Check if current token is still valid
+    if (this.accessToken && this.tokenExpiresAt && new Date() < this.tokenExpiresAt) {
+      return this.accessToken;
+    }
+
+    // Request new token via OAuth 2.0
+    const tokenResponse = await fetch(`${this.baseUrl}/oauth/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: this.applicationId,
+        client_secret: this.applicationSecret
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Failed to get access token: ${tokenResponse.status}`);
+    }
+
+    const tokenData = await tokenResponse.json();
+    this.accessToken = tokenData.access_token;
+    
+    // Set expiration time (subtract 60 seconds for safety)
+    const expiresIn = tokenData.expires_in || 3600;
+    this.tokenExpiresAt = new Date(Date.now() + (expiresIn - 60) * 1000);
+
+    return this.accessToken;
+  }
+
+  private async getHeaders(): Promise<Record<string, string>> {
+    const token = await this.getAccessToken();
     return {
-      'Authorization': `Bearer ${this.apiToken}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     };
   }
@@ -30,6 +68,7 @@ export class RouteeGateway implements SMSGateway {
   async sendSingle(message: SMSMessage): Promise<SMSResult> {
     try {
       const formattedTo = this.formatPhoneNumber(message.to);
+      const headers = await this.getHeaders();
       
       // Payload conforme documentação oficial do Routee
       const payload = {
@@ -44,7 +83,7 @@ export class RouteeGateway implements SMSGateway {
 
       const response = await fetch(`${this.baseUrl}/sms`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers,
         body: JSON.stringify(payload)
       });
 
@@ -140,18 +179,19 @@ export class RouteeGateway implements SMSGateway {
   }
 
   async isConfigured(): Promise<boolean> {
-    return Boolean(this.apiToken);
+    return Boolean(this.applicationId && this.applicationSecret);
   }
 
   async testConnection(): Promise<boolean> {
     try {
-      // Teste simples de conectividade
+      // Teste simples de conectividade com OAuth
+      const headers = await this.getHeaders();
       const response = await fetch(`${this.baseUrl}/sms`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers,
         body: JSON.stringify({
           body: 'Test connection',
-          to: ['+244900000000'], // Número de teste
+          to: '+244900000000', // String conforme documentação
           from: 'TEST'
         })
       });

@@ -24,7 +24,8 @@ export async function createSMSGatewayManager(env: Record<string, string | undef
   
   // Initialize with Routee credentials only
   await manager.initialize({
-    routeeApiToken: env.ROUTEE_API_TOKEN
+    routeeApplicationId: env.ROUTEE_APPLICATION_ID,
+    routeeApplicationSecret: env.ROUTEE_APPLICATION_SECRET
   });
   
   return manager;

@@ -14,14 +14,15 @@ export class SMSGatewayManager {
    * Inicializa gateways com credenciais - usando apenas Routee
    */
   async initialize(credentials: {
-    routeeApiToken?: string;
+    routeeApplicationId?: string;
+    routeeApplicationSecret?: string;
   }): Promise<void> {
     // Limpar gateways existentes
     this.gateways.clear();
 
     // Inicializar Routee como gateway exclusivo
-    if (credentials.routeeApiToken) {
-      const routeeGateway = new RouteeGateway(credentials.routeeApiToken);
+    if (credentials.routeeApplicationId && credentials.routeeApplicationSecret) {
+      const routeeGateway = new RouteeGateway(credentials.routeeApplicationId, credentials.routeeApplicationSecret);
       this.gateways.set('routee', routeeGateway);
     }
   }

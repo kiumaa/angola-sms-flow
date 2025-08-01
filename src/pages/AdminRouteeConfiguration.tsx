@@ -13,7 +13,8 @@ import RouteeProductionStatus from "@/components/admin/RouteeProductionStatus";
 
 interface RouteeConfig {
   isActive: boolean;
-  apiToken: string;
+  applicationId: string;
+  applicationSecret: string;
   status: 'connected' | 'error' | 'disconnected';
   balance?: number;
   lastTested?: string;
@@ -28,7 +29,8 @@ export default function AdminRouteeConfiguration() {
   // Routee Configuration
   const [config, setConfig] = useState<RouteeConfig>({
     isActive: true,
-    apiToken: '',
+    applicationId: '',
+    applicationSecret: '',
     status: 'disconnected'
   });
 
@@ -60,6 +62,8 @@ export default function AdminRouteeConfiguration() {
         setConfig(prev => ({
           ...prev,
           isActive: settings.is_active,
+          applicationId: (settings as any).application_id_encrypted ? atob((settings as any).application_id_encrypted) : '',
+          applicationSecret: (settings as any).application_secret_encrypted ? atob((settings as any).application_secret_encrypted) : '',
           status: settings.test_status === 'success' ? 'connected' : 
                  settings.test_status === 'error' ? 'error' : 'disconnected',
           balance: settings.balance_eur,
@@ -78,7 +82,8 @@ export default function AdminRouteeConfiguration() {
         .from('routee_settings')
         .upsert({
           is_active: config.isActive,
-          api_token_encrypted: config.apiToken ? btoa(config.apiToken) : null,
+          application_id_encrypted: config.applicationId ? btoa(config.applicationId) : null,
+          application_secret_encrypted: config.applicationSecret ? btoa(config.applicationSecret) : null,
           updated_at: new Date().toISOString()
         });
 
@@ -100,10 +105,10 @@ export default function AdminRouteeConfiguration() {
   };
 
   const handleTestConnection = async () => {
-    if (!config.apiToken) {
+    if (!config.applicationId || !config.applicationSecret) {
       toast({
-        title: "Token necessário",
-        description: "Insira o token da API antes de testar a conexão.",
+        title: "Credenciais necessárias",
+        description: "Insira o Application ID e Secret antes de testar a conexão.",
         variant: "destructive",
       });
       return;
@@ -113,7 +118,8 @@ export default function AdminRouteeConfiguration() {
     try {
       const { data, error } = await supabase.functions.invoke('test-routee-connection', {
         body: {
-          apiToken: config.apiToken
+          applicationId: config.applicationId,
+          applicationSecret: config.applicationSecret
         }
       });
 
@@ -241,7 +247,7 @@ export default function AdminRouteeConfiguration() {
                 Routee by AMD Telecom
               </CardTitle>
               <CardDescription>
-                Gateway SMS exclusivo com Sender IDs customizáveis
+                Gateway SMS exclusivo com autenticação OAuth 2.0
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -261,15 +267,34 @@ export default function AdminRouteeConfiguration() {
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="routee-token">API Token</Label>
-              <Input
-                id="routee-token"
-                type="password"
-                value={config.apiToken}
-                onChange={(e) => setConfig(prev => ({ ...prev, apiToken: e.target.value }))}
-                placeholder="Seu token da API Routee"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="routee-app-id">Application ID</Label>
+                <Input
+                  id="routee-app-id"
+                  type="text"
+                  value={config.applicationId}
+                  onChange={(e) => setConfig(prev => ({ ...prev, applicationId: e.target.value }))}
+                  placeholder="Seu Application ID do Routee"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="routee-app-secret">Application Secret</Label>
+                <Input
+                  id="routee-app-secret"
+                  type="password"
+                  value={config.applicationSecret}
+                  onChange={(e) => setConfig(prev => ({ ...prev, applicationSecret: e.target.value }))}
+                  placeholder="Seu Application Secret do Routee"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>OAuth 2.0:</strong> O Routee utiliza autenticação OAuth. Insira suas credenciais de aplicativo para gerar automaticamente os tokens de acesso.
+              </p>
             </div>
 
             {config.balance !== undefined && (
@@ -291,7 +316,7 @@ export default function AdminRouteeConfiguration() {
           <div className="flex gap-2">
             <Button
               onClick={handleTestConnection}
-              disabled={isTestingConnection || !config.apiToken}
+              disabled={isTestingConnection || !config.applicationId || !config.applicationSecret}
               variant="outline"
             >
               {isTestingConnection ? (
@@ -309,7 +334,7 @@ export default function AdminRouteeConfiguration() {
 
             <Button
               onClick={handleSaveConfig}
-              disabled={isLoading || !config.apiToken}
+              disabled={isLoading || !config.applicationId || !config.applicationSecret}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
