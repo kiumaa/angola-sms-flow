@@ -159,8 +159,12 @@ async function sendViaRoutee(
     try {
       const payload = {
         body: message,
-        to: [contact],
-        from: senderId
+        to: contact, // String conforme documentação oficial
+        from: senderId,
+        callback: {
+          url: `${supabaseUrl}/functions/v1/routee-webhook`,
+          strategy: 'OnChange'
+        }
       }
 
       const response = await fetch('https://connect.routee.net/sms', {
@@ -190,15 +194,15 @@ async function sendViaRoutee(
 
       const data = await response.json()
       
-      // Handle successful response
+      // Handle successful response conforme documentação oficial
       results.push({
-        trackingId: data.trackingId || `routee_${Date.now()}_${Math.random()}`,
+        trackingId: data.trackingId,
         to: contact,
-        from: senderId,
-        body: message,
-        status: data.status || 'Queued',
-        parts: data.parts || 1,
-        cost: data.cost || 1
+        from: data.from,
+        body: data.body,
+        status: data.status,
+        parts: data.bodyAnalysis?.parts || 1,
+        cost: data.bodyAnalysis?.parts || 1 // Custo baseado no número de partes
       })
 
     } catch (error) {

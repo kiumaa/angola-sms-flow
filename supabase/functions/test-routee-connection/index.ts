@@ -21,10 +21,10 @@ serve(async (req) => {
       throw new Error('API token is required')
     }
 
-    // Test connection to Routee
+    // Test connection to Routee - formato correto conforme documentação
     const testPayload = {
       body: 'Test connection from SMS Marketing Angola',
-      to: ['+244900000000'], // Test number
+      to: '+244900000000', // String, não array
       from: 'TEST'
     }
 

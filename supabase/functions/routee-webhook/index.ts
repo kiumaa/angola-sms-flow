@@ -31,18 +31,20 @@ serve(async (req) => {
     
     console.log('Received Routee webhook:', payload)
 
-    // Map Routee status to our internal status
+    // Map Routee status to our internal status - conforme documentação oficial
     const mapStatus = (routeeStatus: string): string => {
-      switch (routeeStatus.toLowerCase()) {
-        case 'delivered':
+      switch (routeeStatus) {
+        case 'Delivered':
           return 'delivered'
-        case 'failed':
-        case 'expired':
-        case 'rejected':
+        case 'Failed':
+        case 'Undelivered':
+        case 'Network Error':
           return 'failed'
-        case 'sent':
-        case 'queued':
+        case 'Sent':
+        case 'Queued':
           return 'sent'
+        case 'Unsent':
+          return 'pending'
         default:
           return 'pending'
       }
@@ -55,7 +57,7 @@ serve(async (req) => {
       .from('sms_logs')
       .update({
         status: internalStatus,
-        delivered_at: payload.status.toLowerCase() === 'delivered' ? new Date(payload.timestamp).toISOString() : null,
+        delivered_at: payload.status === 'Delivered' ? new Date(payload.timestamp).toISOString() : null,
         error_message: payload.errorDescription || null
       })
       .eq('gateway_message_id', payload.trackingId)

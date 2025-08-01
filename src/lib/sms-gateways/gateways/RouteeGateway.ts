@@ -31,10 +31,15 @@ export class RouteeGateway implements SMSGateway {
     try {
       const formattedTo = this.formatPhoneNumber(message.to);
       
+      // Payload conforme documentação oficial do Routee
       const payload = {
         body: message.text,
-        to: [formattedTo],
-        from: message.from || 'SMS.AO'
+        to: formattedTo, // String, não array
+        from: message.from || 'SMS.AO',
+        callback: {
+          url: `${process.env.SUPABASE_URL || 'https://hwxxcprqxqznselwzghi.supabase.co'}/functions/v1/routee-webhook`,
+          strategy: 'OnChange'
+        }
       };
 
       const response = await fetch(`${this.baseUrl}/sms`, {
@@ -50,10 +55,14 @@ export class RouteeGateway implements SMSGateway {
 
       const data = await response.json();
       
+      // Calcular custo baseado no número de partes
+      const cost = data.bodyAnalysis?.parts || 1;
+      
       return {
         success: true,
-        messageId: data.trackingId || data.messageId || `routee_${Date.now()}`,
-        gateway: this.name
+        messageId: data.trackingId,
+        gateway: this.name,
+        cost
       };
     } catch (error) {
       return {
