@@ -21,6 +21,40 @@ interface BulkSMSResponse {
   error?: string
 }
 
+// Função para buscar credenciais do banco de dados
+async function getBulkSMSCredentials(supabase: any) {
+  try {
+    const { data, error } = await supabase
+      .from('sms_configurations')
+      .select('api_token_id, api_token_secret')
+      .eq('gateway_name', 'bulksms')
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar credenciais do banco:', error);
+      // Fallback para variáveis de ambiente
+      return {
+        tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
+        tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
+      };
+    }
+
+    console.log('Credenciais carregadas do banco de dados');
+    return {
+      tokenId: data.api_token_id,
+      tokenSecret: data.api_token_secret
+    };
+  } catch (error) {
+    console.error('Erro ao conectar com banco para credenciais:', error);
+    // Fallback para variáveis de ambiente
+    return {
+      tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
+      tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -82,11 +116,12 @@ serve(async (req) => {
       console.log(`Using default Sender ID: ${senderId}`)
     }
 
-    // Get BulkSMS API tokens from secrets
-    const bulkSMSTokenId = Deno.env.get('BULKSMS_TOKEN_ID')
-    const bulkSMSTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
+    // Buscar credenciais do banco de dados
+    const credentials = await getBulkSMSCredentials(supabase);
+    const bulkSMSTokenId = credentials.tokenId;
+    const bulkSMSTokenSecret = credentials.tokenSecret;
 
-    if (!bulkSMSTokenId || !bulkSMSTokenSecret) {
+    if (!bulkSMSTokenId) {
       throw new Error('BulkSMS API credentials not configured')
     }
 

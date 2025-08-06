@@ -479,28 +479,34 @@ export type Database = {
         Row: {
           api_token_id: string | null
           api_token_secret: string | null
+          balance: number | null
           created_at: string
           gateway_name: string
           id: string
           is_active: boolean
+          last_balance_check: string | null
           updated_at: string
         }
         Insert: {
           api_token_id?: string | null
           api_token_secret?: string | null
+          balance?: number | null
           created_at?: string
           gateway_name: string
           id?: string
           is_active?: boolean
+          last_balance_check?: string | null
           updated_at?: string
         }
         Update: {
           api_token_id?: string | null
           api_token_secret?: string | null
+          balance?: number | null
           created_at?: string
           gateway_name?: string
           id?: string
           is_active?: boolean
+          last_balance_check?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -1,8 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Função para buscar credenciais do banco de dados
+async function getBulkSMSCredentials(supabase: any) {
+  try {
+    const { data, error } = await supabase
+      .from('sms_configurations')
+      .select('api_token_id, api_token_secret')
+      .eq('gateway_name', 'bulksms')
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar credenciais do banco:', error);
+      // Fallback para variáveis de ambiente
+      return {
+        tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
+        tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
+      };
+    }
+
+    return {
+      tokenId: data.api_token_id,
+      tokenSecret: data.api_token_secret
+    };
+  } catch (error) {
+    console.error('Erro ao conectar com banco para credenciais:', error);
+    // Fallback para variáveis de ambiente
+    return {
+      tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
+      tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
+    };
+  }
 }
 
 serve(async (req) => {
@@ -15,31 +49,50 @@ serve(async (req) => {
     console.log('=== BulkSMS Balance Function Started ===');
     console.log('Request method:', req.method);
     
-    // Get API tokens from environment (both ID and Secret)
-    let apiTokenId = Deno.env.get('BULKSMS_TOKEN_ID');
-    let apiTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET');
-    console.log('Environment tokens found - ID:', !!apiTokenId, 'Secret:', !!apiTokenSecret);
-    
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    let apiTokenId: string;
+    let apiTokenSecret: string;
+
     if (req.method === 'POST') {
       try {
         const body = await req.json();
         console.log('Request body received:', body);
         if (body.apiTokenId) {
+          // Usar tokens do corpo da requisição (para teste)
+          console.log('Using tokens from request body');
           apiTokenId = body.apiTokenId;
           apiTokenSecret = body.apiTokenSecret || '';
-          console.log('Using tokens from request body');
+        } else {
+          // Buscar credenciais do banco de dados
+          console.log('Fetching credentials from database');
+          const credentials = await getBulkSMSCredentials(supabase);
+          apiTokenId = credentials.tokenId;
+          apiTokenSecret = credentials.tokenSecret;
         }
       } catch (e) {
         console.error('Error parsing request body:', e);
+        // Buscar credenciais do banco de dados como fallback
+        const credentials = await getBulkSMSCredentials(supabase);
+        apiTokenId = credentials.tokenId;
+        apiTokenSecret = credentials.tokenSecret;
       }
+    } else {
+      // Para GET, sempre buscar do banco
+      const credentials = await getBulkSMSCredentials(supabase);
+      apiTokenId = credentials.tokenId;
+      apiTokenSecret = credentials.tokenSecret;
     }
-    
+
     if (!apiTokenId) {
-      console.error('No API Token ID available');
+      console.error('❌ BulkSMS Token ID não encontrado');
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'API Token not configured' 
+          error: 'BulkSMS Token ID não configurado' 
         }),
         { 
           status: 400, 

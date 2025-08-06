@@ -41,6 +41,10 @@ export default function AdminSMSConfiguration() {
       if (error) throw error;
       if (data.success) {
         setBalance(data.balance);
+        
+        // Salvar saldo atualizado na configuração
+        await updateBalanceInConfiguration(data.balance);
+        
         toast({
           title: "Saldo Atualizado",
           description: `Saldo atual: $${data.balance.toFixed(2)} USD`
@@ -119,7 +123,9 @@ export default function AdminSMSConfiguration() {
           gateway_name: 'bulksms',
           api_token_id: apiTokenId.trim(),
           api_token_secret: apiTokenSecret.trim(),
-          is_active: true
+          is_active: true,
+          balance: balance,
+          last_balance_check: new Date().toISOString()
         }, {
           onConflict: 'gateway_name'
         });
@@ -127,6 +133,25 @@ export default function AdminSMSConfiguration() {
       if (error) throw error;
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
+    }
+  };
+
+  // Função para atualizar apenas o saldo na configuração
+  const updateBalanceInConfiguration = async (newBalance: number) => {
+    try {
+      const { error } = await supabase
+        .from('sms_configurations')
+        .upsert({
+          gateway_name: 'bulksms',
+          balance: newBalance,
+          last_balance_check: new Date().toISOString()
+        }, {
+          onConflict: 'gateway_name'
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao atualizar saldo:', error);
     }
   };
 
@@ -151,8 +176,20 @@ export default function AdminSMSConfiguration() {
           setApiTokenSecret(data.api_token_secret || '');
           setConnectionStatus('success');
           
-          // Buscar saldo com as credenciais salvas
-          await fetchBalance();
+          // Usar saldo salvo se disponível e recente (menos de 1 hora)
+          const lastCheck = new Date(data.last_balance_check);
+          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+          
+          if (data.balance && lastCheck > oneHourAgo) {
+            setBalance(data.balance);
+            toast({
+              title: "Configuração carregada",
+              description: `Credenciais conectadas. Saldo: $${data.balance.toFixed(2)} USD`
+            });
+          } else {
+            // Buscar saldo atualizado se não há saldo salvo ou está desatualizado
+            await fetchBalance();
+          }
         } else {
           // Se não há configuração salva, buscar saldo com credenciais do ambiente
           await fetchBalance();
