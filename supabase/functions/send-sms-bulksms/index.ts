@@ -252,10 +252,11 @@ async function sendViaBulkSMSProduction(
   console.log(`=== BulkSMS API Call ===`)
   console.log(`Sending ${formattedContacts.length} SMS via BulkSMS API v1`)
   console.log(`Sender ID: ${senderId}`)
+  console.log(`Message: ${message}`)
   console.log(`Token ID: ${apiTokenId.substring(0, 8)}...`)
   console.log(`Token Secret: ${apiTokenSecret ? 'Available' : 'Missing'}`)
   console.log(`Formatted contacts:`, formattedContacts)
-  console.log(`Messages payload:`, messages)
+  console.log(`Messages payload:`, JSON.stringify(messages, null, 2))
 
   // Create proper Basic Auth with TokenID:TokenSecret
   const authString = `${apiTokenId}:${apiTokenSecret}`;
@@ -265,7 +266,8 @@ async function sendViaBulkSMSProduction(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(authString)}`
+        'Authorization': `Basic ${btoa(authString)}`,
+        'Accept': 'application/json'
       },
       body: JSON.stringify(messages) // Enviar o array diretamente, não em um objeto
     })
