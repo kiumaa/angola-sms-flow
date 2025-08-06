@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Settings, Send, CheckCircle, AlertCircle, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import SMSGatewaySelector from "@/components/admin/sms/SMSGatewaySelector";
 
 export default function AdminSMSConfiguration() {
   const { toast } = useToast();
@@ -119,6 +120,9 @@ export default function AdminSMSConfiguration() {
         <Settings className="h-5 w-5" />
         <h1 className="text-2xl font-semibold">Configuração de SMS</h1>
       </div>
+
+      {/* Gateway Selector */}
+      <SMSGatewaySelector />
 
       {/* Africa's Talking Gateway */}
       <Card>

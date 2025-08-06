@@ -14,14 +14,18 @@ interface SMSRequest {
   isTest?: boolean
 }
 
-interface RouteeResponse {
-  trackingId: string
+interface BulkSMSResponse {
+  id: string
   to: string
   from: string
   body: string
-  status: string
-  parts: number
-  cost: number
+  status: {
+    type: string
+    subtype: string
+  }
+  userSuppliedId?: string
+  numberOfParts: number
+  creditCost: number
 }
 
 serve(async (req) => {
@@ -75,29 +79,31 @@ serve(async (req) => {
       console.log(`Using approved Sender ID: ${senderId} for user: ${user.id}`)
     }
 
-    // Get Routee API token from secrets
-    const routeeApiToken = Deno.env.get('ROUTEE_API_TOKEN')
+    // Get BulkSMS credentials from secrets
+    const bulkSMSTokenId = Deno.env.get('BULKSMS_TOKEN_ID')
+    const bulkSMSTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
 
-    if (!routeeApiToken) {
-      throw new Error('Routee API token not configured')
+    if (!bulkSMSTokenId || !bulkSMSTokenSecret) {
+      throw new Error('BulkSMS credentials not configured')
     }
 
-    // Send SMS via Routee
-    const routeeResponse = await sendViaRoutee(
+    // Send SMS via BulkSMS
+    const bulkSMSResponse = await sendViaBulkSMS(
       contacts,
       message,
       senderId,
-      routeeApiToken,
+      bulkSMSTokenId,
+      bulkSMSTokenSecret,
       isTest
     )
 
     // Parse response and calculate totals
-    const totalSent = routeeResponse.filter(r => r.status === 'Queued' || r.status === 'Sent').length
-    const totalFailed = routeeResponse.filter(r => r.status !== 'Queued' && r.status !== 'Sent').length
-    const totalCost = routeeResponse.reduce((acc, r) => acc + (r.cost || 1), 0)
+    const totalSent = bulkSMSResponse.filter(r => r.status.type === 'ACCEPTED').length
+    const totalFailed = bulkSMSResponse.filter(r => r.status.type !== 'ACCEPTED').length
+    const totalCost = bulkSMSResponse.reduce((acc, r) => acc + (r.creditCost || 1), 0)
 
     // Log SMS records
-    for (const result of routeeResponse) {
+    for (const result of bulkSMSResponse) {
       await supabase
         .from('sms_logs')
         .insert({
@@ -105,12 +111,12 @@ serve(async (req) => {
           user_id: user.id,
           phone_number: result.to,
           message: message,
-          status: result.status === 'Queued' || result.status === 'Sent' ? 'sent' : 'failed',
-          gateway_used: 'routee',
-          gateway_message_id: result.trackingId,
-          cost_credits: Math.ceil(result.cost || 1),
-          error_message: result.status !== 'Queued' && result.status !== 'Sent' ? result.status : null,
-          sent_at: result.status === 'Queued' || result.status === 'Sent' ? new Date().toISOString() : null
+          status: result.status.type === 'ACCEPTED' ? 'sent' : 'failed',
+          gateway_used: 'bulksms',
+          gateway_message_id: result.id,
+          cost_credits: Math.ceil(result.creditCost || 1),
+          error_message: result.status.type !== 'ACCEPTED' ? `${result.status.type}: ${result.status.subtype}` : null,
+          sent_at: result.status.type === 'ACCEPTED' ? new Date().toISOString() : null
         })
     }
 
@@ -129,8 +135,8 @@ serve(async (req) => {
         totalSent,
         totalFailed,
         creditsUsed: isTest ? 0 : Math.ceil(totalCost),
-        messageIds: routeeResponse.map(r => r.trackingId),
-        gateway: 'routee'
+        messageIds: bulkSMSResponse.map(r => r.id),
+        gateway: 'bulksms'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -139,7 +145,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('SMS sending error:', error)
+    console.error('BulkSMS sending error:', error)
     return new Response(
       JSON.stringify({
         success: false,
@@ -153,13 +159,14 @@ serve(async (req) => {
   }
 })
 
-async function sendViaRoutee(
+async function sendViaBulkSMS(
   contacts: string[],
   message: string,
   senderId: string,
-  apiToken: string,
+  tokenId: string,
+  tokenSecret: string,
   isTest: boolean = false
-): Promise<RouteeResponse[]> {
+): Promise<BulkSMSResponse[]> {
   
   // Format phone numbers for Angola (+244)
   const formattedContacts = contacts.map(contact => {
@@ -169,72 +176,100 @@ async function sendViaRoutee(
     return contact.startsWith('+') ? contact : `+${contact}`
   })
 
-  const results: RouteeResponse[] = []
+  // Create Basic Auth header
+  const authString = btoa(`${tokenId}:${tokenSecret}`)
+  
+  const results: BulkSMSResponse[] = []
 
-  // Send SMS to each contact (Routee doesn't have bulk endpoint)
-  for (const contact of formattedContacts) {
-    try {
-      const payload = {
-        body: message,
-        to: contact, // String conforme documentação oficial
-        from: senderId,
-        callback: {
-          url: `${supabaseUrl}/functions/v1/routee-webhook`,
-          strategy: 'OnChange'
-        }
-      }
+  // BulkSMS supports bulk sending
+  try {
+    const payload = formattedContacts.map(contact => ({
+      to: contact,
+      body: message,
+      from: senderId,
+      userSuppliedId: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }))
 
-      const response = await fetch('https://connect.routee.net/sms', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
+    console.log(`Sending ${payload.length} SMS via BulkSMS with sender: ${senderId}`)
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`Routee API error for ${contact}:`, response.status, errorText)
-        
+    const response = await fetch('https://api.bulksms.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`BulkSMS API error:`, response.status, errorText)
+      
+      // Create error responses for all contacts
+      formattedContacts.forEach(contact => {
         results.push({
-          trackingId: `error_${Date.now()}_${Math.random()}`,
+          id: `error_${Date.now()}_${Math.random()}`,
           to: contact,
           from: senderId,
           body: message,
-          status: 'Failed',
-          parts: 1,
-          cost: 0
+          status: {
+            type: 'FAILED',
+            subtype: `HTTP ${response.status}: ${errorText}`
+          },
+          numberOfParts: 1,
+          creditCost: 0
         })
-        continue
-      }
-
-      const data = await response.json()
+      })
       
-      // Handle successful response conforme documentação oficial
+      return results
+    }
+
+    const data = await response.json()
+    
+    // BulkSMS returns an array of message responses
+    if (Array.isArray(data)) {
+      results.push(...data.map((item: any) => ({
+        id: item.id,
+        to: item.to,
+        from: item.from,
+        body: item.body,
+        status: item.status,
+        userSuppliedId: item.userSuppliedId,
+        numberOfParts: item.numberOfParts || 1,
+        creditCost: item.numberOfParts || 1
+      })))
+    } else {
+      // Single message response
       results.push({
-        trackingId: data.trackingId,
-        to: contact,
+        id: data.id,
+        to: data.to,
         from: data.from,
         body: data.body,
         status: data.status,
-        parts: data.bodyAnalysis?.parts || 1,
-        cost: data.bodyAnalysis?.parts || 1 // Custo baseado no número de partes
+        userSuppliedId: data.userSuppliedId,
+        numberOfParts: data.numberOfParts || 1,
+        creditCost: data.numberOfParts || 1
       })
+    }
 
-    } catch (error) {
-      console.error(`Error sending SMS to ${contact}:`, error)
-      
+  } catch (error) {
+    console.error(`Error sending SMS via BulkSMS:`, error)
+    
+    // Create error responses for all contacts
+    formattedContacts.forEach(contact => {
       results.push({
-        trackingId: `error_${Date.now()}_${Math.random()}`,
+        id: `error_${Date.now()}_${Math.random()}`,
         to: contact,
         from: senderId,
         body: message,
-        status: 'Failed',
-        parts: 1,
-        cost: 0
+        status: {
+          type: 'FAILED',
+          subtype: error.message
+        },
+        numberOfParts: 1,
+        creditCost: 0
       })
-    }
+    })
   }
 
   return results
