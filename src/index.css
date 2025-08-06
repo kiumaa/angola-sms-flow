@@ -6,151 +6,151 @@
 /* SMS Marketing Angola - Sophisticated Design System */
 @layer base {
   :root {
-    /* Base Colors - Light Mode */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 15%;
+    /* SMS.AO Design System - Light Mode */
+    --background: 220 14% 96%;
+    --foreground: 220 39% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --card-foreground: 220 39% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover-foreground: 220 39% 11%;
 
-    /* Primary Colors - Sophisticated Dark Gray */
-    --primary: 0 0% 10%;
-    --primary-foreground: 0 0% 98%;
-    --primary-glow: 0 0% 20%;
+    /* Primary Colors - Dark Gray (85% Black) */
+    --primary: 220 39% 11%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 220 26% 14%;
 
-    /* Secondary Colors */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 15%;
+    /* Secondary Colors - Light Gray */
+    --secondary: 220 13% 91%;
+    --secondary-foreground: 220 39% 11%;
 
-    /* Muted Colors */
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    /* Muted Colors - Subtle Grays */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 14% 32%;
 
-    /* Accent Colors */
-    --accent: 0 0% 94%;
-    --accent-foreground: 0 0% 15%;
+    /* Accent Colors - Minimal Hover */
+    --accent: 220 13% 91%;
+    --accent-foreground: 220 39% 11%;
 
     /* Destructive Colors */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Border Colors */
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 0% 10%;
+    /* Border and Input Colors */
+    --border: 220 13% 86%;
+    --input: 220 13% 86%;
+    --ring: 220 39% 11%;
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 0 0% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 94%;
-    --sidebar-accent-foreground: 0 0% 15%;
-    --sidebar-border: 0 0% 88%;
-    --sidebar-ring: 0 0% 45%;
+    /* Sidebar Colors */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 14% 32%;
+    --sidebar-primary: 220 39% 11%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 220 39% 11%;
+    --sidebar-border: 220 13% 86%;
+    --sidebar-ring: 220 39% 11%;
 
-    /* Custom Gray Tokens */
-    --gray-100: 0 0% 96%;
-    --gray-200: 0 0% 94%;
-    --gray-300: 0 0% 88%;
-    --gray-400: 0 0% 65%;
-    --gray-500: 0 0% 45%;
-    --gray-600: 0 0% 35%;
-    --gray-700: 0 0% 25%;
-    --gray-800: 0 0% 15%;
-    --gray-900: 0 0% 10%;
+    /* SMS.AO Gray Scale - Sophisticated Tones */
+    --gray-100: 220 14% 96%;
+    --gray-200: 220 13% 91%;
+    --gray-300: 220 13% 86%;
+    --gray-400: 220 9% 76%;
+    --gray-500: 220 9% 56%;
+    --gray-600: 220 14% 32%;
+    --gray-700: 215 16% 24%;
+    --gray-800: 215 20% 17%;
+    --gray-900: 220 26% 14%;
 
-    /* Glassmorphism & Effects */
-    --glass-bg: 255 255 255 / 0.1;
-    --glass-border: 255 255 255 / 0.2;
-    --backdrop-blur: 16px;
+    /* Glass & Effects */
+    --glass-bg: 255 255 255 / 0.9;
+    --glass-border: 220 13% 86% / 0.2;
+    --backdrop-blur: 8px;
     
-    /* Advanced Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+    /* SMS.AO Brand Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 39% 11%) 0%, hsl(215 20% 17%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(220 14% 98%) 0%, hsl(220 14% 96%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 50%, hsl(220 14% 96%) 100%);
     
-    /* Shadows */
-    --shadow-glass: 0 8px 32px hsl(var(--primary) / 0.1);
-    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
-    --shadow-elevated: 0 20px 60px hsl(var(--primary) / 0.15);
+    /* Shadows - Clean & Minimal */
+    --shadow-glass: 0 2px 6px 0 hsl(220 39% 11% / 0.05);
+    --shadow-glow: 0 4px 12px 0 hsl(220 39% 11% / 0.08);
+    --shadow-elevated: 0 8px 24px 0 hsl(220 39% 11% / 0.12);
 
-    /* Radius */
-    --radius: 1rem;
-    --radius-lg: 1.5rem;
-    --radius-xl: 2rem;
+    /* Radii - Minimal Roundness */
+    --radius: 4px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
   }
 
   .dark {
-    /* Base Colors - Elegant Dark Mode */
-    --background: 0 0% 8%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
+    /* SMS.AO Design System - Dark Mode */
+    --background: 220 26% 7%;
+    --foreground: 0 0% 100%;
+    --card: 220 20% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Primary Colors - Consistent Dark Gray */
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 8%;
-    --primary-glow: 0 0% 85%;
+    /* Primary Colors - White on Dark */
+    --primary: 0 0% 100%;
+    --primary-foreground: 220 39% 11%;
+    --primary-glow: 220 13% 65%;
 
     /* Secondary Colors */
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 16% 15%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted Colors */
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 220 20% 10%;
+    --muted-foreground: 220 13% 65%;
 
     /* Accent Colors */
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 220 16% 15%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive Colors */
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Border Colors */
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 98%;
+    /* Border and Input Colors */
+    --border: 220 16% 15%;
+    --input: 220 16% 15%;
+    --ring: 0 0% 100%;
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 0 0% 8%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 0 0% 65%;
+    /* Sidebar Colors */
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 220 13% 65%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 220 39% 11%;
+    --sidebar-accent: 220 16% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 16% 15%;
+    --sidebar-ring: 0 0% 100%;
 
-    /* Custom Gray Tokens */
-    --gray-100: 0 0% 18%;
-    --gray-200: 0 0% 15%;
-    --gray-300: 0 0% 20%;
-    --gray-400: 0 0% 35%;
-    --gray-500: 0 0% 55%;
-    --gray-600: 0 0% 65%;
-    --gray-700: 0 0% 75%;
-    --gray-800: 0 0% 85%;
-    --gray-900: 0 0% 95%;
+    /* SMS.AO Dark Gray Scale */
+    --gray-100: 220 20% 10%;
+    --gray-200: 220 16% 15%;
+    --gray-300: 220 13% 20%;
+    --gray-400: 220 10% 35%;
+    --gray-500: 220 9% 50%;
+    --gray-600: 220 13% 65%;
+    --gray-700: 220 13% 75%;
+    --gray-800: 220 14% 85%;
+    --gray-900: 220 14% 95%;
 
-    /* Glassmorphism & Effects */
-    --glass-bg: 0 0 0 / 0.2;
+    /* Glass & Effects for Dark Mode */
+    --glass-bg: 0 0 0 / 0.4;
     --glass-border: 255 255 255 / 0.1;
     
-    /* Advanced Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+    /* SMS.AO Dark Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 13% 65%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(220 26% 7%) 0%, hsl(220 20% 10%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(220 26% 7%) 0%, hsl(220 20% 10%) 50%, hsl(220 16% 15%) 100%);
     
-    /* Shadows */
-    --shadow-glass: 0 8px 32px hsl(var(--primary) / 0.2);
-    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
-    --shadow-elevated: 0 20px 60px hsl(var(--primary) / 0.25);
+    /* Shadows for Dark Mode */
+    --shadow-glass: 0 4px 12px 0 hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 8px 24px 0 hsl(0 0% 0% / 0.5);
+    --shadow-elevated: 0 12px 32px 0 hsl(0 0% 0% / 0.6);
   }
 }
 
