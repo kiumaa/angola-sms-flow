@@ -202,12 +202,20 @@ const QuickSend = () => {
                               <Badge variant="secondary" className="text-xs">Padrão</Badge>
                             </div>
                           </SelectItem>
-                         {senderIds.map((sender: any) => <SelectItem key={sender.id} value={sender.sender_id}>
-                             <div className="flex items-center gap-2">
-                               {sender.sender_id}
-                               {sender.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
-                             </div>
-                           </SelectItem>)}
+                          {/* Mostrar Sender IDs aprovados, excluindo SMSAO para evitar duplicação */}
+                          {senderIds
+                            .filter((sender: any) => sender.sender_id !== 'SMSAO') // Filtrar SMSAO para evitar duplicação
+                            .map((sender: any) => (
+                            <SelectItem key={sender.id} value={sender.sender_id}>
+                              <div className="flex items-center gap-2">
+                                {sender.sender_id}
+                                {sender.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
+                                <Badge variant="outline" className="text-xs">
+                                  {sender.supported_gateways?.includes('bulksms') ? '✓ BulkSMS' : ''}
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
                        </SelectContent>
                     </Select>
                      <p className="text-sm text-muted-foreground">
