@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, DollarSign, RefreshCw, Loader2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ export default function AdminSMSConfiguration() {
     message: 'Teste de SMS via SMS.AO',
     senderId: 'SMSAO'
   });
+  const [availableSenderIds, setAvailableSenderIds] = useState<any[]>([]);
 
   // Função para buscar saldo
   const fetchBalance = async () => {
@@ -232,7 +234,23 @@ export default function AdminSMSConfiguration() {
       }
     };
 
+    const loadSenderIds = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('sender_ids')
+          .select('*')
+          .eq('status', 'approved')
+          .order('is_default', { ascending: false });
+
+        if (error) throw error;
+        setAvailableSenderIds(data || []);
+      } catch (error) {
+        console.error('Erro ao carregar Sender IDs:', error);
+      }
+    };
+
     loadSavedConfiguration();
+    loadSenderIds();
   }, []);
   const handleTestSMS = async () => {
     if (!testSMS.phoneNumber || !testSMS.message) {
@@ -456,12 +474,40 @@ export default function AdminSMSConfiguration() {
 
             <div className="space-y-2">
               <Label htmlFor="test-sender">Sender ID</Label>
-              <Input id="test-sender" value={testSMS.senderId} onChange={e => setTestSMS(prev => ({
-              ...prev,
-              senderId: e.target.value
-            }))} placeholder="SMS.AO" maxLength={11} />
+              <Select value={testSMS.senderId} onValueChange={(value) => setTestSMS(prev => ({
+                ...prev,
+                senderId: value
+              }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar Sender ID" />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* Sempre mostrar SMSAO como padrão */}
+                  <SelectItem value="SMSAO">
+                    <div className="flex items-center gap-2">
+                      SMSAO
+                      <Badge variant="secondary" className="text-xs">Padrão</Badge>
+                    </div>
+                  </SelectItem>
+                  
+                  {/* Mostrar Sender IDs aprovados */}
+                  {availableSenderIds.map((sender) => (
+                    <SelectItem key={sender.id} value={sender.sender_id}>
+                      <div className="flex items-center gap-2">
+                        {sender.sender_id}
+                        {sender.is_default && (
+                          <Badge variant="secondary" className="text-xs">Padrão</Badge>
+                        )}
+                        <Badge variant="outline" className="text-xs">
+                          {sender.supported_gateways?.includes('bulksms') ? '✓ BulkSMS' : ''}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
-                Alfanumérico, máximo 11 caracteres
+                Selecione um Sender ID aprovado para teste
               </p>
             </div>
           </div>
