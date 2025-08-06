@@ -100,7 +100,7 @@ export default function SMSConfigurationHeader({ config, onRefresh, refreshing }
             <Settings2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-foreground">
               {activeGateways}/2
             </div>
             <p className="text-xs text-muted-foreground">
@@ -130,7 +130,7 @@ export default function SMSConfigurationHeader({ config, onRefresh, refreshing }
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-foreground">
               {config.useFallback ? 'ATIVO' : 'INATIVO'}
             </div>
             <p className="text-xs text-muted-foreground">

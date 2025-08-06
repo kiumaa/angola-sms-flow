@@ -287,10 +287,10 @@
   }
 }
 
-/* Text Selection */
+/* Text Selection - Neutralized */
 ::selection {
-  background-color: hsl(var(--primary) / 0.2);
-  color: hsl(var(--primary-foreground));
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
 }
 
 /* Scrollbar Styling */
