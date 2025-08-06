@@ -16,8 +16,9 @@ export default function AdminSMSConfiguration() {
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   
-  // API Token Configuration
-  const [apiToken, setApiToken] = useState('');
+  // API Token Configuration  
+  const [apiTokenId, setApiTokenId] = useState('');
+  const [apiTokenSecret, setApiTokenSecret] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   // Test SMS
@@ -58,10 +59,10 @@ export default function AdminSMSConfiguration() {
 
   // Função para testar conexão com API Token
   const testConnection = async () => {
-    if (!apiToken.trim()) {
+    if (!apiTokenId.trim()) {
       toast({
-        title: "API Token obrigatório",
-        description: "Digite o API Token antes de testar a conexão.",
+        title: "API Token ID obrigatório",
+        description: "Digite o API Token ID antes de testar a conexão.",
         variant: "destructive",
       });
       return;
@@ -72,7 +73,10 @@ export default function AdminSMSConfiguration() {
     
     try {
       const { data, error } = await supabase.functions.invoke('bulksms-balance', {
-        body: { apiToken: apiToken.trim() }
+        body: { 
+          apiTokenId: apiTokenId.trim(),
+          apiTokenSecret: apiTokenSecret.trim() 
+        }
       });
       
       if (error) throw error;
@@ -228,24 +232,40 @@ export default function AdminSMSConfiguration() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="api-token">API Token BulkSMS</Label>
-            <Input
-              id="api-token"
-              type="password"
-              value={apiToken}
-              onChange={(e) => setApiToken(e.target.value)}
-              placeholder="Digite seu API Token aqui..."
-            />
-            <p className="text-xs text-muted-foreground">
-              Formato: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX-XX-X
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="api-token-id">Token ID</Label>
+              <Input
+                id="api-token-id"
+                type="text"
+                value={apiTokenId}
+                onChange={(e) => setApiTokenId(e.target.value)}
+                placeholder="D1E7D35CB4954A62987FFD318548723D-02-2"
+              />
+              <p className="text-xs text-muted-foreground">
+                Token ID do BulkSMS
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="api-token-secret">Token Secret</Label>
+              <Input
+                id="api-token-secret"
+                type="password"
+                value={apiTokenSecret}
+                onChange={(e) => setApiTokenSecret(e.target.value)}
+                placeholder="9kgN1b9LSovYXeKrTGBwN0bp1foiZ"
+              />
+              <p className="text-xs text-muted-foreground">
+                Token Secret (opcional para teste)
+              </p>
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
             <Button
               onClick={testConnection}
-              disabled={isTestingConnection || !apiToken.trim()}
+              disabled={isTestingConnection || !apiTokenId.trim()}
               variant="outline"
             >
               {isTestingConnection ? (

@@ -15,25 +15,27 @@ serve(async (req) => {
     console.log('=== BulkSMS Balance Function Started ===');
     console.log('Request method:', req.method);
     
-    // Get API token from request body or environment
-    let apiToken = Deno.env.get('BULKSMS_TOKEN_ID');
-    console.log('Environment token found:', !!apiToken);
+    // Get API tokens from environment (both ID and Secret)
+    let apiTokenId = Deno.env.get('BULKSMS_TOKEN_ID');
+    let apiTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET');
+    console.log('Environment tokens found - ID:', !!apiTokenId, 'Secret:', !!apiTokenSecret);
     
     if (req.method === 'POST') {
       try {
         const body = await req.json();
         console.log('Request body received:', body);
-        if (body.apiToken) {
-          apiToken = body.apiToken;
-          console.log('Using token from request body');
+        if (body.apiTokenId) {
+          apiTokenId = body.apiTokenId;
+          apiTokenSecret = body.apiTokenSecret || '';
+          console.log('Using tokens from request body');
         }
       } catch (e) {
         console.error('Error parsing request body:', e);
       }
     }
     
-    if (!apiToken) {
-      console.error('No API Token available');
+    if (!apiTokenId) {
+      console.error('No API Token ID available');
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -46,13 +48,17 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Fetching balance using API Token: ${apiToken.substring(0, 8)}...`);
+    console.log(`Fetching balance using Token ID: ${apiTokenId.substring(0, 8)}...`);
+    
+    // Create Basic Auth with Token ID:Token Secret format
+    const authString = `${apiTokenId}:${apiTokenSecret || ''}`;
+    console.log('Auth string format:', `${apiTokenId.substring(0, 8)}:${apiTokenSecret ? '***' : '(empty)'}`);
 
     // Consultar saldo via BulkSMS API v1 usando endpoint profile
     const response = await fetch('https://api.bulksms.com/v1/profile', {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${btoa(apiToken + ':')}`
+        'Authorization': `Basic ${btoa(authString)}`
       }
     });
 

@@ -75,21 +75,24 @@ serve(async (req) => {
       console.log(`Using default Sender ID: ${senderId}`)
     }
 
-    // Get BulkSMS API token from secrets
-    const bulkSMSToken = Deno.env.get('BULKSMS_TOKEN_ID')
+    // Get BulkSMS API tokens from secrets
+    const bulkSMSTokenId = Deno.env.get('BULKSMS_TOKEN_ID')
+    const bulkSMSTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
 
-    if (!bulkSMSToken) {
-      throw new Error('BulkSMS API token not configured')
+    if (!bulkSMSTokenId) {
+      throw new Error('BulkSMS API Token ID not configured')
     }
 
-    console.log(`Using BulkSMS token: ${bulkSMSToken.substring(0, 8)}...`)
+    console.log(`Using BulkSMS Token ID: ${bulkSMSTokenId.substring(0, 8)}...`)
+    console.log(`Token Secret available: ${!!bulkSMSTokenSecret}`)
 
     // Send SMS via BulkSMS API v1
     const bulkSMSResponse = await sendViaBulkSMSProduction(
       contacts,
       message,
       senderId,
-      bulkSMSToken,
+      bulkSMSTokenId,
+      bulkSMSTokenSecret || '',
       isTest
     )
 
@@ -159,7 +162,8 @@ async function sendViaBulkSMSProduction(
   contacts: string[],
   message: string,
   senderId: string,
-  apiToken: string,
+  apiTokenId: string,
+  apiTokenSecret: string,
   isTest: boolean = false
 ): Promise<BulkSMSResponse[]> {
   
@@ -179,14 +183,18 @@ async function sendViaBulkSMSProduction(
   }))
 
   console.log(`Sending ${formattedContacts.length} SMS via BulkSMS API v1 with sender: ${senderId}`)
-  console.log(`Using API Token: ${apiToken.substring(0, 8)}...`)
+  console.log(`Using Token ID: ${apiTokenId.substring(0, 8)}...`)
+  console.log(`Token Secret available: ${!!apiTokenSecret}`)
+
+  // Create proper Basic Auth with TokenID:TokenSecret
+  const authString = `${apiTokenId}:${apiTokenSecret}`;
 
   try {
     const response = await fetch('https://api.bulksms.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(`${apiToken}:`)}`
+        'Authorization': `Basic ${btoa(authString)}`
       },
       body: JSON.stringify({ messages })
     })
