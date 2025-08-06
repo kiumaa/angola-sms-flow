@@ -115,7 +115,7 @@
     /* Border and Input Colors */
     --border: 220 16% 15%;
     --input: 220 16% 15%;
-    --ring: 0 0% 100%;
+    --ring: 220 16% 15%;
 
     /* Sidebar Colors */
     --sidebar-background: 220 20% 8%;
@@ -125,7 +125,7 @@
     --sidebar-accent: 220 16% 15%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 16% 15%;
-    --sidebar-ring: 0 0% 100%;
+    --sidebar-ring: 220 16% 15%;
 
     /* SMS.AO Dark Gray Scale */
     --gray-100: 220 20% 10%;
@@ -159,6 +159,13 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Remove all focus rings completely */
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   html {
