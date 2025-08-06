@@ -63,21 +63,29 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       throw new Error('Missing authorization header')
     }
 
-    // Get user from auth header
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
+    // Create client with anon key for user authentication
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey)
+    
+    // Get user from auth header using the user token
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await userSupabase.auth.getUser(token)
     
     if (userError || !user) {
+      console.error('Authentication error:', userError)
       throw new Error('Invalid authorization')
     }
+
+    console.log(`Authenticated user: ${user.id}`)
+
+    // Create admin client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const { contacts, message, senderId = 'SMSAO', campaignId, isTest = false }: SMSRequest = await req.json()
 
