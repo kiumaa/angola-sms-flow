@@ -58,12 +58,12 @@ function App() {
           enableSystem={false}
           disableTransitionOnChange={false}
         >
-          <BrandProvider>
-            <TooltipProvider>
+          <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
-          <Suspense fallback={<MessageSendingLoader />}>
+              <BrandProvider>
+                <Suspense fallback={<MessageSendingLoader />}>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
@@ -296,12 +296,12 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </BrowserRouter>
-            </TooltipProvider>
-          </BrandProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+        </BrandProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </ThemeProvider>
+</AuthProvider>
+</QueryClientProvider>
   );
 }
 
