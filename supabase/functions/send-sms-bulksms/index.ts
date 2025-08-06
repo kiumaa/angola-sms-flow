@@ -233,11 +233,11 @@ async function sendViaBulkSMSProduction(
   console.log(`Original contacts:`, contacts)
   console.log(`Formatted contacts:`, formattedContacts)
 
-  // Prepare messages for API v1 (using "content" not "body")
+  // Prepare messages for API v1 (using "body" not "content")
   const messages = formattedContacts.map(contact => ({
     to: contact,
     from: senderId,
-    content: message
+    body: message
   }))
 
   console.log(`=== BulkSMS API Call ===`)

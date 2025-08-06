@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 interface SMSRequest {
-  contacts: string[]
+  phoneNumber: string
   message: string
   senderId?: string
   campaignId?: string
@@ -38,18 +38,19 @@ serve(async (req) => {
       throw new Error('Invalid authorization')
     }
 
-    const { contacts, message, senderId = 'SMS.AO', campaignId, isTest = false }: SMSRequest = await req.json()
+    const { phoneNumber, message, senderId = 'SMSAO', campaignId, isTest = false }: SMSRequest = await req.json()
 
-    if (!contacts || contacts.length === 0) {
-      throw new Error('No contacts provided')
+    if (!phoneNumber) {
+      throw new Error('No phone number provided')
     }
 
     if (!message) {
       throw new Error('No message provided')
     }
 
-    // Validate Sender ID if not default
-    if (senderId !== 'SMS.AO') {
+    // Validate Sender ID if not default (allow both SMSAO and SMS.AO as default)
+    const defaultSenderIds = ['SMSAO', 'SMS.AO']
+    if (!defaultSenderIds.includes(senderId)) {
       const { data: senderData, error: senderError } = await supabase
         .from('sender_ids')
         .select('*')
@@ -63,12 +64,14 @@ serve(async (req) => {
       }
 
       console.log(`Using approved Sender ID: ${senderId} for user: ${user.id}`)
+    } else {
+      console.log(`Using default Sender ID: ${senderId}`)
     }
 
     // Forward to BulkSMS function
     const { data: bulkSMSResponse, error: bulkSMSError } = await supabase.functions.invoke('send-sms-bulksms', {
       body: {
-        contacts,
+        contacts: [phoneNumber], // Convert single phone to array for BulkSMS function
         message,
         senderId,
         campaignId,
@@ -90,7 +93,8 @@ serve(async (req) => {
         totalSent: bulkSMSResponse.totalSent || 0,
         totalFailed: bulkSMSResponse.totalFailed || 0,
         creditsUsed: bulkSMSResponse.creditsUsed || 0,
-        batchId: bulkSMSResponse.batchId
+        messageId: bulkSMSResponse.messageId,
+        responseTime: bulkSMSResponse.responseTime || 0
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -103,7 +107,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message,
+        gateway: 'bulksms'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
