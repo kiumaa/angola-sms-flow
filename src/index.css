@@ -155,10 +155,17 @@
 }
 
 /* Base Styles */
+/* SMS.AO Typography Standards */
 @layer base {
+  /* Global Typography Settings */
+  * {
+    font-family: 'Inter', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-light antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-weight: 300; /* Light como padrão */
   }
 
   /* ELIMINATE ALL POSSIBLE COLORED BORDERS/OUTLINES/SHADOWS */
@@ -196,8 +203,54 @@
   }
 }
 
-/* Advanced Component Utilities */
+/* SMS.AO Typography Utilities */
 @layer utilities {
+  /* Standardized Typography Classes */
+  .text-h1 {
+    @apply text-h1 font-light tracking-tight leading-tight;
+  }
+  
+  .text-h2 {
+    @apply text-h2 font-light tracking-tight leading-normal;
+  }
+  
+  .text-h3 {
+    @apply text-h3 font-normal leading-normal;
+  }
+  
+  .text-body {
+    @apply text-body font-light leading-normal;
+  }
+
+  /* Override any inconsistent font weights */
+  h1, .h1 {
+    @apply text-h1 font-light tracking-tight;
+  }
+  
+  h2, .h2 {
+    @apply text-h2 font-light tracking-tight;
+  }
+  
+  h3, .h3 {
+    @apply text-h3 font-normal;
+  }
+  
+  p, .p {
+    @apply text-body font-light;
+  }
+
+  /* Consistent button typography */
+  button {
+    font-family: 'Inter', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 400; /* Regular for buttons */
+  }
+
+  /* Consistent input typography */
+  input, textarea, select {
+    font-family: 'Inter', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 300; /* Light for inputs */
+  }
+
   /* Glass Effects */
   .glass {
     background: rgba(var(--glass-bg));
