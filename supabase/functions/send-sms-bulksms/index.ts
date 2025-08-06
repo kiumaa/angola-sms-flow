@@ -258,7 +258,7 @@ async function sendViaBulkSMSProduction(
         'Content-Type': 'application/json',
         'Authorization': `Basic ${btoa(authString)}`
       },
-      body: JSON.stringify({ messages })
+      body: JSON.stringify(messages) // Enviar o array diretamente, não em um objeto
     })
 
     const responseData = await response.json()
