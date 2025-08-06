@@ -48,35 +48,49 @@ serve(async (req) => {
       throw new Error('BulkSMS API token not configured')
     }
 
-    console.log('Fetching BulkSMS balance...')
+    console.log('Fetching BulkSMS balance via Legacy EAPI...')
 
-    // Get balance from BulkSMS API v1
-    const response = await fetch('https://api.bulksms.com/v1/profile', {
-      method: 'GET',
+    // Get balance from BulkSMS Legacy EAPI
+    const response = await fetch('https://api-legacy2.bulksms.com/eapi', {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': `Basic ${btoa(`${bulkSMSToken}:`)}`
-      }
+      },
+      body: new URLSearchParams({
+        command: 'CHECKACCOUNT'
+      })
     })
 
-    const responseData = await response.json()
-    console.log('BulkSMS profile response:', responseData)
+    const responseText = await response.text()
+    console.log('BulkSMS Legacy EAPI balance response:', responseText)
 
     if (response.ok) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          balance: responseData.credits?.balance || 0,
-          currency: responseData.currency || 'USD',
-          company: responseData.company || 'Unknown',
-          lastUpdated: new Date().toISOString()
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      )
+      // Parse Legacy EAPI balance response: "0: SUCCESS|credits:1000"
+      const [statusCode, statusText] = responseText.split(': ', 2)
+      
+      if (statusCode === '0') {
+        const creditsMatch = responseText.match(/credits:(\d+(\.\d+)?)/)
+        const credits = creditsMatch ? parseFloat(creditsMatch[1]) : 0
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            balance: credits,
+            currency: 'USD',
+            company: 'BulkSMS Account',
+            lastUpdated: new Date().toISOString()
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+      } else {
+        throw new Error(`BulkSMS EAPI error: ${statusCode}: ${statusText}`)
+      }
     } else {
-      throw new Error(`BulkSMS API error: ${responseData.detail?.message || response.statusText}`)
+      throw new Error(`BulkSMS EAPI HTTP error: ${response.status} ${response.statusText}`)
     }
 
   } catch (error) {

@@ -200,14 +200,14 @@ export default function AdminSMSConfiguration() {
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <p className="text-sm text-green-800">
-                <strong>Produção Ativa:</strong> API v1 configurada com token de produção
+                <strong>API Token Configurado:</strong> Autenticação simplificada via API Token
               </p>
             </div>
           </div>
 
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Endpoint:</strong> https://api.bulksms.com/v1/messages (API v1 JSON)
+              <strong>Legacy EAPI:</strong> https://api-legacy2.bulksms.com/eapi (Produção)
             </p>
           </div>
 
