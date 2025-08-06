@@ -210,9 +210,6 @@ const QuickSend = () => {
                               <div className="flex items-center gap-2">
                                 {sender.sender_id}
                                 {sender.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
-                                <Badge variant="outline" className="text-xs">
-                                  {sender.supported_gateways?.includes('bulksms') ? '✓ BulkSMS' : ''}
-                                </Badge>
                               </div>
                             </SelectItem>
                           ))}
