@@ -14,6 +14,11 @@ export default function AdminSMSConfiguration() {
   const [isTestingSMS, setIsTestingSMS] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  
+  // API Token Configuration
+  const [apiToken, setApiToken] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   // Test SMS
   const [testSMS, setTestSMS] = useState({
@@ -48,6 +53,50 @@ export default function AdminSMSConfiguration() {
       });
     } finally {
       setLoadingBalance(false);
+    }
+  };
+
+  // Função para testar conexão com API Token
+  const testConnection = async () => {
+    if (!apiToken.trim()) {
+      toast({
+        title: "API Token obrigatório",
+        description: "Digite o API Token antes de testar a conexão.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTestingConnection(true);
+    setConnectionStatus('idle');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('bulksms-balance', {
+        body: { apiToken: apiToken.trim() }
+      });
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        setConnectionStatus('success');
+        setBalance(data.balance);
+        toast({
+          title: "Conexão bem-sucedida!",
+          description: `API Token válido. Saldo: $${data.balance.toFixed(2)} USD`,
+        });
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao testar conexão:', error);
+      setConnectionStatus('error');
+      toast({
+        title: "Erro na conexão",
+        description: error.message || "Falha ao conectar com BulkSMS",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTestingConnection(false);
     }
   };
 
@@ -167,6 +216,68 @@ export default function AdminSMSConfiguration() {
         </CardContent>
       </Card>
 
+      {/* Card de Configuração API Token */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Configuração API Token
+          </CardTitle>
+          <CardDescription>
+            Configure e teste seu API Token do BulkSMS
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="api-token">API Token BulkSMS</Label>
+            <Input
+              id="api-token"
+              type="password"
+              value={apiToken}
+              onChange={(e) => setApiToken(e.target.value)}
+              placeholder="Digite seu API Token aqui..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Formato: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX-XX-X
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={testConnection}
+              disabled={isTestingConnection || !apiToken.trim()}
+              variant="outline"
+            >
+              {isTestingConnection ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Testando...
+                </div>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Testar Conexão
+                </>
+              )}
+            </Button>
+            
+            {connectionStatus === 'success' && (
+              <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Conectado
+              </Badge>
+            )}
+            
+            {connectionStatus === 'error' && (
+              <Badge variant="destructive">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Erro na conexão
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Card de Saldo */}
       <Card>
         <CardHeader>
@@ -196,7 +307,7 @@ export default function AdminSMSConfiguration() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-blue-600">
-            {balance !== null ? `$${balance.toFixed(2)} USD` : "Carregando..."}
+            {balance !== null ? `$${balance.toFixed(2)} USD` : "Configure o API Token para ver o saldo"}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             Atualizado automaticamente após cada envio

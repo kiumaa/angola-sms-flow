@@ -12,14 +12,25 @@ serve(async (req) => {
   }
 
   try {
-    const apiToken = Deno.env.get('BULKSMS_TOKEN_ID');
+    // Get API token from request body or environment
+    let apiToken = Deno.env.get('BULKSMS_TOKEN_ID');
+    
+    if (req.method === 'POST') {
+      const body = await req.json();
+      if (body.apiToken) {
+        apiToken = body.apiToken;
+      }
+    }
     
     if (!apiToken) {
       console.error('BulkSMS API Token not found');
       return new Response(
-        JSON.stringify({ error: 'API Token not configured' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'API Token not configured' 
+        }),
         { 
-          status: 500, 
+          status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
