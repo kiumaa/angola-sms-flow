@@ -25,15 +25,15 @@ export function RouteeProvider({ children }: { children: ReactNode }) {
       const { data: settings, error } = await supabase
         .from('routee_settings')
         .select('*')
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error loading Routee config:', error);
         return;
       }
 
       if (settings) {
-        setIsConfigured(Boolean(settings.api_token_encrypted));
+        setIsConfigured(Boolean(settings.application_id_encrypted && settings.application_secret_encrypted));
         setIsActive(settings.is_active);
         setLastTestedAt(settings.last_tested_at);
         setTestStatus(settings.test_status as 'success' | 'error' | null);
@@ -121,7 +121,7 @@ export function useRouteeProductionStatus() {
   
   const isProductionReady = isConfigured && isActive && testStatus === 'success';
   const statusMessage = !isConfigured 
-    ? 'Token da API não configurado'
+    ? 'Credenciais OAuth não configuradas'
     : !isActive 
     ? 'Gateway desativado'
     : testStatus !== 'success'

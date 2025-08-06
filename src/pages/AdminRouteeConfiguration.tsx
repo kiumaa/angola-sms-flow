@@ -51,9 +51,9 @@ export default function AdminRouteeConfiguration() {
       const { data: settings, error } = await supabase
         .from('routee_settings')
         .select('*')
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error loading configuration:', error);
         return;
       }
@@ -62,8 +62,8 @@ export default function AdminRouteeConfiguration() {
         setConfig(prev => ({
           ...prev,
           isActive: settings.is_active,
-          applicationId: (settings as any).application_id_encrypted ? atob((settings as any).application_id_encrypted) : '',
-          applicationSecret: (settings as any).application_secret_encrypted ? atob((settings as any).application_secret_encrypted) : '',
+          applicationId: settings.application_id_encrypted ? atob(settings.application_id_encrypted) : '',
+          applicationSecret: settings.application_secret_encrypted ? atob(settings.application_secret_encrypted) : '',
           status: settings.test_status === 'success' ? 'connected' : 
                  settings.test_status === 'error' ? 'error' : 'disconnected',
           balance: settings.balance_eur,
@@ -84,6 +84,7 @@ export default function AdminRouteeConfiguration() {
           is_active: config.isActive,
           application_id_encrypted: config.applicationId ? btoa(config.applicationId) : null,
           application_secret_encrypted: config.applicationSecret ? btoa(config.applicationSecret) : null,
+          created_by: '8a2544af-b71e-4e66-9068-fac3172bb791',
           updated_at: new Date().toISOString()
         });
 
