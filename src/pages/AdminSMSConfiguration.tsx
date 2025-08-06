@@ -17,7 +17,7 @@ export default function AdminSMSConfiguration() {
   const [testSMS, setTestSMS] = useState({
     phoneNumber: '+244',
     message: 'Teste de SMS via SMS.AO',
-    senderId: 'SMS.AO'
+    senderId: 'SMSAO'
   });
 
   const handleTestSMS = async () => {

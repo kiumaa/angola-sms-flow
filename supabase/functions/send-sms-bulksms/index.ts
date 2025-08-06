@@ -45,7 +45,7 @@ serve(async (req) => {
       throw new Error('Invalid authorization')
     }
 
-    const { contacts, message, senderId = 'SMS.AO', campaignId, isTest = false }: SMSRequest = await req.json()
+    const { contacts, message, senderId = 'SMSAO', campaignId, isTest = false }: SMSRequest = await req.json()
 
     if (!contacts || contacts.length === 0) {
       throw new Error('No contacts provided')
@@ -55,8 +55,9 @@ serve(async (req) => {
       throw new Error('No message provided')
     }
 
-    // Validate Sender ID if not default
-    if (senderId !== 'SMS.AO') {
+    // Validate Sender ID if not default (allow both SMSAO and SMS.AO as default)
+    const defaultSenderIds = ['SMSAO', 'SMS.AO']
+    if (!defaultSenderIds.includes(senderId)) {
       const { data: senderData, error: senderError } = await supabase
         .from('sender_ids')
         .select('*')
@@ -70,6 +71,8 @@ serve(async (req) => {
       }
 
       console.log(`Using approved Sender ID: ${senderId} for user: ${user.id}`)
+    } else {
+      console.log(`Using default Sender ID: ${senderId}`)
     }
 
     // Get BulkSMS API token from secrets (Legacy EAPI uses only token, no secret)
