@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, DollarSign, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import SenderIDsSection from "@/components/admin/sms/SenderIDsSection";
 export default function AdminSMSConfiguration() {
   const {
     toast
@@ -354,7 +355,21 @@ export default function AdminSMSConfiguration() {
         </CardContent>
       </Card>
 
-      {/* Informações sobre Sender IDs */}
+      {/* Seção de Gestão de Sender IDs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Send className="h-5 w-5" />
+            Gestão de Sender IDs
+          </CardTitle>
+          <CardDescription>
+            Gerencie os Sender IDs aprovados para uso no sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SenderIDsSection />
+        </CardContent>
+      </Card>
       
     </div>;
 }
