@@ -8,15 +8,21 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, isAdmin, loading } = useAuth();
-  const { toast } = useToast();
+  const {
+    signIn,
+    user,
+    isAdmin,
+    loading
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -24,39 +30,36 @@ const Login = () => {
       navigate(isAdmin ? "/admin" : "/dashboard");
     }
   }, [user, isAdmin, loading, navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const { error } = await signIn(email, password);
-      
+      const {
+        error
+      } = await signIn(email, password);
       if (error) {
         toast({
           title: "Erro no login",
           description: error.message || "Credenciais inválidas",
-          variant: "destructive",
+          variant: "destructive"
         });
       } else {
         toast({
           title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta à sua conta.",
+          description: "Bem-vindo de volta à sua conta."
         });
       }
     } catch (error) {
       toast({
         title: "Erro no login",
         description: "Ocorreu um erro inesperado",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent animate-float"></div>
       
@@ -79,78 +82,40 @@ const Login = () => {
         <div className="w-full max-w-md">
           {/* Advanced Login Card */}
           <Card className="card-futuristic relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-            <CardHeader className="text-center relative">
-              <div className="p-4 rounded-3xl bg-gradient-primary shadow-glow w-fit mx-auto mb-6 animate-glow">
-                <Mail className="h-8 w-8 text-white" />
-              </div>
-              <CardTitle className="text-3xl font-light gradient-text">Entrar na sua conta</CardTitle>
-              <CardDescription className="text-lg">
-                Entre com suas credenciais para acessar o dashboard
-              </CardDescription>
-            </CardHeader>
+            <div className="absolute inset-0 bg-gradient-primary opacity-5 my-0 py-0"></div>
+            
             
             <CardContent className="relative">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-base">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="rounded-2xl h-14 text-base glass-card border-glass-border"
-                    required
-                  />
+                  <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} className="rounded-2xl h-14 text-base glass-card border-glass-border" required />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-base">Senha</Label>
                   <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
+                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full button-futuristic text-lg py-6" 
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full button-futuristic text-lg py-6" disabled={isLoading}>
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
               </form>
 
               <div className="mt-8 text-center">
-                <Link 
-                  to="/forgot-password" 
-                  className="text-primary hover:underline transition-all duration-300 hover:scale-105"
-                >
+                <Link to="/forgot-password" className="text-primary hover:underline transition-all duration-300 hover:scale-105">
                   Esqueceu sua senha?
                 </Link>
               </div>
 
               <div className="mt-8 text-center">
                 <span className="text-muted-foreground">Não tem uma conta? </span>
-                <Link 
-                  to="/register" 
-                  className="text-primary hover:underline font-medium gradient-text transition-all duration-300 hover:scale-105"
-                >
+                <Link to="/register" className="text-primary hover:underline font-medium gradient-text transition-all duration-300 hover:scale-105">
                   Criar conta grátis
                 </Link>
               </div>
@@ -161,31 +126,19 @@ const Login = () => {
           <div className="mt-12 text-center">
             <p className="text-muted-foreground mb-6 text-lg">Por que escolher nossa plataforma?</p>
             <div className="space-y-4">
-              {loginFeatures.map((feature, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-center text-base glass-card p-4 rounded-2xl hover-lift animate-slide-up-stagger"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
+              {loginFeatures.map((feature, index) => <div key={index} style={{
+              animationDelay: `${index * 0.1}s`
+            }} className="flex items-center justify-center text-base glass-card p-4 rounded-2xl hover-lift animate-slide-up-stagger my-[5px] py-[10px]">
                   <div className="p-2 rounded-full bg-gradient-primary shadow-glow mr-4">
                     <Check className="h-4 w-4 text-white" />
                   </div>
-                  <span>{feature}</span>
-                </div>
-              ))}
+                  <span className="text-sm font-normal">{feature}</span>
+                </div>)}
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
-const loginFeatures = [
-  "99,9% de uptime garantido",
-  "Suporte especializado em português",
-  "Preços transparentes em Kwanzas",
-  "API completa com documentação"
-];
-
+const loginFeatures = ["99,9% de uptime garantido", "Suporte especializado em português", "Preços transparentes em Kwanzas", "API completa com documentação"];
 export default Login;
