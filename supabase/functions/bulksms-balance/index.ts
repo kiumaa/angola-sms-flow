@@ -38,8 +38,8 @@ serve(async (req) => {
 
     console.log(`Fetching balance using API Token: ${apiToken.substring(0, 8)}...`);
 
-    // Consultar saldo via BulkSMS API v1
-    const response = await fetch('https://api.bulksms.com/v1/profile', {
+    // Consultar saldo via BulkSMS API v1 usando endpoint correto
+    const response = await fetch('https://api.bulksms.com/v1/account/credits', {
       method: 'GET',
       headers: {
         'Authorization': `Basic ${btoa(apiToken + ':')}`
@@ -47,13 +47,13 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log('BulkSMS profile response:', data);
+    console.log('BulkSMS credits response:', data);
 
-    if (response.ok && data.credits) {
+    if (response.ok && data.balance !== undefined) {
       return new Response(
         JSON.stringify({ 
           success: true,
-          balance: data.credits.balance || 0,
+          balance: data.balance || 0,
           currency: 'USD'
         }),
         { 
