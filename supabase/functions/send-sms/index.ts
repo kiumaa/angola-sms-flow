@@ -30,13 +30,15 @@ serve(async (req) => {
     }
 
     // Get user from auth header
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
+      console.error('Authentication error:', userError)
       throw new Error('Invalid authorization')
     }
+
+    console.log(`Authenticated user: ${user.id}`)
 
     const { phoneNumber, message, senderId = 'SMSAO', campaignId, isTest = false }: SMSRequest = await req.json()
 
