@@ -6,7 +6,8 @@ const corsHeaders = {
 }
 
 interface TestConnectionRequest {
-  apiToken: string
+  applicationId: string
+  applicationSecret: string
 }
 
 serve(async (req) => {
@@ -15,10 +16,35 @@ serve(async (req) => {
   }
 
   try {
-    const { apiToken }: TestConnectionRequest = await req.json()
+    const { applicationId, applicationSecret }: TestConnectionRequest = await req.json()
 
-    if (!apiToken) {
-      throw new Error('API token is required')
+    if (!applicationId || !applicationSecret) {
+      throw new Error('Application ID and Secret are required')
+    }
+
+    // First, get OAuth token
+    const tokenResponse = await fetch('https://connect.routee.net/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: applicationId,
+        client_secret: applicationSecret
+      })
+    })
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text()
+      throw new Error(`OAuth failed: ${tokenResponse.status} - ${errorText}`)
+    }
+
+    const tokenData = await tokenResponse.json()
+    const accessToken = tokenData.access_token
+
+    if (!accessToken) {
+      throw new Error('No access token received from OAuth')
     }
 
     // Test connection to Routee - formato correto conforme documentação
@@ -31,7 +57,7 @@ serve(async (req) => {
     const response = await fetch('https://connect.routee.net/sms', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(testPayload)
@@ -47,7 +73,7 @@ serve(async (req) => {
       try {
         const balanceResponse = await fetch('https://connect.routee.net/balance', {
           headers: {
-            'Authorization': `Bearer ${apiToken}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
         })
