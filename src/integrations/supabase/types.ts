@@ -444,7 +444,6 @@ export type Database = {
       }
       sender_ids: {
         Row: {
-          bulkgate_status: string | null
           bulksms_status: string | null
           created_at: string
           id: string
@@ -456,7 +455,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          bulkgate_status?: string | null
           bulksms_status?: string | null
           created_at?: string
           id?: string
@@ -468,7 +466,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          bulkgate_status?: string | null
           bulksms_status?: string | null
           created_at?: string
           id?: string

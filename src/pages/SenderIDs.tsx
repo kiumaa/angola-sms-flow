@@ -12,11 +12,11 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface SenderID {
   id: string;
+  user_id: string;
   sender_id: string;
   is_default: boolean;
   status: string;
   bulksms_status: string;
-  bulkgate_status: string;
   supported_gateways: string[];
   created_at: string;
 }

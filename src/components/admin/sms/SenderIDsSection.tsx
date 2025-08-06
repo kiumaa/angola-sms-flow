@@ -63,7 +63,6 @@ interface SenderID {
   user_id: string;
   status: string;
   bulksms_status: string;
-  bulkgate_status: string;
   supported_gateways: string[];
   is_default: boolean;
   created_at: string;
@@ -84,7 +83,6 @@ export default function SenderIDsSection() {
     user_id: '',
     status: 'pending',
     bulksms_status: 'pending',
-    bulkgate_status: 'pending',
     is_default: false,
     notes: ''
   });
@@ -97,24 +95,13 @@ export default function SenderIDsSection() {
 
   const loadSenderIDs = async () => {
     try {
-      const { data, error } = await supabase
-        .from('sender_ids')
-        .select(`
-          id,
-          sender_id,
-          user_id,
-          status,
-          bulksms_status,
-          bulkgate_status,
-          supported_gateways,
-          is_default,
-          created_at,
-          updated_at
-        `)
-        .order('created_at', { ascending: false });
+        const { data, error } = await supabase
+          .from('sender_ids')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSenderIDs(data || []);
+        if (error) throw error;
+        setSenderIDs(data || []);
     } catch (error) {
       console.error('Erro ao carregar Sender IDs:', error);
       toast({
@@ -151,7 +138,6 @@ export default function SenderIDsSection() {
           supported_gateways: newSenderID.gateways,
           status: newSenderID.status,
           bulksms_status: newSenderID.bulksms_status,
-          bulkgate_status: newSenderID.bulkgate_status,
           is_default: newSenderID.is_default
         });
 
@@ -185,7 +171,6 @@ export default function SenderIDsSection() {
           sender_id: newSenderID.sender_id,
           status: newSenderID.status,
           bulksms_status: newSenderID.bulksms_status,
-          bulkgate_status: newSenderID.bulkgate_status,
           supported_gateways: newSenderID.gateways,
           is_default: newSenderID.is_default
         })
@@ -276,8 +261,7 @@ export default function SenderIDsSection() {
         .from('sender_ids')
         .update({
           status: 'approved',
-          bulksms_status: 'approved',
-          bulkgate_status: 'approved'
+          bulksms_status: 'approved'
         })
         .eq('id', senderID.id);
 
@@ -285,7 +269,7 @@ export default function SenderIDsSection() {
 
       toast({
         title: "Sender ID Aprovado",
-        description: "Sender ID foi aprovado em todos os gateways"
+        description: "Sender ID foi aprovado para BulkSMS"
       });
 
       loadSenderIDs();
@@ -305,8 +289,7 @@ export default function SenderIDsSection() {
         .from('sender_ids')
         .update({
           status: 'rejected',
-          bulksms_status: 'rejected',
-          bulkgate_status: 'rejected'
+          bulksms_status: 'rejected'
         })
         .eq('id', senderID.id);
 
@@ -314,7 +297,7 @@ export default function SenderIDsSection() {
 
       toast({
         title: "Sender ID Rejeitado",
-        description: "Sender ID foi rejeitado em todos os gateways"
+        description: "Sender ID foi rejeitado"
       });
 
       loadSenderIDs();
@@ -335,7 +318,6 @@ export default function SenderIDsSection() {
       user_id: '',
       status: 'pending',
       bulksms_status: 'pending',
-      bulkgate_status: 'pending',
       is_default: false,
       notes: ''
     });
@@ -349,7 +331,6 @@ export default function SenderIDsSection() {
       user_id: senderID.user_id,
       status: senderID.status,
       bulksms_status: senderID.bulksms_status,
-      bulkgate_status: senderID.bulkgate_status,
       is_default: senderID.is_default,
       notes: ''
     });
@@ -382,8 +363,6 @@ export default function SenderIDsSection() {
   const getGatewayStatus = (senderID: SenderID, gateway: string) => {
     if (gateway === 'bulksms') {
       return getStatusBadge(senderID.bulksms_status);
-    } else if (gateway === 'bulkgate') {
-      return getStatusBadge(senderID.bulkgate_status);
     }
     return <Badge variant="outline">N/A</Badge>;
   };
@@ -459,7 +438,7 @@ export default function SenderIDsSection() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Status Geral</Label>
                         <Select value={newSenderID.status} onValueChange={(value) => setNewSenderID(prev => ({ ...prev, status: value }))}>
@@ -487,66 +466,6 @@ export default function SenderIDsSection() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
-                      <div>
-                        <Label>Status BulkGate</Label>
-                        <Select value={newSenderID.bulkgate_status} onValueChange={(value) => setNewSenderID(prev => ({ ...prev, bulkgate_status: value }))}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pendente</SelectItem>
-                            <SelectItem value="approved">Aprovado</SelectItem>
-                            <SelectItem value="rejected">Rejeitado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label>Gateways Suportados</Label>
-                      <div className="mt-2 space-y-2">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={newSenderID.gateways.includes('bulksms')}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setNewSenderID(prev => ({ 
-                                  ...prev, 
-                                  gateways: [...prev.gateways, 'bulksms']
-                                }));
-                              } else {
-                                setNewSenderID(prev => ({ 
-                                  ...prev, 
-                                  gateways: prev.gateways.filter(g => g !== 'bulksms')
-                                }));
-                              }
-                            }}
-                          />
-                          <span className="text-sm">BulkSMS</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={newSenderID.gateways.includes('bulkgate')}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setNewSenderID(prev => ({ 
-                                  ...prev, 
-                                  gateways: [...prev.gateways, 'bulkgate']
-                                }));
-                              } else {
-                                setNewSenderID(prev => ({ 
-                                  ...prev, 
-                                  gateways: prev.gateways.filter(g => g !== 'bulkgate')
-                                }));
-                              }
-                            }}
-                          />
-                          <span className="text-sm">BulkGate</span>
-                        </label>
-                      </div>
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -563,7 +482,7 @@ export default function SenderIDsSection() {
                       </Button>
                       <Button 
                         onClick={createSenderID}
-                        disabled={!newSenderID.sender_id || !newSenderID.user_id || newSenderID.gateways.length === 0}
+                        disabled={!newSenderID.sender_id || !newSenderID.user_id}
                       >
                         <Save className="h-4 w-4 mr-2" />
                         Criar
@@ -587,7 +506,6 @@ export default function SenderIDsSection() {
                 <TableHead>Usuário</TableHead>
                 <TableHead>Status Geral</TableHead>
                 <TableHead>BulkSMS</TableHead>
-                <TableHead>BulkGate</TableHead>
                 <TableHead>Padrão</TableHead>
                 <TableHead>Criado em</TableHead>
                 <TableHead>Ações</TableHead>
@@ -596,7 +514,7 @@ export default function SenderIDsSection() {
             <TableBody>
               {senderIDs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="flex flex-col items-center space-y-2">
                       <FileText className="h-8 w-8 text-muted-foreground" />
                       <p className="text-muted-foreground">Nenhum Sender ID encontrado</p>
@@ -624,12 +542,6 @@ export default function SenderIDsSection() {
                     <TableCell>
                       {senderID.supported_gateways.includes('bulksms') ? 
                         getGatewayStatus(senderID, 'bulksms') : 
-                        <Badge variant="outline">N/A</Badge>
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {senderID.supported_gateways.includes('bulkgate') ? 
-                        getGatewayStatus(senderID, 'bulkgate') : 
                         <Badge variant="outline">N/A</Badge>
                       }
                     </TableCell>
@@ -712,7 +624,7 @@ export default function SenderIDsSection() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Status Geral</Label>
                 <Select value={newSenderID.status} onValueChange={(value) => setNewSenderID(prev => ({ ...prev, status: value }))}>
@@ -739,66 +651,6 @@ export default function SenderIDsSection() {
                     <SelectItem value="rejected">Rejeitado</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              
-              <div>
-                <Label>Status BulkGate</Label>
-                <Select value={newSenderID.bulkgate_status} onValueChange={(value) => setNewSenderID(prev => ({ ...prev, bulkgate_status: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="approved">Aprovado</SelectItem>
-                    <SelectItem value="rejected">Rejeitado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label>Gateways Suportados</Label>
-              <div className="mt-2 space-y-2">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={newSenderID.gateways.includes('bulksms')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setNewSenderID(prev => ({ 
-                          ...prev, 
-                          gateways: [...prev.gateways, 'bulksms']
-                        }));
-                      } else {
-                        setNewSenderID(prev => ({ 
-                          ...prev, 
-                          gateways: prev.gateways.filter(g => g !== 'bulksms')
-                        }));
-                      }
-                    }}
-                  />
-                  <span className="text-sm">BulkSMS</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={newSenderID.gateways.includes('bulkgate')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setNewSenderID(prev => ({ 
-                          ...prev, 
-                          gateways: [...prev.gateways, 'bulkgate']
-                        }));
-                      } else {
-                        setNewSenderID(prev => ({ 
-                          ...prev, 
-                          gateways: prev.gateways.filter(g => g !== 'bulkgate')
-                        }));
-                      }
-                    }}
-                  />
-                  <span className="text-sm">BulkGate</span>
-                </label>
               </div>
             </div>
 
@@ -846,7 +698,7 @@ export default function SenderIDsSection() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Status Geral</Label>
                   <div className="mt-1">{getStatusBadge(selectedSenderID.status)}</div>
@@ -854,10 +706,6 @@ export default function SenderIDsSection() {
                 <div>
                   <Label className="text-sm font-medium">BulkSMS</Label>
                   <div className="mt-1">{getStatusBadge(selectedSenderID.bulksms_status)}</div>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">BulkGate</Label>
-                  <div className="mt-1">{getStatusBadge(selectedSenderID.bulkgate_status)}</div>
                 </div>
               </div>
               
@@ -932,7 +780,7 @@ export default function SenderIDsSection() {
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>• Máximo 11 caracteres alfanuméricos por Sender ID</p>
               <p>• Aprovação automática para administradores</p>
-              <p>• Controle individual por gateway</p>
+              <p>• Controle individual por gateway BulkSMS</p>
               <p>• Apenas um Sender ID padrão por usuário</p>
               <p>• Exclusão permanente - use com cuidado</p>
             </div>

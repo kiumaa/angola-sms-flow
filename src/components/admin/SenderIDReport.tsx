@@ -25,7 +25,6 @@ interface SenderID {
   user_id: string;
   status: string;
   bulksms_status: string;
-  bulkgate_status: string;
   supported_gateways: string[];
   is_default: boolean;
   created_at: string;
@@ -43,7 +42,6 @@ interface SenderIDStats {
   rejected: number;
   byGateway: {
     bulksms: number;
-    bulkgate: number;
   };
 }
 
@@ -55,7 +53,7 @@ const SenderIDReport = () => {
     approved: 0,
     pending: 0,
     rejected: 0,
-    byGateway: { bulksms: 0, bulkgate: 0 }
+    byGateway: { bulksms: 0 }
   });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,7 +105,6 @@ const SenderIDReport = () => {
       rejected: data.filter(s => s.status === 'rejected').length,
       byGateway: {
         bulksms: data.filter(s => s.supported_gateways?.includes('bulksms')).length,
-        bulkgate: data.filter(s => s.supported_gateways?.includes('bulkgate')).length,
       }
     };
     setStats(stats);
@@ -151,17 +148,12 @@ const SenderIDReport = () => {
     }
   };
 
-  const getGatewayBadges = (gateways: string[], bulksmsStatus: string, bulkgateStatus: string) => {
+  const getGatewayBadges = (gateways: string[], bulksmsStatus: string) => {
     return (
       <div className="flex gap-1 flex-wrap">
         {gateways?.includes('bulksms') && (
           <Badge variant="outline" className={`text-xs ${bulksmsStatus === 'approved' ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}>
             BulkSMS {bulksmsStatus === 'approved' ? '✓' : '⏳'}
-          </Badge>
-        )}
-        {gateways?.includes('bulkgate') && (
-          <Badge variant="outline" className={`text-xs ${bulkgateStatus === 'approved' ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}>
-            BulkGate {bulkgateStatus === 'approved' ? '✓' : '⏳'}
           </Badge>
         )}
       </div>
@@ -170,14 +162,13 @@ const SenderIDReport = () => {
 
   const exportData = () => {
     const csvContent = [
-      ['Sender ID', 'Usuário', 'Email', 'Status', 'BulkSMS Status', 'BulkGate Status', 'Gateways Suportados', 'Padrão', 'Criado em', 'Atualizado em'],
+      ['Sender ID', 'Usuário', 'Email', 'Status', 'BulkSMS Status', 'Gateways Suportados', 'Padrão', 'Criado em', 'Atualizado em'],
       ...filteredSenderIds.map(s => [
         s.sender_id,
         s.profiles?.full_name || '',
         s.profiles?.email || '',
         s.status,
         s.bulksms_status,
-        s.bulkgate_status,
         s.supported_gateways?.join(', ') || '',
         s.is_default ? 'Sim' : 'Não',
         new Date(s.created_at).toLocaleDateString('pt-BR'),
@@ -276,19 +267,6 @@ const SenderIDReport = () => {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">BulkGate</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.byGateway.bulkgate}</p>
-                <p className="text-xs text-muted-foreground">Sender IDs configurados</p>
-              </div>
-              <MessageSquare className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filtros e Ações */}
@@ -339,7 +317,6 @@ const SenderIDReport = () => {
               <SelectContent>
                 <SelectItem value="all">Todos os gateways</SelectItem>
                 <SelectItem value="bulksms">BulkSMS</SelectItem>
-                <SelectItem value="bulkgate">BulkGate</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -381,7 +358,7 @@ const SenderIDReport = () => {
                         {getStatusBadge(senderId.status)}
                       </TableCell>
                       <TableCell>
-                        {getGatewayBadges(senderId.supported_gateways, senderId.bulksms_status, senderId.bulkgate_status)}
+                        {getGatewayBadges(senderId.supported_gateways, senderId.bulksms_status)}
                       </TableCell>
                       <TableCell>
                         {senderId.is_default && (

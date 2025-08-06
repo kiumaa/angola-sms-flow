@@ -37,7 +37,7 @@ const AdminPackages = lazy(() => import("./pages/AdminPackages"));
 const AdminTransactions = lazy(() => import("./pages/AdminTransactions"));
 const AdminCreditRequests = lazy(() => import("./pages/AdminCreditRequests"));
 const AdminSenderIDs = lazy(() => import("./pages/AdminSenderIDs"));
-const AdminSenderIDsMultiGateway = lazy(() => import("./pages/AdminSenderIDsMultiGateway"));
+
 const AdminSMSGateways = lazy(() => import("./pages/AdminSMSGateways"));
 const AdminSMSMonitoring = lazy(() => import("./pages/AdminSMSMonitoring"));
 const AdminReports = lazy(() => import("./pages/AdminReports"));
@@ -217,16 +217,6 @@ function App() {
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
                       <AdminSenderIDs />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/sender-ids-multi"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <AdminSenderIDsMultiGateway />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
