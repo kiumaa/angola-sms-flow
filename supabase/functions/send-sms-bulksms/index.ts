@@ -241,11 +241,12 @@ async function sendViaBulkSMSProduction(
   console.log(`Original contacts:`, contacts)
   console.log(`Formatted contacts:`, formattedContacts)
 
-  // Prepare messages for API v1 (using "body" not "content")
+  // Prepare messages for API v1 (using "body" not "content") with Unicode encoding
   const messages = formattedContacts.map(contact => ({
     to: contact,
     from: senderId,
-    body: message
+    body: message,
+    encoding: 'UNICODE' // Force Unicode encoding for proper character support
   }))
 
   console.log(`=== BulkSMS API Call ===`)
