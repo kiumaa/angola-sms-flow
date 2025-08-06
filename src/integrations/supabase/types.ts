@@ -64,36 +64,87 @@ export type Database = {
       }
       brand_settings: {
         Row: {
+          background_color: string | null
           created_at: string
+          custom_css: string | null
           favicon_url: string | null
+          font_family: string | null
+          font_sizes: Json | null
+          font_weight: string | null
           id: string
+          is_active: boolean | null
+          letter_spacing: string | null
+          line_height: string | null
           logo_url: string | null
+          meta_description: string | null
+          meta_title_template: string | null
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
           primary_color: string
+          robots_follow: boolean | null
+          robots_index: boolean | null
           secondary_color: string
           site_subtitle: string | null
           site_title: string | null
+          text_color: string | null
+          theme_mode: string | null
           updated_at: string
         }
         Insert: {
+          background_color?: string | null
           created_at?: string
+          custom_css?: string | null
           favicon_url?: string | null
+          font_family?: string | null
+          font_sizes?: Json | null
+          font_weight?: string | null
           id?: string
+          is_active?: boolean | null
+          letter_spacing?: string | null
+          line_height?: string | null
           logo_url?: string | null
+          meta_description?: string | null
+          meta_title_template?: string | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
           primary_color?: string
+          robots_follow?: boolean | null
+          robots_index?: boolean | null
           secondary_color?: string
           site_subtitle?: string | null
           site_title?: string | null
+          text_color?: string | null
+          theme_mode?: string | null
           updated_at?: string
         }
         Update: {
+          background_color?: string | null
           created_at?: string
+          custom_css?: string | null
           favicon_url?: string | null
+          font_family?: string | null
+          font_sizes?: Json | null
+          font_weight?: string | null
           id?: string
+          is_active?: boolean | null
+          letter_spacing?: string | null
+          line_height?: string | null
           logo_url?: string | null
+          meta_description?: string | null
+          meta_title_template?: string | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
           primary_color?: string
+          robots_follow?: boolean | null
+          robots_index?: boolean | null
           secondary_color?: string
           site_subtitle?: string | null
           site_title?: string | null
+          text_color?: string | null
+          theme_mode?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -10,6 +10,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import AdminLayout from "./components/layout/AdminLayout";
 import MessageSendingLoader from "./components/shared/MessageSendingLoader";
 import { ThemeProvider } from "next-themes";
+import { BrandProvider } from "@/providers/BrandProvider";
 
 const queryClient = new QueryClient();
 
@@ -57,7 +58,8 @@ function App() {
           enableSystem={false}
           disableTransitionOnChange={false}
         >
-          <TooltipProvider>
+          <BrandProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -295,7 +297,8 @@ function App() {
             </Routes>
           </Suspense>
         </BrowserRouter>
-      </TooltipProvider>
+            </TooltipProvider>
+          </BrandProvider>
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
