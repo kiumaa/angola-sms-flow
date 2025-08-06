@@ -12,10 +12,12 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import CountryCodeSelector from "@/components/admin/CountryCodeSelector";
+import { validateAngolanPhone, normalizeAngolanPhone, sanitizeInput } from '@/lib/validation';
 const QuickSend = () => {
   const [formData, setFormData] = useState({
     senderId: "SMSAO",
-    // Default to SMSAO
+    countryCode: "+244",
     phoneNumber: "",
     message: ""
   });
@@ -64,18 +66,6 @@ const QuickSend = () => {
       console.error('Error fetching sender IDs:', error);
     }
   };
-  const validateAngolanPhone = (phone: string): boolean => {
-    const cleanPhone = phone.trim().replace(/[\s\-\(\)]/g, '');
-    const patterns = [/^\+244[9][0-9]{8}$/,
-    // +244XXXXXXXXX
-    /^244[9][0-9]{8}$/,
-    // 244XXXXXXXXX  
-    /^[9][0-9]{8}$/,
-    // 9XXXXXXXX
-    /^0[9][0-9]{8}$/ // 09XXXXXXXX
-    ];
-    return patterns.some(pattern => pattern.test(cleanPhone));
-  };
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -99,6 +89,7 @@ const QuickSend = () => {
       setIsLoading(false);
       return;
     }
+    
     if (!formData.phoneNumber.trim()) {
       toast({
         title: "Número obrigatório",
@@ -108,10 +99,13 @@ const QuickSend = () => {
       setIsLoading(false);
       return;
     }
-    if (!validateAngolanPhone(formData.phoneNumber)) {
+
+    // Build full phone number and validate
+    const fullPhoneNumber = formData.countryCode + formData.phoneNumber;
+    if (!validateAngolanPhone(fullPhoneNumber)) {
       toast({
         title: "Número inválido",
-        description: "Insira um número angolano válido (ex: +244912345678).",
+        description: "Insira um número angolano válido (ex: 912345678).",
         variant: "destructive"
       });
       setIsLoading(false);
@@ -128,27 +122,22 @@ const QuickSend = () => {
     }
     try {
       // Send SMS using Supabase edge function
-      const {
-        data: authData
-      } = await supabase.auth.getSession();
-      const response = await fetch('https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/send-sms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authData.session?.access_token}`
-        },
-        body: JSON.stringify({
-          contacts: [formData.phoneNumber],
-          message: formData.message,
+      const normalizedPhoneNumber = normalizeAngolanPhone(fullPhoneNumber);
+      
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          phoneNumber: normalizedPhoneNumber,
+          message: sanitizeInput(formData.message),
           senderId: formData.senderId,
           isTest: false
-        })
+        }
       });
-      const result = await response.json();
-      if (result.success) {
+
+      if (error) throw error;
+      if (data.success) {
         toast({
           title: "SMS enviado com sucesso!",
-          description: `Mensagem enviada para ${formData.phoneNumber}`
+          description: `Mensagem enviada para ${normalizedPhoneNumber}`
         });
 
         // Reset form
@@ -159,7 +148,7 @@ const QuickSend = () => {
         }));
         setMessageLength(0);
       } else {
-        throw new Error(result.error || 'Falha no envio');
+        throw new Error(data.error || 'Falha no envio');
       }
     } catch (error: any) {
       console.error('SMS send error:', error);
@@ -207,12 +196,12 @@ const QuickSend = () => {
                       </SelectTrigger>
                        <SelectContent>
                          {/* Always show SMSAO as default option */}
-                         <SelectItem key="smsao-default" value="SMSAO">
-                           <div className="flex items-center gap-2">
-                             SMSAO
-                             <Badge variant="secondary" className="text-xs">Padrão</Badge>
-                           </div>
-                         </SelectItem>
+                          <SelectItem value="SMSAO">
+                            <div className="flex items-center gap-2">
+                              SMSAO
+                              <Badge variant="secondary" className="text-xs">Padrão</Badge>
+                            </div>
+                          </SelectItem>
                          {senderIds.map((sender: any) => <SelectItem key={sender.id} value={sender.sender_id}>
                              <div className="flex items-center gap-2">
                                {sender.sender_id}
@@ -226,14 +215,40 @@ const QuickSend = () => {
                        </p>
                   </div>
 
-                  {/* Phone Number */}
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber" className="text-base">Número do Destinatário</Label>
-                    <Input id="phoneNumber" placeholder="+244 912 345 678" value={formData.phoneNumber} onChange={e => handleInputChange('phoneNumber', e.target.value)} className="h-12 rounded-2xl glass-card border-glass-border bg-slate-50" />
-                    <div className="text-sm text-muted-foreground">
-                      Formatos aceitos: +244912345678, 912345678, 244912345678
-                    </div>
-                  </div>
+                   {/* Phone Number */}
+                   <div className="space-y-4">
+                     <Label htmlFor="phoneNumber" className="text-base">Número do Destinatário</Label>
+                     
+                     <div className="space-y-2">
+                       <Label className="text-sm text-muted-foreground">Código do País</Label>
+                       <CountryCodeSelector
+                         value={formData.countryCode}
+                         onValueChange={(value) => handleInputChange('countryCode', value)}
+                         isAdmin={false}
+                         placeholder="Selecionar país"
+                       />
+                     </div>
+
+                     <div className="space-y-2">
+                       <Label className="text-sm text-muted-foreground">Número</Label>
+                       <div className="flex items-center gap-2">
+                         <span className="px-3 py-2 bg-muted rounded-md text-sm font-medium h-12 flex items-center">
+                           {formData.countryCode}
+                         </span>
+                         <Input 
+                           id="phoneNumber" 
+                           placeholder="912 345 678" 
+                           value={formData.phoneNumber} 
+                           onChange={e => handleInputChange('phoneNumber', e.target.value)} 
+                           className="h-12 rounded-2xl glass-card border-glass-border bg-slate-50 flex-1" 
+                         />
+                       </div>
+                     </div>
+                     
+                     <div className="text-sm text-muted-foreground">
+                       Digite apenas o número sem o código do país
+                     </div>
+                   </div>
 
                   {/* Message */}
                   <div className="space-y-2">
@@ -271,8 +286,8 @@ const QuickSend = () => {
               </CardHeader>
               <CardContent>
                 <div className="rounded-2xl p-4 border-l-4 border-primary bg-gray-200">
-                  <div className="text-xs text-muted-foreground mb-1">De: {formData.senderId || "SMSAO"}</div>
-                  <div className="text-xs text-muted-foreground mb-2">Para: {formData.phoneNumber || "+244 XXX XXX XXX"}</div>
+                   <div className="text-xs text-muted-foreground mb-1">De: {formData.senderId || "SMSAO"}</div>
+                   <div className="text-xs text-muted-foreground mb-2">Para: {formData.phoneNumber ? formData.countryCode + formData.phoneNumber : "+244 XXX XXX XXX"}</div>
                   <div className="font-mono text-sm">
                     {formData.message || "Digite sua mensagem para ver o preview..."}
                   </div>
