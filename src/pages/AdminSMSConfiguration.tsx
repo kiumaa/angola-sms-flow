@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, DollarSign, RefreshCw, Loader2 } from "lucide-react";
+import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, DollarSign, RefreshCw, Loader2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import SenderIDsSection from "@/components/admin/sms/SenderIDsSection";
@@ -17,6 +17,7 @@ export default function AdminSMSConfiguration() {
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // API Token Configuration  
   const [apiTokenId, setApiTokenId] = useState('');
@@ -111,6 +112,36 @@ export default function AdminSMSConfiguration() {
       });
     } finally {
       setIsTestingConnection(false);
+    }
+  };
+
+  // Função para salvar configuração manualmente
+  const handleSaveConfiguration = async () => {
+    if (!apiTokenId.trim()) {
+      toast({
+        title: "Token ID obrigatório",
+        description: "Digite o API Token ID antes de salvar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await saveConfiguration();
+      toast({
+        title: "Configuração salva",
+        description: "Credenciais BulkSMS salvas com sucesso!"
+      });
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Falha ao salvar configuração",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -347,6 +378,16 @@ export default function AdminSMSConfiguration() {
                 </div> : <>
                   <CheckCircle className="h-4 w-4" />
                   Testar Conexão
+                </>}
+            </Button>
+
+            <Button onClick={handleSaveConfiguration} disabled={isSaving || !apiTokenId.trim()} variant="default">
+              {isSaving ? <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Salvando...
+                </div> : <>
+                  <Save className="h-4 w-4" />
+                  Salvar
                 </>}
             </Button>
             
