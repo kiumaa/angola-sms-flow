@@ -14,7 +14,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 const QuickSend = () => {
   const [formData, setFormData] = useState({
-    senderId: "SMSAO", // Default to SMSAO
+    senderId: "SMSAO",
+    // Default to SMSAO
     phoneNumber: "",
     message: ""
   });
@@ -65,11 +66,13 @@ const QuickSend = () => {
   };
   const validateAngolanPhone = (phone: string): boolean => {
     const cleanPhone = phone.trim().replace(/[\s\-\(\)]/g, '');
-    const patterns = [
-      /^\+244[9][0-9]{8}$/, // +244XXXXXXXXX
-      /^244[9][0-9]{8}$/,   // 244XXXXXXXXX  
-      /^[9][0-9]{8}$/,      // 9XXXXXXXX
-      /^0[9][0-9]{8}$/      // 09XXXXXXXX
+    const patterns = [/^\+244[9][0-9]{8}$/,
+    // +244XXXXXXXXX
+    /^244[9][0-9]{8}$/,
+    // 244XXXXXXXXX  
+    /^[9][0-9]{8}$/,
+    // 9XXXXXXXX
+    /^0[9][0-9]{8}$/ // 09XXXXXXXX
     ];
     return patterns.some(pattern => pattern.test(cleanPhone));
   };
@@ -191,15 +194,7 @@ const QuickSend = () => {
           {/* Main Form */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="card-futuristic">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 gradient-text">
-                  <Zap className="h-5 w-5" />
-                  Envio Rápido SMS
-                </CardTitle>
-                <CardDescription>
-                  Envie uma mensagem SMS rapidamente
-                </CardDescription>
-              </CardHeader>
+              
               <CardContent className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
                   
@@ -218,14 +213,12 @@ const QuickSend = () => {
                              <Badge variant="secondary" className="text-xs">Padrão</Badge>
                            </div>
                          </SelectItem>
-                         {senderIds.map((sender: any) => (
-                           <SelectItem key={sender.id} value={sender.sender_id}>
+                         {senderIds.map((sender: any) => <SelectItem key={sender.id} value={sender.sender_id}>
                              <div className="flex items-center gap-2">
                                {sender.sender_id}
                                {sender.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
                              </div>
-                           </SelectItem>
-                         ))}
+                           </SelectItem>)}
                        </SelectContent>
                     </Select>
                      <p className="text-sm text-muted-foreground">
@@ -257,7 +250,7 @@ const QuickSend = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <Button type="submit" className="w-full button-futuristic text-lg py-6" disabled={isLoading}>
+                  <Button type="submit" disabled={isLoading} className="w-full button-futuristic py-6 text-sm font-normal">
                     {isLoading ? "Enviando..." : <>
                       <Send className="h-5 w-5 mr-2" />
                       Enviar SMS
@@ -298,7 +291,7 @@ const QuickSend = () => {
             {/* Tips */}
             <Card className="card-futuristic border-blue-500/30 bg-blue-500/5">
               <CardHeader>
-                <CardTitle className="text-blue-400 text-lg">💡 Dicas de Envio</CardTitle>
+                <CardTitle className="text-lg text-gray-950">Dicas de Envio</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p>• Use números no formato angolano (+244)</p>
