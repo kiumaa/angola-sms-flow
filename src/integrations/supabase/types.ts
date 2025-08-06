@@ -513,7 +513,7 @@ export type Database = {
       }
       sms_logs: {
         Row: {
-          campaign_id: string
+          campaign_id: string | null
           cost_credits: number | null
           created_at: string
           delivered_at: string | null
@@ -530,7 +530,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          campaign_id: string
+          campaign_id?: string | null
           cost_credits?: number | null
           created_at?: string
           delivered_at?: string | null
@@ -547,7 +547,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          campaign_id?: string
+          campaign_id?: string | null
           cost_credits?: number | null
           created_at?: string
           delivered_at?: string | null

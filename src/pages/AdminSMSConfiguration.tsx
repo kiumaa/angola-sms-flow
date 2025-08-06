@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Send, CheckCircle, AlertTriangle, Smartphone } from "lucide-react";
+import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, CreditCard, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminSMSConfiguration() {
   const { toast } = useToast();
   const [isTestingSMS, setIsTestingSMS] = useState(false);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [bulkSMSBalance, setBulkSMSBalance] = useState<{
+    balance: number;
+    currency: string;
+    company: string;
+    lastUpdated: string;
+  } | null>(null);
   
   // Test SMS
   const [testSMS, setTestSMS] = useState({
@@ -19,6 +26,31 @@ export default function AdminSMSConfiguration() {
     message: 'Teste de SMS via SMS.AO',
     senderId: 'SMSAO'
   });
+
+  // Load BulkSMS balance on component mount
+  useEffect(() => {
+    loadBulkSMSBalance();
+  }, []);
+
+  const loadBulkSMSBalance = async () => {
+    setIsLoadingBalance(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('bulksms-balance');
+
+      if (error) throw error;
+
+      setBulkSMSBalance(data);
+    } catch (error) {
+      console.error('Erro ao carregar saldo BulkSMS:', error);
+      toast({
+        title: "Erro ao carregar saldo",
+        description: "Não foi possível obter o saldo do BulkSMS",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  };
 
   const handleTestSMS = async () => {
     if (!testSMS.phoneNumber || !testSMS.message) {
@@ -46,11 +78,19 @@ export default function AdminSMSConfiguration() {
       toast({
         title: "SMS de teste enviado",
         description: data.success ? 
-          `SMS enviado com sucesso via BulkSMS! Batch ID: ${data.batchId}` : 
+          `SMS enviado com sucesso! Enviados: ${data.totalSent}, Falharam: ${data.totalFailed}` : 
           "Falha no envio do SMS",
-        variant: data.success ? "default" : "destructive",
+        variant: data.success && data.totalSent > 0 ? "default" : "destructive",
       });
+
+      // Reload balance after sending SMS
+      if (data.success && data.totalSent > 0) {
+        setTimeout(() => {
+          loadBulkSMSBalance();
+        }, 2000);
+      }
     } catch (error) {
+      console.error('Erro no envio:', error);
       toast({
         title: "Erro no envio",
         description: "Falha ao enviar SMS de teste",
@@ -67,6 +107,72 @@ export default function AdminSMSConfiguration() {
         <Settings className="h-5 w-5" />
         <h1 className="text-2xl font-semibold">Configuração SMS - BulkSMS</h1>
       </div>
+
+      {/* BulkSMS Balance Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Saldo BulkSMS
+              </CardTitle>
+              <CardDescription>
+                Créditos disponíveis na sua conta BulkSMS
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadBulkSMSBalance}
+              disabled={isLoadingBalance}
+            >
+              {isLoadingBalance ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              Atualizar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {bulkSMSBalance ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div>
+                  <p className="text-sm text-green-800">
+                    <strong>Créditos Disponíveis:</strong>
+                  </p>
+                  <p className="text-2xl font-bold text-green-900">
+                    {bulkSMSBalance.balance.toLocaleString()} {bulkSMSBalance.currency}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-green-800">
+                    <strong>Empresa:</strong> {bulkSMSBalance.company}
+                  </p>
+                  <p className="text-xs text-green-600">
+                    Última atualização: {new Date(bulkSMSBalance.lastUpdated).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Custo por SMS:</strong> 1 crédito por mensagem enviada
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                Carregando informações do saldo...
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* BulkSMS Gateway Status */}
       <Card>

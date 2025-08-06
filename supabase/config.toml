@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.bulksms-delivery-webhook]
 verify_jwt = false
+
+[functions.bulksms-balance]
+verify_jwt = false

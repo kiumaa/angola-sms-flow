@@ -101,7 +101,7 @@ serve(async (req) => {
       await supabase
         .from('sms_logs')
         .insert({
-          campaign_id: campaignId,
+          campaign_id: campaignId || null, // Allow null for test SMS
           user_id: user.id,
           phone_number: result.to,
           message: message,
