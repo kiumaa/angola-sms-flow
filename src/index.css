@@ -205,38 +205,31 @@
 
 /* SMS.AO Typography Utilities */
 @layer utilities {
-  /* Standardized Typography Classes */
-  .text-h1 {
-    @apply text-h1 font-light tracking-tight leading-tight;
-  }
-  
-  .text-h2 {
-    @apply text-h2 font-light tracking-tight leading-normal;
-  }
-  
-  .text-h3 {
-    @apply text-h3 font-normal leading-normal;
-  }
-  
-  .text-body {
-    @apply text-body font-light leading-normal;
-  }
-
-  /* Override any inconsistent font weights */
+  /* Override any inconsistent font weights using base Tailwind classes */
   h1, .h1 {
-    @apply text-h1 font-light tracking-tight;
+    font-size: 1.75rem;
+    line-height: 2rem;
+    font-weight: 300;
+    letter-spacing: -0.01em;
   }
   
   h2, .h2 {
-    @apply text-h2 font-light tracking-tight;
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    font-weight: 300;
+    letter-spacing: -0.01em;
   }
   
   h3, .h3 {
-    @apply text-h3 font-normal;
+    font-size: 1rem;
+    line-height: 1.25rem;
+    font-weight: 400;
   }
   
   p, .p {
-    @apply text-body font-light;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 300;
   }
 
   /* Consistent button typography */
