@@ -51,23 +51,25 @@ export default function AdminRouteeConfiguration() {
       const { data: settings, error } = await supabase
         .from('routee_settings')
         .select('*')
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (error) {
         console.error('Error loading configuration:', error);
         return;
       }
 
-      if (settings) {
+      if (settings && settings.length > 0) {
+        const setting = settings[0];
         setConfig(prev => ({
           ...prev,
-          isActive: settings.is_active,
-          applicationId: settings.application_id_encrypted ? atob(settings.application_id_encrypted) : '',
-          applicationSecret: settings.application_secret_encrypted ? atob(settings.application_secret_encrypted) : '',
-          status: settings.test_status === 'success' ? 'connected' : 
-                 settings.test_status === 'error' ? 'error' : 'disconnected',
-          balance: settings.balance_eur,
-          lastTested: settings.last_tested_at
+          isActive: setting.is_active,
+          applicationId: setting.application_id_encrypted ? atob(setting.application_id_encrypted) : '',
+          applicationSecret: setting.application_secret_encrypted ? atob(setting.application_secret_encrypted) : '',
+          status: setting.test_status === 'success' ? 'connected' : 
+                 setting.test_status === 'error' ? 'error' : 'disconnected',
+          balance: setting.balance_eur,
+          lastTested: setting.last_tested_at
         }));
       }
     } catch (error) {
@@ -78,15 +80,38 @@ export default function AdminRouteeConfiguration() {
   const handleSaveConfig = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      // Get the latest record to update instead of creating a new one
+      const { data: existingSettings } = await supabase
         .from('routee_settings')
-        .upsert({
-          is_active: config.isActive,
-          application_id_encrypted: config.applicationId ? btoa(config.applicationId) : null,
-          application_secret_encrypted: config.applicationSecret ? btoa(config.applicationSecret) : null,
-          created_by: '8a2544af-b71e-4e66-9068-fac3172bb791',
-          updated_at: new Date().toISOString()
-        });
+        .select('id')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const updateData = {
+        is_active: config.isActive,
+        application_id_encrypted: config.applicationId ? btoa(config.applicationId) : null,
+        application_secret_encrypted: config.applicationSecret ? btoa(config.applicationSecret) : null,
+        updated_at: new Date().toISOString()
+      };
+
+      let error;
+      if (existingSettings && existingSettings.length > 0) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('routee_settings')
+          .update(updateData)
+          .eq('id', existingSettings[0].id);
+        error = updateError;
+      } else {
+        // Create new record if none exists
+        const { error: insertError } = await supabase
+          .from('routee_settings')
+          .insert({
+            ...updateData,
+            created_by: '8a2544af-b71e-4e66-9068-fac3172bb791'
+          });
+        error = insertError;
+      }
 
       if (error) throw error;
 
@@ -128,14 +153,23 @@ export default function AdminRouteeConfiguration() {
 
       const newStatus = data.success ? 'connected' : 'error';
       
-      // Salvar resultado do teste no banco
-      await supabase
+      // Salvar resultado do teste no banco - atualiza apenas o registro mais recente
+      const { data: existingSettings } = await supabase
         .from('routee_settings')
-        .upsert({
-          test_status: data.success ? 'success' : 'error',
-          last_tested_at: new Date().toISOString(),
-          balance_eur: data.balance || 0
-        });
+        .select('id')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (existingSettings && existingSettings.length > 0) {
+        await supabase
+          .from('routee_settings')
+          .update({
+            test_status: data.success ? 'success' : 'error',
+            last_tested_at: new Date().toISOString(),
+            balance_eur: data.balance || 0
+          })
+          .eq('id', existingSettings[0].id);
+      }
 
       setConfig(prev => ({
         ...prev,
