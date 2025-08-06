@@ -393,7 +393,9 @@ export type Database = {
       }
       routee_settings: {
         Row: {
-          api_token_encrypted: string | null
+          access_token_encrypted: string | null
+          application_id_encrypted: string | null
+          application_secret_encrypted: string | null
           balance_eur: number | null
           created_at: string
           created_by: string | null
@@ -401,11 +403,15 @@ export type Database = {
           is_active: boolean
           last_tested_at: string | null
           test_status: string | null
+          token_expires_at: string | null
+          token_type: string | null
           updated_at: string
           webhook_url: string | null
         }
         Insert: {
-          api_token_encrypted?: string | null
+          access_token_encrypted?: string | null
+          application_id_encrypted?: string | null
+          application_secret_encrypted?: string | null
           balance_eur?: number | null
           created_at?: string
           created_by?: string | null
@@ -413,11 +419,15 @@ export type Database = {
           is_active?: boolean
           last_tested_at?: string | null
           test_status?: string | null
+          token_expires_at?: string | null
+          token_type?: string | null
           updated_at?: string
           webhook_url?: string | null
         }
         Update: {
-          api_token_encrypted?: string | null
+          access_token_encrypted?: string | null
+          application_id_encrypted?: string | null
+          application_secret_encrypted?: string | null
           balance_eur?: number | null
           created_at?: string
           created_by?: string | null
@@ -425,6 +435,8 @@ export type Database = {
           is_active?: boolean
           last_tested_at?: string | null
           test_status?: string | null
+          token_expires_at?: string | null
+          token_type?: string | null
           updated_at?: string
           webhook_url?: string | null
         }
