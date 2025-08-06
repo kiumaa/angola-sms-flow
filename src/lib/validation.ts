@@ -18,6 +18,21 @@ export const validateAngolanPhone = (phone: string): boolean => {
 };
 
 /**
+ * Validates international phone numbers (for testing purposes)
+ * Accepts any format with country code
+ */
+export const validateInternationalPhone = (phone: string): boolean => {
+  // Remove all spaces, dashes, and parentheses
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // Basic international phone validation
+  // Must start with + and have at least 7 digits
+  const internationalPattern = /^\+[1-9][0-9]{6,14}$/;
+  
+  return internationalPattern.test(cleanPhone);
+};
+
+/**
  * Normalizes Angolan phone number to international format
  */
 export const normalizeAngolanPhone = (phone: string): string => {
@@ -39,6 +54,22 @@ export const normalizeAngolanPhone = (phone: string): string => {
   }
   
   return phone; // Return original if can't normalize
+};
+
+/**
+ * Normalizes international phone numbers (for testing)
+ * Ensures proper international format with +
+ */
+export const normalizeInternationalPhone = (phone: string): string => {
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // If already starts with +, return as is
+  if (cleanPhone.startsWith('+')) {
+    return cleanPhone;
+  }
+  
+  // If doesn't start with +, add it
+  return '+' + cleanPhone;
 };
 
 /**

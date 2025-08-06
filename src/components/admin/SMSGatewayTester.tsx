@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Send } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import { validateAngolanPhone, normalizeAngolanPhone, sanitizeInput } from '@/lib/validation';
+import { validateAngolanPhone, normalizeAngolanPhone, validateInternationalPhone, normalizeInternationalPhone, sanitizeInput } from '@/lib/validation';
 
 const SMSGatewayTester = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -18,11 +18,11 @@ const SMSGatewayTester = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate inputs
-    if (!validateAngolanPhone(phoneNumber)) {
+    // Validate inputs - For testing, allow international numbers
+    if (!validateInternationalPhone(phoneNumber)) {
       toast({
         title: "Número inválido",
-        description: "Por favor, insira um número angolano válido (ex: +244 9XX XXX XXX)",
+        description: "Por favor, insira um número internacional válido (ex: +244 9XX XXX XXX, +351 9XX XXX XXX)",
         variant: "destructive",
       });
       return;
@@ -69,10 +69,10 @@ const SMSGatewayTester = () => {
 
       if (campaignError) throw campaignError;
 
-      // Send SMS
+      // Send SMS - Use international normalization for testing
       const { data, error } = await supabase.functions.invoke('send-sms', {
         body: {
-          phoneNumber: normalizeAngolanPhone(phoneNumber),
+          phoneNumber: normalizeInternationalPhone(phoneNumber),
           message: sanitizeInput(message),
           campaignId: campaign.id,
           isTest: true
@@ -87,7 +87,7 @@ const SMSGatewayTester = () => {
         gateway: data.gateway || 'unknown',
         status: data.success ? 'success' : 'failed',
         timestamp: new Date().toISOString(),
-        phone: normalizeAngolanPhone(phoneNumber),
+        phone: normalizeInternationalPhone(phoneNumber),
         message: sanitizeInput(message),
         error: data.error || null,
         responseTime: data.responseTime || 0
@@ -134,7 +134,7 @@ const SMSGatewayTester = () => {
             <Input
               id="phone"
               type="tel"
-              placeholder="+244 9XX XXX XXX"
+              placeholder="+244 9XX XXX XXX (ou qualquer país para teste)"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
