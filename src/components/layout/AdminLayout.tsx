@@ -87,7 +87,6 @@ const AdminLayout = ({
               </button>
               <Link to="/admin" className="flex items-center ml-4">
                 <BrandAwareLogo className="h-8 w-auto mr-2" textClassName="font-bold text-lg" showText={true} />
-                <span className="font-bold text-lg">Admin</span>
               </Link>
             </div>
 
