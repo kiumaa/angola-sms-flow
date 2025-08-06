@@ -16,7 +16,7 @@ export default function AdminSMSConfiguration() {
   // Test SMS
   const [testSMS, setTestSMS] = useState({
     phoneNumber: '+244',
-    message: 'Teste de SMS via BulkSMS Legacy EAPI - SMS Marketing Angola',
+    message: 'Teste de SMS via SMS.AO',
     senderId: 'SMS.AO'
   });
 

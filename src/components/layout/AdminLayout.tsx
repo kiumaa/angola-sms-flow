@@ -72,6 +72,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       current: location.pathname.startsWith("/admin/reports")
     },
     {
+      name: "Sender IDs",
+      href: "/admin/sender-ids",
+      icon: Send,
+      current: location.pathname.startsWith("/admin/sender-ids")
+    },
+    {
       name: "Configurações",
       href: "/admin/sms-configuration",
       icon: Settings,
