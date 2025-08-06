@@ -84,8 +84,8 @@ serve(async (req) => {
 
     console.log(`Using BulkSMS token: ${bulkSMSToken.substring(0, 8)}...`)
 
-    // Send SMS via BulkSMS Legacy EAPI
-    const bulkSMSResponse = await sendViaBulkSMSLegacy(
+    // Send SMS via BulkSMS API v1
+    const bulkSMSResponse = await sendViaBulkSMSProduction(
       contacts,
       message,
       senderId,
@@ -155,7 +155,7 @@ serve(async (req) => {
   }
 })
 
-async function sendViaBulkSMSLegacy(
+async function sendViaBulkSMSProduction(
   contacts: string[],
   message: string,
   senderId: string,
@@ -171,76 +171,70 @@ async function sendViaBulkSMSLegacy(
     return contact.startsWith('+') ? contact : `+${contact}`
   })
 
-  const results: BulkSMSResponse[] = []
+  // Prepare messages for API v1
+  const messages = formattedContacts.map(contact => ({
+    to: contact,
+    from: senderId,
+    body: message
+  }))
+
+  console.log(`Sending ${formattedContacts.length} SMS via BulkSMS API v1 with sender: ${senderId}`)
+  console.log(`Using API Token: ${apiToken.substring(0, 8)}...`)
 
   try {
-    // BulkSMS Legacy EAPI payload - apenas API Token
-    const payload = new URLSearchParams()
-    payload.append('command', 'SEND')
-    payload.append('message', message)
-    payload.append('msisdn', formattedContacts.join(','))
-    payload.append('sender', senderId)
-    payload.append('bulkSMSMode', '1')
-
-    console.log(`Sending ${formattedContacts.length} SMS via BulkSMS Legacy EAPI with sender: ${senderId}`)
-    console.log(`Using API Token: ${apiToken.substring(0, 8)}...`)
-
-    const response = await fetch('https://api-legacy2.bulksms.com/eapi', {
+    const response = await fetch('https://api.bulksms.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         'Authorization': `Basic ${btoa(`${apiToken}:`)}`
       },
-      body: payload
+      body: JSON.stringify({ messages })
     })
 
-    const responseText = await response.text()
-    console.log('BulkSMS Legacy EAPI response:', responseText)
+    const responseData = await response.json()
+    console.log('BulkSMS API v1 response:', responseData)
 
-    // Parse Legacy EAPI response format: "0: Accepted for delivery|batch_id:12345"
-    const lines = responseText.split('\n').filter(line => line.trim())
-    
-    for (let i = 0; i < formattedContacts.length; i++) {
-      const contact = formattedContacts[i]
-      const responseLine = lines[i] || lines[0] // Fallback to first line if not enough responses
-      
-      if (responseLine) {
-        const parts = responseLine.split('|')
-        const statusPart = parts[0]
-        const batchPart = parts.find(p => p.includes('batch_id:'))
-        
-        const [statusCode, statusText] = statusPart.split(': ', 2)
-        const batchId = batchPart ? batchPart.split(':')[1] : undefined
-        
-        const success = statusCode === '0' // Status code 0 means success
-        
-        results.push({
-          success,
-          to: contact,
-          messageId: success ? batchId : undefined,
-          error: success ? undefined : `${statusCode}: ${statusText}`
-        })
-      } else {
+    const results: BulkSMSResponse[] = []
+
+    if (response.ok && Array.isArray(responseData)) {
+      responseData.forEach((result, index) => {
+        const contact = formattedContacts[index]
+        if (result.id) {
+          results.push({
+            success: true,
+            to: contact,
+            messageId: result.id,
+            error: undefined
+          })
+        } else {
+          results.push({
+            success: false,
+            to: contact,
+            messageId: undefined,
+            error: result.error?.description || 'Unknown error'
+          })
+        }
+      })
+    } else {
+      // Se houve erro na requisição, marcar todos como falha
+      formattedContacts.forEach(contact => {
         results.push({
           success: false,
           to: contact,
-          error: 'No response from BulkSMS Legacy EAPI'
+          messageId: undefined,
+          error: responseData.detail || responseData.error?.description || `HTTP ${response.status}`
         })
-      }
+      })
     }
 
+    return results
   } catch (error) {
-    console.error(`Error sending SMS via BulkSMS Legacy EAPI:`, error)
-    
-    // Create error responses for all contacts
-    formattedContacts.forEach(contact => {
-      results.push({
-        success: false,
-        to: contact,
-        error: error.message
-      })
-    })
+    console.error('Error calling BulkSMS API v1:', error)
+    return formattedContacts.map(contact => ({
+      success: false,
+      to: contact,
+      messageId: undefined,
+      error: error.message
+    }))
   }
-
-  return results
 }

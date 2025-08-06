@@ -27,25 +27,27 @@ export class BulkSMSGateway implements SMSGateway {
           'Authorization': this.getAuthHeader()
         },
         body: JSON.stringify({
-          to: message.to,
-          body: message.text,
-          from: message.from
+          messages: [{
+            to: message.to,
+            from: message.from,
+            body: message.text
+          }]
         })
       });
 
       const result = await response.json();
 
-      if (response.ok && result.id) {
+      if (response.ok && Array.isArray(result) && result[0]?.id) {
         return {
           success: true,
-          messageId: result.id,
+          messageId: result[0].id,
           gateway: this.name,
           cost: 1 // BulkSMS typically charges 1 credit per SMS
         };
       } else {
         return {
           success: false,
-          error: result.detail || result.message || `HTTP ${response.status}`,
+          error: result.detail || result.error?.description || `HTTP ${response.status}`,
           gateway: this.name
         };
       }
@@ -93,14 +95,14 @@ export class BulkSMSGateway implements SMSGateway {
 
       const result = await response.json();
 
-      if (response.ok) {
+      if (response.ok && result.credits) {
         return {
-          credits: result.credits?.balance || 0,
+          credits: result.credits.balance || 0,
           currency: 'USD',
           lastUpdated: new Date().toISOString()
         };
       } else {
-        throw new Error(`Failed to get balance: ${result.detail || result.message}`);
+        throw new Error(`Failed to get balance: ${result.detail || result.error?.description || 'Unknown error'}`);
       }
     } catch (error) {
       throw new Error(`Failed to get balance: ${error.message}`);
@@ -151,7 +153,7 @@ export class BulkSMSGateway implements SMSGateway {
 
   async validateSenderID(senderId: string): Promise<boolean> {
     try {
-      // BulkSMS não tem endpoint específico para validar sender ID
+      // BulkSMS API v1 não tem endpoint específico para validar sender ID
       // Vamos fazer um teste de envio para um número fictício
       const response = await fetch(`${this.baseUrl}/messages`, {
         method: 'POST',
@@ -160,9 +162,11 @@ export class BulkSMSGateway implements SMSGateway {
           'Authorization': this.getAuthHeader()
         },
         body: JSON.stringify({
-          to: '+1234567890', // Número fictício para teste
-          body: 'Test',
-          from: senderId
+          messages: [{
+            to: '+1234567890', // Número fictício para teste
+            from: senderId,
+            body: 'Test'
+          }]
         })
       });
 

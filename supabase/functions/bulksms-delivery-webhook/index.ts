@@ -7,13 +7,18 @@ const corsHeaders = {
 }
 
 interface DeliveryReport {
-  batch_id: string
-  message_id: string
-  msisdn: string
-  status: string
-  submitted_at: string
-  completed_at?: string
-  error?: string
+  id: string
+  status: {
+    type: string
+    description?: string
+  }
+  messageId?: string
+  batchId?: string
+  to?: string
+  from?: string
+  // Campos de compatibilidade para Legacy EAPI
+  batch_id?: string
+  message_id?: string
 }
 
 serve(async (req) => {
@@ -31,18 +36,32 @@ serve(async (req) => {
     const deliveryReport: DeliveryReport = await req.json()
     console.log('Delivery report data:', deliveryReport)
 
-    const { batch_id, message_id, status, completed_at, error } = deliveryReport
-
-    if (!batch_id) {
-      throw new Error('Missing batch_id in delivery report')
+    // Support both API v1 and Legacy EAPI formats
+    const messageId = deliveryReport.id || deliveryReport.message_id
+    const batchId = deliveryReport.batchId || deliveryReport.batch_id || deliveryReport.id
+    
+    if (!messageId && !batchId) {
+      throw new Error('Missing message ID or batch ID in delivery report')
     }
 
-    // Map BulkSMS status to our internal status
+    // Map BulkSMS API v1 status to our internal status
     let internalStatus = 'sent'
-    if (status === 'Delivered') {
-      internalStatus = 'delivered'
-    } else if (status === 'Failed' || error) {
-      internalStatus = 'failed'
+    const statusType = deliveryReport.status?.type?.toLowerCase() || deliveryReport.status
+    
+    switch (statusType) {
+      case 'sent':
+      case 'accepted':
+        internalStatus = 'sent'
+        break
+      case 'delivered':
+        internalStatus = 'delivered'
+        break
+      case 'failed':
+      case 'rejected':
+        internalStatus = 'failed'
+        break
+      default:
+        internalStatus = 'pending'
     }
 
     // Update SMS logs with delivery status
@@ -50,12 +69,11 @@ serve(async (req) => {
       .from('sms_logs')
       .update({
         status: internalStatus,
-        gateway_message_id: message_id,
-        delivered_at: completed_at ? new Date(completed_at).toISOString() : null,
-        error_message: error || null,
+        delivered_at: internalStatus === 'delivered' ? new Date().toISOString() : null,
+        error_message: deliveryReport.status?.description || null,
         updated_at: new Date().toISOString()
       })
-      .eq('gateway_message_id', batch_id)
+      .eq('gateway_message_id', batchId || messageId)
       .eq('gateway_used', 'bulksms')
 
     if (updateError) {
@@ -63,7 +81,7 @@ serve(async (req) => {
       throw updateError
     }
 
-    console.log(`Updated SMS logs for batch_id: ${batch_id}, status: ${internalStatus}`)
+    console.log(`Updated SMS logs for message ID: ${messageId || batchId}, status: ${internalStatus}`)
 
     return new Response(
       JSON.stringify({ success: true, message: 'Delivery report processed' }),

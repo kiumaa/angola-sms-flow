@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, CreditCard, RefreshCw } from "lucide-react";
+import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, DollarSign, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminSMSConfiguration() {
   const { toast } = useToast();
   const [isTestingSMS, setIsTestingSMS] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
   
   // Test SMS
   const [testSMS, setTestSMS] = useState({
@@ -19,6 +21,40 @@ export default function AdminSMSConfiguration() {
     message: 'Teste de SMS via SMS.AO',
     senderId: 'SMSAO'
   });
+
+  // Função para buscar saldo
+  const fetchBalance = async () => {
+    setLoadingBalance(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('bulksms-balance');
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        setBalance(data.balance);
+        toast({
+          title: "Saldo Atualizado",
+          description: `Saldo atual: $${data.balance.toFixed(2)} USD`,
+        });
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar saldo:', error);
+      toast({
+        title: "Erro ao buscar saldo",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
+
+  // Buscar saldo ao carregar
+  useEffect(() => {
+    fetchBalance();
+  }, []);
 
   const handleTestSMS = async () => {
     if (!testSMS.phoneNumber || !testSMS.message) {
@@ -50,6 +86,11 @@ export default function AdminSMSConfiguration() {
           "Falha no envio do SMS",
         variant: data.success && data.totalSent > 0 ? "default" : "destructive",
       });
+      
+      // Atualizar saldo após envio
+      if (data.success && data.totalSent > 0) {
+        setTimeout(() => fetchBalance(), 1000);
+      }
     } catch (error) {
       console.error('Erro no envio:', error);
       toast({
@@ -76,16 +117,16 @@ export default function AdminSMSConfiguration() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Smartphone className="h-5 w-5" />
-                BulkSMS Legacy EAPI
+                BulkSMS API v1
               </CardTitle>
               <CardDescription>
-                Gateway SMS principal com autenticação por API Token
+                Gateway SMS moderno com autenticação por API Token
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-                Configurado
+                API v1 Ativo
               </Badge>
             </div>
           </div>
@@ -102,7 +143,7 @@ export default function AdminSMSConfiguration() {
 
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Legacy EAPI:</strong> https://api-legacy2.bulksms.com/eapi (Produção)
+              <strong>API v1:</strong> https://api.bulksms.com/v1/messages (Produção)
             </p>
           </div>
 
@@ -123,6 +164,43 @@ export default function AdminSMSConfiguration() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Card de Saldo */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-blue-500" />
+                Saldo BulkSMS
+              </CardTitle>
+              <CardDescription>
+                Saldo atual da conta BulkSMS - atualizado em tempo real
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchBalance}
+              disabled={loadingBalance}
+            >
+              {loadingBalance ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold text-blue-600">
+            {balance !== null ? `$${balance.toFixed(2)} USD` : "Carregando..."}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Atualizado automaticamente após cada envio
+          </p>
         </CardContent>
       </Card>
 
