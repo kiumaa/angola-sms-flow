@@ -40,7 +40,6 @@ const AdminReports = lazy(() => import("./pages/AdminReports"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const AdminBrand = lazy(() => import("./pages/AdminBrand"));
 const AdminSMSConfiguration = lazy(() => import("./pages/AdminSMSConfiguration"));
-const AdminRouteeConfiguration = lazy(() => import("./pages/AdminRouteeConfiguration"));
 
 // 404 page
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -218,16 +217,6 @@ function App() {
                 }
               />
               <Route
-                path="/admin/routee-configuration"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <AdminRouteeConfiguration />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/admin/reports"
                 element={
                   <ProtectedRoute requireAdmin>
@@ -262,7 +251,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminRouteeConfiguration />
+                      <AdminSMSConfiguration />
                     </AdminLayout>
                   </ProtectedRoute>
                 }

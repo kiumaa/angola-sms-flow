@@ -1,10 +1,10 @@
 project_id = "hwxxcprqxqznselwzghi"
 
-[functions.bulkgate-webhook]
-verify_jwt = false
-
 [functions.gateway-status]
 verify_jwt = true
+
+[functions.send-sms]
+verify_jwt = false
 
 [functions.send-sms-bulksms]
 verify_jwt = false

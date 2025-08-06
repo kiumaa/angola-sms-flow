@@ -4,90 +4,35 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Send, CheckCircle, AlertCircle, MessageSquare } from "lucide-react";
+import { Settings, Send, CheckCircle, AlertTriangle, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import SMSGatewaySelector from "@/components/admin/sms/SMSGatewaySelector";
 
 export default function AdminSMSConfiguration() {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isTestingSMS, setIsTestingSMS] = useState(false);
   
-  // Africa's Talking Configuration
-  const [config, setConfig] = useState({
-    isActive: true,
-    username: '',
-    apiKey: '',
-    defaultSenderId: 'SMSao',
-    sandboxMode: false
-  });
-
   // Test SMS
   const [testSMS, setTestSMS] = useState({
     phoneNumber: '+244',
-    message: 'Teste de SMS via Africa\'s Talking - SMS Marketing Angola',
-    senderId: 'SMSao'
+    message: 'Teste de SMS via BulkSMS Legacy EAPI - SMS Marketing Angola',
+    senderId: 'SMS.AO'
   });
 
-  const handleSaveConfig = async () => {
-    setIsLoading(true);
-    try {
-      // Save configuration to database or settings
-      toast({
-        title: "Configuração salva",
-        description: "Configurações do Africa's Talking atualizadas com sucesso.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao salvar configurações.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleTestConnection = async () => {
-    setIsTestingConnection(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('test-sms-connection', {
-        body: {
-          gateway: 'africastalking',
-          config: {
-            username: config.username,
-            apiKey: config.apiKey,
-            sandbox: config.sandboxMode
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Conexão testada",
-        description: data.success ? "Conexão com Africa's Talking estabelecida com sucesso!" : "Falha na conexão",
-        variant: data.success ? "default" : "destructive",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro no teste",
-        description: "Falha ao testar conexão com Africa's Talking",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTestingConnection(false);
-    }
-  };
-
   const handleTestSMS = async () => {
+    if (!testSMS.phoneNumber || !testSMS.message) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o número e a mensagem antes de enviar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsTestingSMS(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-sms', {
+      const { data, error } = await supabase.functions.invoke('send-sms-bulksms', {
         body: {
           contacts: [testSMS.phoneNumber],
           message: testSMS.message,
@@ -100,7 +45,9 @@ export default function AdminSMSConfiguration() {
 
       toast({
         title: "SMS de teste enviado",
-        description: data.success ? "SMS enviado com sucesso!" : "Falha no envio",
+        description: data.success ? 
+          `SMS enviado com sucesso via BulkSMS! Batch ID: ${data.batchId}` : 
+          "Falha no envio do SMS",
         variant: data.success ? "default" : "destructive",
       });
     } catch (error) {
@@ -118,123 +65,53 @@ export default function AdminSMSConfiguration() {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Settings className="h-5 w-5" />
-        <h1 className="text-2xl font-semibold">Configuração de SMS</h1>
+        <h1 className="text-2xl font-semibold">Configuração SMS - BulkSMS</h1>
       </div>
 
-      {/* Gateway Selector */}
-      <SMSGatewaySelector />
-
-      {/* Africa's Talking Gateway */}
+      {/* BulkSMS Gateway Status */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Africa's Talking
+                <Smartphone className="h-5 w-5" />
+                BulkSMS Legacy EAPI
               </CardTitle>
               <CardDescription>
-                Gateway SMS principal para Angola com Sender IDs customizáveis
+                Gateway SMS principal com autenticação por API Token
               </CardDescription>
             </div>
-            <Badge variant={config.isActive ? "default" : "secondary"}>
-              {config.isActive ? "Ativo" : "Inativo"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                Configurado
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="at-active"
-              checked={config.isActive}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, isActive: checked }))}
-            />
-            <Label htmlFor="at-active">Gateway ativo</Label>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="at-username">Username</Label>
-              <Input
-                id="at-username"
-                value={config.username}
-                onChange={(e) => setConfig(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="sua_conta_at"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="at-apikey">API Key</Label>
-              <Input
-                id="at-apikey"
-                type="password"
-                value={config.apiKey}
-                onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
-                placeholder="sua_api_key_at"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="at-sender">Sender ID Padrão</Label>
-              <Input
-                id="at-sender"
-                value={config.defaultSenderId}
-                onChange={(e) => setConfig(prev => ({ ...prev, defaultSenderId: e.target.value }))}
-                placeholder="SMSao"
-                maxLength={11}
-              />
-              <p className="text-xs text-muted-foreground">
-                Alfanumérico, máximo 11 caracteres
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="at-sandbox"
-                  checked={config.sandboxMode}
-                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, sandboxMode: checked }))}
-                />
-                <Label htmlFor="at-sandbox">Modo Sandbox</Label>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Ative para testes gratuitos (não envia SMS reais)
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <p className="text-sm text-green-800">
+                <strong>API Token configurado:</strong> F3F6606E497344F5A0DE5CD616AF8883-02-A
               </p>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={handleTestConnection}
-              disabled={isTestingConnection || !config.username || !config.apiKey}
-              variant="outline"
-            >
-              {isTestingConnection ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                  Testando...
-                </div>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4" />
-                  Testar Conexão
-                </>
-              )}
-            </Button>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Legacy EAPI:</strong> Utiliza autenticação por API Token com endpoint https://api-legacy2.bulksms.com/eapi
+            </p>
+          </div>
 
-            <Button
-              onClick={handleSaveConfig}
-              disabled={isLoading || !config.username || !config.apiKey}
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                  Salvando...
-                </div>
-              ) : (
-                "Salvar Configuração"
-              )}
-            </Button>
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <p className="text-sm text-yellow-800">
+                <strong>Webhook configurado:</strong> https://sms.kbagency.me/api/webhooks/bulksms-delivery
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -268,9 +145,12 @@ export default function AdminSMSConfiguration() {
                 id="test-sender"
                 value={testSMS.senderId}
                 onChange={(e) => setTestSMS(prev => ({ ...prev, senderId: e.target.value }))}
-                placeholder="SMSao"
+                placeholder="SMS.AO"
                 maxLength={11}
               />
+              <p className="text-xs text-muted-foreground">
+                Alfanumérico, máximo 11 caracteres
+              </p>
             </div>
           </div>
 
@@ -305,36 +185,27 @@ export default function AdminSMSConfiguration() {
               </>
             )}
           </Button>
-
-          {config.sandboxMode && (
-            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <p className="text-sm text-amber-800">
-                Modo sandbox ativo - SMS não será enviado, apenas simulado
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
       {/* Informações sobre Sender IDs */}
       <Card>
         <CardHeader>
-          <CardTitle>Sobre Sender IDs Customizáveis</CardTitle>
+          <CardTitle>Sobre Sender IDs com BulkSMS</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="text-sm text-muted-foreground space-y-2">
             <p>
-              • <strong>Sem burocracia:</strong> Cada cliente pode usar qualquer Sender ID alfanumérico desejado
+              • <strong>Aprovação interna:</strong> Sistema de aprovação 100% controlado pela SMS.AO
             </p>
             <p>
-              • <strong>Registro automático:</strong> Sender IDs são registrados automaticamente no Africa's Talking
+              • <strong>Sem dependências externas:</strong> Não precisa aguardar aprovação de operadoras
             </p>
             <p>
-              • <strong>Flexibilidade total:</strong> Clientes podem ter múltiplos Sender IDs para diferentes campanhas
+              • <strong>Flexibilidade total:</strong> Qualquer Sender ID alfanumérico aprovado funciona
             </p>
             <p>
-              • <strong>Angola friendly:</strong> Otimizado para o mercado angolano com suporte nativo
+              • <strong>Delivery Reports:</strong> Recebimento automático via webhook configurado
             </p>
           </div>
         </CardContent>
