@@ -44,7 +44,7 @@ const Landing = () => {
       <section className="pt-40 pb-32 section-padding relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent animate-float"></div>
         <div className="container-futuristic relative">
-          <div className="text-center max-w-6xl mx-auto">
+          <div className="text-center max-w-6xl mx-auto py-[50px]">
             <h1 className="text-6xl md:text-8xl font-light mb-12 tracking-tighter animate-slide-up">
               <span className="gradient-text">SMS.AO</span>
             </h1>
