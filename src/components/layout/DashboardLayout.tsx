@@ -149,7 +149,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </aside>
 
         {/* Main Content */}
-        <main className={`flex-1 ${location.pathname === '/quick-send' ? 'p-0' : 'p-6'}`}>
+        <main className="flex-1 p-6">
           {children}
         </main>
       </div>
