@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -84,6 +85,13 @@ const Login = () => {
           <Card className="card-futuristic relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-primary opacity-5 my-0 py-0"></div>
             
+            {/* Login Logo */}
+            <div className="flex justify-center pt-8 pb-4">
+              <BrandAwareLogo 
+                className="h-16 w-auto" 
+                showText={false}
+              />
+            </div>
             
             <CardContent className="relative">
               <form onSubmit={handleSubmit} className="space-y-6">
