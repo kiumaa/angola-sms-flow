@@ -210,24 +210,32 @@ async function sendViaBulkSMSProduction(
   isTest: boolean = false
 ): Promise<BulkSMSResponse[]> {
   
-  // Format phone numbers for Angola (+244)
+  // Format phone numbers correctly - DON'T add +244 prefix for international numbers
   const formattedContacts = contacts.map(contact => {
     let cleanContact = contact.trim().replace(/[\s\-\(\)]/g, ''); // Remove spaces, dashes, parentheses
+    
+    // If already starts with +, return as is (international format)
+    if (cleanContact.startsWith('+')) {
+      return cleanContact;
+    }
     
     // Remove leading zeros
     if (cleanContact.startsWith('0')) {
       cleanContact = cleanContact.substring(1);
     }
     
-    // If already starts with +244 or 244, ensure correct format
-    if (cleanContact.startsWith('+244')) {
-      return cleanContact;
-    } else if (cleanContact.startsWith('244')) {
+    // If starts with 244, ensure correct format
+    if (cleanContact.startsWith('244')) {
       return `+${cleanContact}`;
-    } else {
-      // Add Angola prefix if not present
+    } 
+    
+    // Only add Angola prefix if it looks like a local Angolan number (starts with 9)
+    if (cleanContact.startsWith('9') && cleanContact.length === 9) {
       return `+244${cleanContact}`;
     }
+    
+    // For other numbers, assume they need + prefix
+    return cleanContact.startsWith('+') ? cleanContact : `+${cleanContact}`;
   })
 
   console.log(`Original contacts:`, contacts)
