@@ -8,19 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, DollarSign, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
 export default function AdminSMSConfiguration() {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isTestingSMS, setIsTestingSMS] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  
+
   // API Token Configuration  
   const [apiTokenId, setApiTokenId] = useState('');
   const [apiTokenSecret, setApiTokenSecret] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  
+
   // Test SMS
   const [testSMS, setTestSMS] = useState({
     phoneNumber: '+244',
@@ -32,15 +33,16 @@ export default function AdminSMSConfiguration() {
   const fetchBalance = async () => {
     setLoadingBalance(true);
     try {
-      const { data, error } = await supabase.functions.invoke('bulksms-balance');
-      
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('bulksms-balance');
       if (error) throw error;
-      
       if (data.success) {
         setBalance(data.balance);
         toast({
           title: "Saldo Atualizado",
-          description: `Saldo atual: $${data.balance.toFixed(2)} USD`,
+          description: `Saldo atual: $${data.balance.toFixed(2)} USD`
         });
       } else {
         throw new Error(data.error);
@@ -50,7 +52,7 @@ export default function AdminSMSConfiguration() {
       toast({
         title: "Erro ao buscar saldo",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoadingBalance(false);
@@ -63,30 +65,29 @@ export default function AdminSMSConfiguration() {
       toast({
         title: "API Token ID obrigatório",
         description: "Digite o API Token ID antes de testar a conexão.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsTestingConnection(true);
     setConnectionStatus('idle');
-    
     try {
-      const { data, error } = await supabase.functions.invoke('bulksms-balance', {
-        body: { 
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('bulksms-balance', {
+        body: {
           apiTokenId: apiTokenId.trim(),
-          apiTokenSecret: apiTokenSecret.trim() 
+          apiTokenSecret: apiTokenSecret.trim()
         }
       });
-      
       if (error) throw error;
-      
       if (data.success) {
         setConnectionStatus('success');
         setBalance(data.balance);
         toast({
           title: "Conexão bem-sucedida!",
-          description: `API Token válido. Saldo: $${data.balance.toFixed(2)} USD`,
+          description: `API Token válido. Saldo: $${data.balance.toFixed(2)} USD`
         });
       } else {
         throw new Error(data.error);
@@ -97,7 +98,7 @@ export default function AdminSMSConfiguration() {
       toast({
         title: "Erro na conexão",
         description: error.message || "Falha ao conectar com BulkSMS",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsTestingConnection(false);
@@ -108,20 +109,21 @@ export default function AdminSMSConfiguration() {
   useEffect(() => {
     fetchBalance();
   }, []);
-
   const handleTestSMS = async () => {
     if (!testSMS.phoneNumber || !testSMS.message) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha o número e a mensagem antes de enviar.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsTestingSMS(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-sms-bulksms', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('send-sms-bulksms', {
         body: {
           contacts: [testSMS.phoneNumber],
           message: testSMS.message,
@@ -129,17 +131,13 @@ export default function AdminSMSConfiguration() {
           isTest: true
         }
       });
-
       if (error) throw error;
-
       toast({
         title: "SMS de teste enviado",
-        description: data.success ? 
-          `SMS enviado com sucesso! Enviados: ${data.totalSent}, Falharam: ${data.totalFailed}` : 
-          "Falha no envio do SMS",
-        variant: data.success && data.totalSent > 0 ? "default" : "destructive",
+        description: data.success ? `SMS enviado com sucesso! Enviados: ${data.totalSent}, Falharam: ${data.totalFailed}` : "Falha no envio do SMS",
+        variant: data.success && data.totalSent > 0 ? "default" : "destructive"
       });
-      
+
       // Atualizar saldo após envio
       if (data.success && data.totalSent > 0) {
         setTimeout(() => fetchBalance(), 1000);
@@ -149,15 +147,13 @@ export default function AdminSMSConfiguration() {
       toast({
         title: "Erro no envio",
         description: "Falha ao enviar SMS de teste",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsTestingSMS(false);
     }
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Settings className="h-5 w-5" />
         <h1 className="text-2xl font-semibold">Configuração SMS - BulkSMS</h1>
@@ -235,13 +231,7 @@ export default function AdminSMSConfiguration() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="api-token-id">Token ID</Label>
-              <Input
-                id="api-token-id"
-                type="text"
-                value={apiTokenId}
-                onChange={(e) => setApiTokenId(e.target.value)}
-                placeholder="D1E7D35CB4954A62987FFD318548723D-02-2"
-              />
+              <Input id="api-token-id" type="text" value={apiTokenId} onChange={e => setApiTokenId(e.target.value)} placeholder="D1E7D35CB4954A62987FFD318548723D-02-2" />
               <p className="text-xs text-muted-foreground">
                 Token ID do BulkSMS
               </p>
@@ -249,13 +239,7 @@ export default function AdminSMSConfiguration() {
             
             <div className="space-y-2">
               <Label htmlFor="api-token-secret">Token Secret</Label>
-              <Input
-                id="api-token-secret"
-                type="password"
-                value={apiTokenSecret}
-                onChange={(e) => setApiTokenSecret(e.target.value)}
-                placeholder="9kgN1b9LSovYXeKrTGBwN0bp1foiZ"
-              />
+              <Input id="api-token-secret" type="password" value={apiTokenSecret} onChange={e => setApiTokenSecret(e.target.value)} placeholder="9kgN1b9LSovYXeKrTGBwN0bp1foiZ" />
               <p className="text-xs text-muted-foreground">
                 Token Secret (opcional para teste)
               </p>
@@ -263,37 +247,25 @@ export default function AdminSMSConfiguration() {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button
-              onClick={testConnection}
-              disabled={isTestingConnection || !apiTokenId.trim()}
-              variant="outline"
-            >
-              {isTestingConnection ? (
-                <div className="flex items-center gap-2">
+            <Button onClick={testConnection} disabled={isTestingConnection || !apiTokenId.trim()} variant="outline">
+              {isTestingConnection ? <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Testando...
-                </div>
-              ) : (
-                <>
+                </div> : <>
                   <CheckCircle className="h-4 w-4" />
                   Testar Conexão
-                </>
-              )}
+                </>}
             </Button>
             
-            {connectionStatus === 'success' && (
-              <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+            {connectionStatus === 'success' && <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Conectado
-              </Badge>
-            )}
+              </Badge>}
             
-            {connectionStatus === 'error' && (
-              <Badge variant="destructive">
+            {connectionStatus === 'error' && <Badge variant="destructive">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 Erro na conexão
-              </Badge>
-            )}
+              </Badge>}
           </div>
         </CardContent>
       </Card>
@@ -311,17 +283,8 @@ export default function AdminSMSConfiguration() {
                 Saldo atual da conta BulkSMS - atualizado em tempo real
               </CardDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={fetchBalance}
-              disabled={loadingBalance}
-            >
-              {loadingBalance ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
+            <Button variant="ghost" size="sm" onClick={fetchBalance} disabled={loadingBalance}>
+              {loadingBalance ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             </Button>
           </div>
         </CardHeader>
@@ -350,23 +313,18 @@ export default function AdminSMSConfiguration() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="test-phone">Número de Telefone</Label>
-              <Input
-                id="test-phone"
-                value={testSMS.phoneNumber}
-                onChange={(e) => setTestSMS(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                placeholder="+244912345678"
-              />
+              <Input id="test-phone" value={testSMS.phoneNumber} onChange={e => setTestSMS(prev => ({
+              ...prev,
+              phoneNumber: e.target.value
+            }))} placeholder="+244912345678" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="test-sender">Sender ID</Label>
-              <Input
-                id="test-sender"
-                value={testSMS.senderId}
-                onChange={(e) => setTestSMS(prev => ({ ...prev, senderId: e.target.value }))}
-                placeholder="SMS.AO"
-                maxLength={11}
-              />
+              <Input id="test-sender" value={testSMS.senderId} onChange={e => setTestSMS(prev => ({
+              ...prev,
+              senderId: e.target.value
+            }))} placeholder="SMS.AO" maxLength={11} />
               <p className="text-xs text-muted-foreground">
                 Alfanumérico, máximo 11 caracteres
               </p>
@@ -375,60 +333,28 @@ export default function AdminSMSConfiguration() {
 
           <div className="space-y-2">
             <Label htmlFor="test-message">Mensagem</Label>
-            <Textarea
-              id="test-message"
-              value={testSMS.message}
-              onChange={(e) => setTestSMS(prev => ({ ...prev, message: e.target.value }))}
-              placeholder="Digite sua mensagem de teste aqui..."
-              maxLength={160}
-            />
+            <Textarea id="test-message" value={testSMS.message} onChange={e => setTestSMS(prev => ({
+            ...prev,
+            message: e.target.value
+          }))} placeholder="Digite sua mensagem de teste aqui..." maxLength={160} />
             <p className="text-xs text-muted-foreground">
               {testSMS.message.length}/160 caracteres
             </p>
           </div>
 
-          <Button
-            onClick={handleTestSMS}
-            disabled={isTestingSMS || !testSMS.phoneNumber || !testSMS.message}
-            className="w-full md:w-auto"
-          >
-            {isTestingSMS ? (
-              <div className="flex items-center gap-2">
+          <Button onClick={handleTestSMS} disabled={isTestingSMS || !testSMS.phoneNumber || !testSMS.message} className="w-full md:w-auto">
+            {isTestingSMS ? <div className="flex items-center gap-2">
                 <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
                 Enviando SMS...
-              </div>
-            ) : (
-              <>
+              </div> : <>
                 <Send className="h-4 w-4" />
                 Enviar SMS de Teste
-              </>
-            )}
+              </>}
           </Button>
         </CardContent>
       </Card>
 
       {/* Informações sobre Sender IDs */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sobre Sender IDs com BulkSMS</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p>
-              • <strong>Aprovação interna:</strong> Sistema de aprovação 100% controlado pela SMS.AO
-            </p>
-            <p>
-              • <strong>Sem dependências externas:</strong> Não precisa aguardar aprovação de operadoras
-            </p>
-            <p>
-              • <strong>Flexibilidade total:</strong> Qualquer Sender ID alfanumérico aprovado funciona
-            </p>
-            <p>
-              • <strong>Delivery Reports:</strong> Recebimento automático via webhook configurado
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+      
+    </div>;
 }
