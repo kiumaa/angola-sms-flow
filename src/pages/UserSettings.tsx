@@ -6,28 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Settings, 
-  User, 
-  Building2, 
-  Phone, 
-  Mail, 
-  Key, 
-  Bell, 
-  Shield,
-  CreditCard,
-  Save,
-  AlertTriangle,
-  Zap,
-  Eye,
-  EyeOff,
-  CheckCircle
-} from "lucide-react";
+import { Settings, User, Building2, Phone, Mail, Key, Bell, Shield, CreditCard, Save, AlertTriangle, Zap, Eye, EyeOff, CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-
 interface UserProfile {
   full_name: string;
   email: string;
@@ -36,7 +19,6 @@ interface UserProfile {
   credits: number;
   default_sender_id: string;
 }
-
 const UserSettings = () => {
   const [profile, setProfile] = useState<UserProfile>({
     full_name: "",
@@ -57,26 +39,24 @@ const UserSettings = () => {
     new: false,
     confirm: false
   });
-
-  const { user } = useAuth();
-  const { toast } = useToast();
-
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     if (user) {
       fetchProfile();
     }
   }, [user]);
-
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('profiles').select('*').eq('user_id', user?.id).single();
       if (error) throw error;
-
       setProfile({
         full_name: data.full_name || "",
         email: data.email || "",
@@ -96,25 +76,20 @@ const UserSettings = () => {
       setLoading(false);
     }
   };
-
   const updateProfile = async () => {
     setSaving(true);
-    
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          phone: profile.phone,
-          company_name: profile.company_name
-        })
-        .eq('user_id', user?.id);
-
+      const {
+        error
+      } = await supabase.from('profiles').update({
+        full_name: profile.full_name,
+        phone: profile.phone,
+        company_name: profile.company_name
+      }).eq('user_id', user?.id);
       if (error) throw error;
-
       toast({
         title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
+        description: "Suas informações foram salvas com sucesso."
       });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -127,7 +102,6 @@ const UserSettings = () => {
       setSaving(false);
     }
   };
-
   const updatePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       toast({
@@ -137,28 +111,25 @@ const UserSettings = () => {
       });
       return;
     }
-
     if (passwordForm.newPassword.length < 6) {
       toast({
-        title: "Erro", 
+        title: "Erro",
         description: "A senha deve ter pelo menos 6 caracteres.",
         variant: "destructive"
       });
       return;
     }
-
     try {
-      const { error } = await supabase.auth.updateUser({
+      const {
+        error
+      } = await supabase.auth.updateUser({
         password: passwordForm.newPassword
       });
-
       if (error) throw error;
-
       toast({
         title: "Senha alterada",
-        description: "Sua senha foi atualizada com sucesso.",
+        description: "Sua senha foi atualizada com sucesso."
       });
-
       setPasswordForm({
         currentPassword: "",
         newPassword: "",
@@ -173,10 +144,8 @@ const UserSettings = () => {
       });
     }
   };
-
   if (loading) {
-    return (
-      <DashboardLayout>
+    return <DashboardLayout>
         <div className="space-y-8">
           <div className="glass-card p-8 animate-float">
             <div className="flex items-center space-x-4">
@@ -190,12 +159,9 @@ const UserSettings = () => {
             </div>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="space-y-8 max-w-6xl mx-auto">
         {/* Enhanced Header */}
         <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
@@ -238,27 +204,16 @@ const UserSettings = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-base">Nome Completo</Label>
-                    <Input
-                      id="fullName"
-                      placeholder="Seu nome completo"
-                      value={profile.full_name}
-                      onChange={(e) => setProfile({...profile, full_name: e.target.value})}
-                      className="rounded-2xl h-12 glass-card border-glass-border"
-                    />
+                    <Input id="fullName" placeholder="Seu nome completo" value={profile.full_name} onChange={e => setProfile({
+                    ...profile,
+                    full_name: e.target.value
+                  })} className="rounded-2xl h-12 glass-card border-glass-border" />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-base">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profile.email}
-                      disabled
-                      className="rounded-2xl h-12 glass-card bg-muted border-muted"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      📧 O email não pode ser alterado por segurança
-                    </p>
+                    <Input id="email" type="email" value={profile.email} disabled className="rounded-2xl h-12 glass-card bg-muted border-muted" />
+                    <p className="text-xs text-muted-foreground">O email não pode ser alterado por segurança</p>
                   </div>
                 </div>
 
@@ -267,13 +222,10 @@ const UserSettings = () => {
                     <Label htmlFor="phone" className="text-base">Telefone</Label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        id="phone"
-                        placeholder="+244 900 000 000"
-                        value={profile.phone}
-                        onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                        className="rounded-2xl h-12 glass-card border-glass-border pl-12"
-                      />
+                      <Input id="phone" placeholder="+244 900 000 000" value={profile.phone} onChange={e => setProfile({
+                      ...profile,
+                      phone: e.target.value
+                    })} className="rounded-2xl h-12 glass-card border-glass-border pl-12" />
                     </div>
                   </div>
 
@@ -281,13 +233,10 @@ const UserSettings = () => {
                     <Label htmlFor="company" className="text-base">Empresa</Label>
                     <div className="relative">
                       <Building2 className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        id="company"
-                        placeholder="Nome da sua empresa"
-                        value={profile.company_name}
-                        onChange={(e) => setProfile({...profile, company_name: e.target.value})}
-                        className="rounded-2xl h-12 glass-card border-glass-border pl-12"
-                      />
+                      <Input id="company" placeholder="Nome da sua empresa" value={profile.company_name} onChange={e => setProfile({
+                      ...profile,
+                      company_name: e.target.value
+                    })} className="rounded-2xl h-12 glass-card border-glass-border pl-12" />
                     </div>
                   </div>
                 </div>
@@ -361,19 +310,14 @@ const UserSettings = () => {
                     <div className="space-y-2">
                       <Label htmlFor="newPassword" className="text-base">Nova Senha</Label>
                       <div className="relative">
-                        <Input
-                          id="newPassword"
-                          type={showPassword.new ? "text" : "password"}
-                          placeholder="Digite sua nova senha"
-                          value={passwordForm.newPassword}
-                          onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                          className="rounded-2xl h-12 glass-card border-glass-border pr-12"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword({...showPassword, new: !showPassword.new})}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
+                        <Input id="newPassword" type={showPassword.new ? "text" : "password"} placeholder="Digite sua nova senha" value={passwordForm.newPassword} onChange={e => setPasswordForm({
+                        ...passwordForm,
+                        newPassword: e.target.value
+                      })} className="rounded-2xl h-12 glass-card border-glass-border pr-12" />
+                        <button type="button" onClick={() => setShowPassword({
+                        ...showPassword,
+                        new: !showPassword.new
+                      })} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                           {showPassword.new ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
                       </div>
@@ -382,19 +326,14 @@ const UserSettings = () => {
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword" className="text-base">Confirmar Nova Senha</Label>
                       <div className="relative">
-                        <Input
-                          id="confirmPassword"
-                          type={showPassword.confirm ? "text" : "password"}
-                          placeholder="Confirme sua nova senha"
-                          value={passwordForm.confirmPassword}
-                          onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
-                          className="rounded-2xl h-12 glass-card border-glass-border pr-12"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword({...showPassword, confirm: !showPassword.confirm})}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
+                        <Input id="confirmPassword" type={showPassword.confirm ? "text" : "password"} placeholder="Confirme sua nova senha" value={passwordForm.confirmPassword} onChange={e => setPasswordForm({
+                        ...passwordForm,
+                        confirmPassword: e.target.value
+                      })} className="rounded-2xl h-12 glass-card border-glass-border pr-12" />
+                        <button type="button" onClick={() => setShowPassword({
+                        ...showPassword,
+                        confirm: !showPassword.confirm
+                      })} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                           {showPassword.confirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
                       </div>
@@ -572,8 +511,6 @@ const UserSettings = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default UserSettings;
