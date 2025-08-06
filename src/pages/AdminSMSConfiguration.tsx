@@ -86,9 +86,13 @@ export default function AdminSMSConfiguration() {
       if (data.success) {
         setConnectionStatus('success');
         setBalance(data.balance);
+        
+        // Salvar credenciais no banco após conexão bem-sucedida
+        await saveConfiguration();
+        
         toast({
           title: "Conexão bem-sucedida!",
-          description: `API Token válido. Saldo: $${data.balance.toFixed(2)} USD`
+          description: `API Token válido e salvo. Saldo: $${data.balance.toFixed(2)} USD`
         });
       } else {
         throw new Error(data.error);
@@ -106,9 +110,60 @@ export default function AdminSMSConfiguration() {
     }
   };
 
-  // Buscar saldo ao carregar
+  // Função para salvar configuração
+  const saveConfiguration = async () => {
+    try {
+      const { error } = await supabase
+        .from('sms_configurations')
+        .upsert({
+          gateway_name: 'bulksms',
+          api_token_id: apiTokenId.trim(),
+          api_token_secret: apiTokenSecret.trim(),
+          is_active: true
+        }, {
+          onConflict: 'gateway_name'
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao salvar configuração:', error);
+    }
+  };
+
+  // Carregar configuração salva e buscar saldo ao carregar
   useEffect(() => {
-    fetchBalance();
+    const loadSavedConfiguration = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('sms_configurations')
+          .select('*')
+          .eq('gateway_name', 'bulksms')
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Erro ao carregar configuração:', error);
+          return;
+        }
+
+        if (data) {
+          setApiTokenId(data.api_token_id || '');
+          setApiTokenSecret(data.api_token_secret || '');
+          setConnectionStatus('success');
+          
+          // Buscar saldo com as credenciais salvas
+          await fetchBalance();
+        } else {
+          // Se não há configuração salva, buscar saldo com credenciais do ambiente
+          await fetchBalance();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configuração:', error);
+        await fetchBalance();
+      }
+    };
+
+    loadSavedConfiguration();
   }, []);
   const handleTestSMS = async () => {
     if (!testSMS.phoneNumber || !testSMS.message) {

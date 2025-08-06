@@ -475,6 +475,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_configurations: {
+        Row: {
+          api_token_id: string | null
+          api_token_secret: string | null
+          created_at: string
+          gateway_name: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          api_token_id?: string | null
+          api_token_secret?: string | null
+          created_at?: string
+          gateway_name: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          api_token_id?: string | null
+          api_token_secret?: string | null
+          created_at?: string
+          gateway_name?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sms_gateways: {
         Row: {
           api_endpoint: string
