@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText, Wifi, Palette } from "lucide-react";
+import { Home, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText, Wifi, Palette, UserCheck } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -56,10 +56,10 @@ const AdminLayout = ({
     icon: MessageSquare,
     current: location.pathname.startsWith("/admin/reports")
   }, {
-    name: "Contatos",
-    href: "/admin/users",
-    icon: Users,
-    current: location.pathname.startsWith("/admin/users")
+    name: "Sender IDs",
+    href: "/admin/sender-ids",
+    icon: UserCheck,
+    current: location.pathname.startsWith("/admin/sender-ids")
   }, {
     name: "Relatórios",
     href: "/admin/reports",
