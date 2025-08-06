@@ -75,12 +75,14 @@ serve(async (req) => {
       console.log(`Using default Sender ID: ${senderId}`)
     }
 
-    // Get BulkSMS API token from secrets (Legacy EAPI uses only token, no secret)
-    const bulkSMSToken = Deno.env.get('BULKSMS_TOKEN_ID') || 'F3F6606E497344F5A0DE5CD616AF8883-02-A'
+    // Get BulkSMS API token from secrets
+    const bulkSMSToken = Deno.env.get('BULKSMS_TOKEN_ID')
 
     if (!bulkSMSToken) {
       throw new Error('BulkSMS API token not configured')
     }
+
+    console.log(`Using BulkSMS token: ${bulkSMSToken.substring(0, 8)}...`)
 
     // Send SMS via BulkSMS Legacy EAPI
     const bulkSMSResponse = await sendViaBulkSMSLegacy(
@@ -181,6 +183,7 @@ async function sendViaBulkSMSLegacy(
     payload.append('bulkSMSMode', '1')
 
     console.log(`Sending ${formattedContacts.length} SMS via BulkSMS Legacy EAPI with sender: ${senderId}`)
+    console.log(`Using API Token: ${apiToken.substring(0, 8)}...`)
 
     const response = await fetch('https://api-legacy2.bulksms.com/eapi', {
       method: 'POST',
