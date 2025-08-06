@@ -158,7 +158,7 @@ const QuickSend = () => {
     }
   };
   return <DashboardLayout>
-      <div className="space-y-8 max-w-4xl">
+      <div className="space-y-8 w-full">
         {/* Header */}
         <div className="glass-card p-6 bg-gradient-hero relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
