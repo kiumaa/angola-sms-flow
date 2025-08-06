@@ -56,10 +56,10 @@ const AdminLayout = ({
     icon: MessageSquare,
     current: location.pathname.startsWith("/admin/reports")
   }, {
-    name: "Contatos",
-    href: "/admin/users",
-    icon: Users,
-    current: location.pathname.startsWith("/admin/users")
+    name: "Sender IDs",
+    href: "/admin/sender-ids",
+    icon: Send,
+    current: location.pathname.startsWith("/admin/sender-ids")
   }, {
     name: "Relatórios",
     href: "/admin/reports",
