@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,22 +7,44 @@ import { useToast } from "@/hooks/use-toast";
 import { Send } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { validateAngolanPhone, normalizeAngolanPhone, validateInternationalPhone, normalizeInternationalPhone, sanitizeInput } from '@/lib/validation';
+import CountryCodeSelector from './CountryCodeSelector';
 
 const SMSGatewayTester = () => {
+  const [countryCode, setCountryCode] = useState('+244');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [message, setMessage] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        setIsAdmin(roles?.role === 'admin');
+      }
+    };
+    checkUserRole();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Build full phone number with country code
+    const fullPhoneNumber = countryCode + phoneNumber;
+    
     // Validate inputs - For testing, allow international numbers
-    if (!validateInternationalPhone(phoneNumber)) {
+    if (!validateInternationalPhone(fullPhoneNumber)) {
       toast({
         title: "Número inválido",
-        description: "Por favor, insira um número internacional válido (ex: +244 9XX XXX XXX, +351 9XX XXX XXX)",
+        description: `Por favor, insira um número válido para ${countryCode}`,
         variant: "destructive",
       });
       return;
@@ -72,7 +94,7 @@ const SMSGatewayTester = () => {
       // Send SMS - Use international normalization for testing
       const { data, error } = await supabase.functions.invoke('send-sms', {
         body: {
-          phoneNumber: normalizeInternationalPhone(phoneNumber),
+          phoneNumber: normalizeInternationalPhone(fullPhoneNumber),
           message: sanitizeInput(message),
           campaignId: campaign.id,
           isTest: true
@@ -87,7 +109,7 @@ const SMSGatewayTester = () => {
         gateway: data.gateway || 'unknown',
         status: data.success ? 'success' : 'failed',
         timestamp: new Date().toISOString(),
-        phone: normalizeInternationalPhone(phoneNumber),
+        phone: normalizeInternationalPhone(fullPhoneNumber),
         message: sanitizeInput(message),
         error: data.error || null,
         responseTime: data.responseTime || 0
@@ -130,15 +152,30 @@ const SMSGatewayTester = () => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">Número de Telefone</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+244 9XX XXX XXX (ou qualquer país para teste)"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              required
+            <Label htmlFor="country">Código do País</Label>
+            <CountryCodeSelector
+              value={countryCode}
+              onValueChange={setCountryCode}
+              isAdmin={isAdmin}
+              placeholder="Selecionar país"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Número de Telefone</Label>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-2 bg-muted rounded-md text-sm font-medium">
+                {countryCode}
+              </span>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder={countryCode === '+244' ? '9XX XXX XXX' : 'Número local'}
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                required
+                className="flex-1"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="message">Mensagem</Label>
