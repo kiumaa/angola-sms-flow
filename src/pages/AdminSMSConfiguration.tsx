@@ -9,6 +9,7 @@ import { Settings, Send, CheckCircle, AlertTriangle, Smartphone, DollarSign, Ref
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import SenderIDsSection from "@/components/admin/sms/SenderIDsSection";
+import SenderIDReport from "@/components/admin/SenderIDReport";
 export default function AdminSMSConfiguration() {
   const {
     toast
@@ -503,6 +504,9 @@ export default function AdminSMSConfiguration() {
           <SenderIDsSection />
         </CardContent>
       </Card>
+
+      {/* Relatório de Sender IDs */}
+      <SenderIDReport />
       
     </div>;
 }
