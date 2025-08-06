@@ -47,6 +47,13 @@ serve(async (req) => {
 
     const { contacts, message, senderId = 'SMSAO', campaignId, isTest = false }: SMSRequest = await req.json()
 
+    console.log('=== SMS Request Details ===')
+    console.log('Contacts:', contacts)
+    console.log('Message:', message)
+    console.log('Sender ID:', senderId)
+    console.log('Is Test:', isTest)
+    console.log('User ID:', user.id)
+
     if (!contacts || contacts.length === 0) {
       throw new Error('No contacts provided')
     }
@@ -79,12 +86,13 @@ serve(async (req) => {
     const bulkSMSTokenId = Deno.env.get('BULKSMS_TOKEN_ID')
     const bulkSMSTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
 
-    if (!bulkSMSTokenId) {
-      throw new Error('BulkSMS API Token ID not configured')
+    if (!bulkSMSTokenId || !bulkSMSTokenSecret) {
+      throw new Error('BulkSMS API credentials not configured')
     }
 
     console.log(`Using BulkSMS Token ID: ${bulkSMSTokenId.substring(0, 8)}...`)
     console.log(`Token Secret available: ${!!bulkSMSTokenSecret}`)
+    console.log(`Sending SMS to ${contacts.length} contacts with sender: ${senderId}`)
 
     // Send SMS via BulkSMS API v1
     const bulkSMSResponse = await sendViaBulkSMSProduction(
@@ -92,7 +100,7 @@ serve(async (req) => {
       message,
       senderId,
       bulkSMSTokenId,
-      bulkSMSTokenSecret || '',
+      bulkSMSTokenSecret,
       isTest
     )
 
@@ -169,11 +177,26 @@ async function sendViaBulkSMSProduction(
   
   // Format phone numbers for Angola (+244)
   const formattedContacts = contacts.map(contact => {
-    if (!contact.startsWith('+244') && !contact.startsWith('244')) {
-      return `+244${contact.replace(/^0+/, '')}`
+    let cleanContact = contact.trim().replace(/[\s\-\(\)]/g, ''); // Remove spaces, dashes, parentheses
+    
+    // Remove leading zeros
+    if (cleanContact.startsWith('0')) {
+      cleanContact = cleanContact.substring(1);
     }
-    return contact.startsWith('+') ? contact : `+${contact}`
+    
+    // If already starts with +244 or 244, ensure correct format
+    if (cleanContact.startsWith('+244')) {
+      return cleanContact;
+    } else if (cleanContact.startsWith('244')) {
+      return `+${cleanContact}`;
+    } else {
+      // Add Angola prefix if not present
+      return `+244${cleanContact}`;
+    }
   })
+
+  console.log(`Original contacts:`, contacts)
+  console.log(`Formatted contacts:`, formattedContacts)
 
   // Prepare messages for API v1 (using "content" not "body")
   const messages = formattedContacts.map(contact => ({
@@ -182,9 +205,13 @@ async function sendViaBulkSMSProduction(
     content: message
   }))
 
-  console.log(`Sending ${formattedContacts.length} SMS via BulkSMS API v1 with sender: ${senderId}`)
-  console.log(`Using Token ID: ${apiTokenId.substring(0, 8)}...`)
-  console.log(`Token Secret available: ${!!apiTokenSecret}`)
+  console.log(`=== BulkSMS API Call ===`)
+  console.log(`Sending ${formattedContacts.length} SMS via BulkSMS API v1`)
+  console.log(`Sender ID: ${senderId}`)
+  console.log(`Token ID: ${apiTokenId.substring(0, 8)}...`)
+  console.log(`Token Secret: ${apiTokenSecret ? 'Available' : 'Missing'}`)
+  console.log(`Formatted contacts:`, formattedContacts)
+  console.log(`Messages payload:`, messages)
 
   // Create proper Basic Auth with TokenID:TokenSecret
   const authString = `${apiTokenId}:${apiTokenSecret}`;
@@ -200,7 +227,10 @@ async function sendViaBulkSMSProduction(
     })
 
     const responseData = await response.json()
-    console.log('BulkSMS API v1 response:', responseData)
+    console.log('=== BulkSMS API Response ===')
+    console.log('Status:', response.status)
+    console.log('Status Text:', response.statusText)
+    console.log('Response Data:', JSON.stringify(responseData, null, 2))
 
     const results: BulkSMSResponse[] = []
 

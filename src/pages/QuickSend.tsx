@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 const QuickSend = () => {
   const [formData, setFormData] = useState({
-    senderId: "",
+    senderId: "SMSAO", // Default to SMSAO
     phoneNumber: "",
     message: ""
   });
@@ -45,12 +45,18 @@ const QuickSend = () => {
       if (error) throw error;
       setSenderIds(data || []);
 
-      // Set default sender ID if exists
+      // Set default sender ID if exists, otherwise use SMSAO
       const defaultSender = data?.find(s => s.is_default);
       if (defaultSender) {
         setFormData(prev => ({
           ...prev,
           senderId: defaultSender.sender_id
+        }));
+      } else if (data && data.length === 0) {
+        // Se não há sender IDs aprovados, use SMSAO como padrão
+        setFormData(prev => ({
+          ...prev,
+          senderId: 'SMSAO'
         }));
       }
     } catch (error) {
@@ -58,8 +64,13 @@ const QuickSend = () => {
     }
   };
   const validateAngolanPhone = (phone: string): boolean => {
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    const patterns = [/^\+244[9][0-9]{8}$/, /^244[9][0-9]{8}$/, /^[9][0-9]{8}$/];
+    const cleanPhone = phone.trim().replace(/[\s\-\(\)]/g, '');
+    const patterns = [
+      /^\+244[9][0-9]{8}$/, // +244XXXXXXXXX
+      /^244[9][0-9]{8}$/,   // 244XXXXXXXXX  
+      /^[9][0-9]{8}$/,      // 9XXXXXXXX
+      /^0[9][0-9]{8}$/      // 09XXXXXXXX
+    ];
     return patterns.some(pattern => pattern.test(cleanPhone));
   };
   const handleInputChange = (field: string, value: string) => {
@@ -124,8 +135,9 @@ const QuickSend = () => {
           'Authorization': `Bearer ${authData.session?.access_token}`
         },
         body: JSON.stringify({
-          phoneNumber: formData.phoneNumber,
+          contacts: [formData.phoneNumber],
           message: formData.message,
+          senderId: formData.senderId,
           isTest: false
         })
       });
@@ -198,20 +210,27 @@ const QuickSend = () => {
                       <SelectTrigger className="h-12 rounded-2xl glass-card border-glass-border">
                         <SelectValue placeholder="Selecione um Sender ID" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {senderIds.length === 0 ? <div className="p-2 text-sm text-muted-foreground">
-                            Nenhum Sender ID aprovado disponível
-                          </div> : senderIds.map((sender: any) => <SelectItem key={sender.id} value={sender.sender_id}>
-                              <div className="flex items-center gap-2">
-                                {sender.sender_id}
-                                {sender.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
-                              </div>
-                            </SelectItem>)}
-                      </SelectContent>
+                       <SelectContent>
+                         {/* Always show SMSAO as default option */}
+                         <SelectItem key="smsao-default" value="SMSAO">
+                           <div className="flex items-center gap-2">
+                             SMSAO
+                             <Badge variant="secondary" className="text-xs">Padrão</Badge>
+                           </div>
+                         </SelectItem>
+                         {senderIds.map((sender: any) => (
+                           <SelectItem key={sender.id} value={sender.sender_id}>
+                             <div className="flex items-center gap-2">
+                               {sender.sender_id}
+                               {sender.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
+                             </div>
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
                     </Select>
-                    {senderIds.length === 0 && <p className="text-sm text-orange-500">
-                        Você precisa ter pelo menos um Sender ID aprovado. <a href="/sender-ids" className="text-primary hover:underline">Solicitar Sender ID</a>
-                      </p>}
+                     <p className="text-sm text-muted-foreground">
+                         SMSAO está sempre disponível como Sender ID padrão. Para usar um Sender ID personalizado, <a href="/sender-ids" className="text-primary hover:underline">solicite aprovação aqui</a>.
+                       </p>
                   </div>
 
                   {/* Phone Number */}
@@ -238,7 +257,7 @@ const QuickSend = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <Button type="submit" className="w-full button-futuristic text-lg py-6" disabled={isLoading || senderIds.length === 0}>
+                  <Button type="submit" className="w-full button-futuristic text-lg py-6" disabled={isLoading}>
                     {isLoading ? "Enviando..." : <>
                       <Send className="h-5 w-5 mr-2" />
                       Enviar SMS
@@ -259,7 +278,7 @@ const QuickSend = () => {
               </CardHeader>
               <CardContent>
                 <div className="rounded-2xl p-4 border-l-4 border-primary bg-gray-200">
-                  <div className="text-xs text-muted-foreground mb-1">De: {formData.senderId || "SENDER_ID"}</div>
+                  <div className="text-xs text-muted-foreground mb-1">De: {formData.senderId || "SMSAO"}</div>
                   <div className="text-xs text-muted-foreground mb-2">Para: {formData.phoneNumber || "+244 XXX XXX XXX"}</div>
                   <div className="font-mono text-sm">
                     {formData.message || "Digite sua mensagem para ver o preview..."}
