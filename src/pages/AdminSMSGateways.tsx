@@ -239,7 +239,7 @@ export default function AdminSMSGateways() {
       return <Badge variant="default" className="bg-green-600">Conectado</Badge>;
     } else {
       return <Badge variant="destructive">
-        {status.error === 'Missing BULKGATE_API_KEY' || status.error === 'Missing credentials' 
+        {status.error === 'Missing credentials' 
           ? 'Não Configurado' 
           : 'Desconectado'}
       </Badge>;
@@ -345,11 +345,6 @@ export default function AdminSMSGateways() {
                         <strong>Erro:</strong> {status.error}
                       </div>
 
-                      {status.error === 'Missing BULKGATE_API_KEY' && (
-                        <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
-                          <strong>Configuração necessária:</strong> Configure a secret BULKGATE_API_KEY no Supabase Dashboard → Settings → Edge Functions
-                        </div>
-                      )}
                     </>
                   )}
 
@@ -425,7 +420,6 @@ export default function AdminSMSGateways() {
             <li>• Apenas um gateway pode ser primário por vez</li>
             <li>• O sistema tentará automaticamente o gateway de fallback em caso de falha</li>
             <li>• Certifique-se de configurar as credenciais nos secrets do Supabase</li>
-            <li>• BulkGate requer a secret BULKGATE_API_KEY configurada</li>
             <li>• BulkSMS requer as secrets BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET</li>
           </ul>
         </div>

@@ -22,7 +22,7 @@ interface GatewayStatus {
 }
 
 interface GatewayConfig {
-  primary: 'bulksms' | 'bulkgate';
+  primary: 'bulksms';
   fallbackEnabled: boolean;
 }
 
@@ -43,21 +43,11 @@ export default function AdminSMSGatewaySettings() {
 
   const loadGatewayStatuses = async () => {
     try {
-      console.log('Loading gateway statuses...');
-      const [bulkSMSResponse, bulkGateResponse] = await Promise.all([
-        supabase.functions.invoke('gateway-status', {
-          body: { gateway: 'bulksms' }
-        }),
-        supabase.functions.invoke('gateway-status', {
-          body: { gateway: 'bulkgate' }
-        })
-      ]);
-
-      console.log('BulkSMS Response:', bulkSMSResponse);
-      console.log('BulkGate Response:', bulkGateResponse);
+      const bulkSMSResponse = await supabase.functions.invoke('gateway-status', {
+        body: { gateway: 'bulksms' }
+      });
 
       if (bulkSMSResponse.data) setBulkSMSStatus(bulkSMSResponse.data);
-      if (bulkGateResponse.data) setBulkGateStatus(bulkGateResponse.data);
     } catch (error) {
       console.error('Erro ao carregar status dos gateways:', error);
       toast.error('Erro ao carregar status dos gateways');
@@ -74,10 +64,10 @@ export default function AdminSMSGatewaySettings() {
 
       if (gateways) {
         const primaryGateway = gateways.find(g => g.is_primary);
-        if (primaryGateway) {
+        if (primaryGateway && primaryGateway.name === 'bulksms') {
           setConfig(prev => ({
             ...prev,
-            primary: primaryGateway.name as 'bulksms' | 'bulkgate'
+            primary: 'bulksms'
           }));
         }
       }
@@ -97,8 +87,6 @@ export default function AdminSMSGatewaySettings() {
 
       if (gatewayName === 'bulksms') {
         setBulkSMSStatus(data);
-      } else {
-        setBulkGateStatus(data);
       }
 
       toast.success(`Teste de ${gatewayName} concluído`);
@@ -254,26 +242,12 @@ export default function AdminSMSGatewaySettings() {
         <CardContent className="space-y-6">
           <div>
             <Label className="text-base font-medium">Gateway Primário</Label>
-            <RadioGroup
-              value={config.primary}
-              onValueChange={(value) => setConfig(prev => ({ ...prev, primary: value as 'bulksms' | 'bulkgate' }))}
-              className="mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="bulksms" id="bulksms" />
-                <Label htmlFor="bulksms">BulkSMS</Label>
-                {bulkSMSStatus?.status === 'active' && (
-                  <Badge variant="outline" className="text-xs">Online</Badge>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="bulkgate" id="bulkgate" />
-                <Label htmlFor="bulkgate">BulkGate</Label>
-                {bulkGateStatus?.status === 'active' && (
-                  <Badge variant="outline" className="text-xs">Online</Badge>
-                )}
-              </div>
-            </RadioGroup>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="bulksms">BulkSMS (Único Gateway Ativo)</Label>
+              {bulkSMSStatus?.status === 'active' && (
+                <Badge variant="outline" className="text-xs">Online</Badge>
+              )}
+            </div>
           </div>
 
           <Separator />
@@ -297,20 +271,13 @@ export default function AdminSMSGatewaySettings() {
         </CardContent>
       </Card>
 
-      {/* Gateway Status Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Gateway Status Card */}
+      <div className="grid md:grid-cols-1 gap-6">
         {renderGatewayCard(
           "BulkSMS",
           "Gateway SMS tradicional com alta confiabilidade",
           bulkSMSStatus,
           "bulksms"
-        )}
-        
-        {renderGatewayCard(
-          "BulkGate",
-          "Gateway SMS moderno com recursos avançados",
-          bulkGateStatus,
-          "bulkgate"
         )}
       </div>
 
@@ -335,9 +302,9 @@ export default function AdminSMSGatewaySettings() {
             </div>
             <div>
               <p className="text-2xl font-bold text-blue-600">
-                {(bulkSMSStatus?.status === 'active' ? 1 : 0) + (bulkGateStatus?.status === 'active' ? 1 : 0)}/2
+                {bulkSMSStatus?.status === 'active' ? 1 : 0}/1
               </p>
-              <p className="text-sm text-muted-foreground">Gateways Online</p>
+              <p className="text-sm text-muted-foreground">Gateway Online</p>
             </div>
           </div>
         </CardContent>

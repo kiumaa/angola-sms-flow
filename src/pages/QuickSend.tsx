@@ -202,10 +202,8 @@ const QuickSend = () => {
                               <Badge variant="secondary" className="text-xs">Padrão</Badge>
                             </div>
                           </SelectItem>
-                          {/* Mostrar Sender IDs aprovados, excluindo SMSAO para evitar duplicação */}
-                          {senderIds
-                            .filter((sender: any) => sender.sender_id !== 'SMSAO') // Filtrar SMSAO para evitar duplicação
-                            .map((sender: any) => (
+                          {/* Mostrar Sender IDs aprovados do usuário */}
+                          {senderIds.map((sender: any) => (
                             <SelectItem key={sender.id} value={sender.sender_id}>
                               <div className="flex items-center gap-2">
                                 {sender.sender_id}
