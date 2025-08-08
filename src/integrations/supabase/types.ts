@@ -391,6 +391,44 @@ export type Database = {
           },
         ]
       }
+      otp_requests: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          used: boolean
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone: string
+          used?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          used?: boolean
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otp_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -815,6 +853,10 @@ export type Database = {
       approve_credit_request: {
         Args: { request_id: string; admin_user_id: string }
         Returns: boolean
+      }
+      clean_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       count_contacts_in_list: {
         Args: { list_id: string }
