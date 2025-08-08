@@ -194,4 +194,45 @@ export class BulkSMSGateway implements SMSGateway {
       return false;
     }
   }
+
+  /**
+   * Send OTP code via SMS
+   */
+  async sendOtpCode(phone: string, code: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': this.getAuthHeader()
+        },
+        body: JSON.stringify({
+          messages: [{
+            to: phone,
+            from: 'SMSAO',
+            content: `Seu código de acesso é: ${code}`
+          }]
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && Array.isArray(result) && result[0]?.id) {
+        return {
+          success: true,
+          messageId: result[0].id
+        };
+      } else {
+        return {
+          success: false,
+          error: result.detail || result.error?.description || `HTTP ${response.status}`
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }

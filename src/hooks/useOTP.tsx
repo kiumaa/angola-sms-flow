@@ -31,8 +31,19 @@ export const useOTP = () => {
         return { success: false, error: dbError.message };
       }
 
-      // TODO: Integrate with SMS service to send OTP
-      console.log('OTP Code to send:', otpPayload.code, 'to phone:', phone);
+      // Send OTP via SMS using edge function
+      const { error: smsError } = await supabase.functions.invoke('send-otp', {
+        body: { 
+          phone: phone, 
+          code: otpPayload.code 
+        }
+      });
+
+      if (smsError) {
+        console.error('Failed to send OTP SMS:', smsError);
+        setError('Erro ao enviar SMS');
+        return { success: false, error: 'Erro ao enviar SMS' };
+      }
       
       return { success: true };
     } catch (err) {
