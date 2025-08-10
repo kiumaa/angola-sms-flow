@@ -4,11 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, Check, Eye, EyeOff, Zap, Gift } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { UserPlus, Check, Eye, EyeOff, Zap, Gift, Smartphone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { PhoneInput } from "@/components/shared/PhoneInput";
+import { useFormValidation, registerSchema } from "@/hooks/useFormValidation";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +20,7 @@ const Register = () => {
     password: "",
     confirmPassword: "",
     company: "",
+    phone: "",
     acceptTerms: false
   });
   const [showPassword, setShowPassword] = useState({
@@ -27,6 +31,7 @@ const Register = () => {
   const navigate = useNavigate();
   const { signUp, user, loading } = useAuth();
   const { toast } = useToast();
+  const { errors, isValid, validateField, getPasswordStrength } = useFormValidation(registerSchema, formData);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -145,10 +150,16 @@ const Register = () => {
                       id="fullName"
                       placeholder="Seu nome completo"
                       value={formData.fullName}
-                      onChange={(e) => updateFormData('fullName', e.target.value)}
+                      onChange={(e) => {
+                        updateFormData('fullName', e.target.value);
+                        validateField('fullName', e.target.value);
+                      }}
                       className="rounded-2xl h-14 text-base glass-card border-glass-border"
                       required
                     />
+                    {errors.fullName && (
+                      <p className="text-sm text-destructive">{errors.fullName}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -163,17 +174,40 @@ const Register = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-base">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={formData.email}
-                    onChange={(e) => updateFormData('email', e.target.value)}
-                    className="rounded-2xl h-14 text-base glass-card border-glass-border"
-                    required
-                  />
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-base">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={formData.email}
+                      onChange={(e) => {
+                        updateFormData('email', e.target.value);
+                        validateField('email', e.target.value);
+                      }}
+                      className="rounded-2xl h-14 text-base glass-card border-glass-border"
+                      required
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-destructive">{errors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-base">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="h-4 w-4" />
+                        Telefone (Opcional)
+                      </div>
+                    </Label>
+                    <PhoneInput
+                      value={formData.phone}
+                      onChange={(value) => updateFormData('phone', value)}
+                      placeholder="9XX XXX XXX"
+                      className="h-14"
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -185,7 +219,10 @@ const Register = () => {
                         type={showPassword.password ? "text" : "password"}
                         placeholder="Mínimo 6 caracteres"
                         value={formData.password}
-                        onChange={(e) => updateFormData('password', e.target.value)}
+                        onChange={(e) => {
+                          updateFormData('password', e.target.value);
+                          validateField('password', e.target.value);
+                        }}
                         className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12"
                         required
                         minLength={6}
@@ -198,6 +235,42 @@ const Register = () => {
                         {showPassword.password ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
+                    
+                    {/* Password Strength Indicator */}
+                    {formData.password && (
+                      <div className="space-y-2 mt-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Força da senha:</span>
+                          <span className={`font-medium ${
+                            getPasswordStrength(formData.password).color === 'destructive' ? 'text-destructive' :
+                            getPasswordStrength(formData.password).color === 'orange' ? 'text-orange-500' :
+                            getPasswordStrength(formData.password).color === 'yellow' ? 'text-yellow-500' :
+                            getPasswordStrength(formData.password).color === 'primary' ? 'text-primary' :
+                            'text-green-500'
+                          }`}>
+                            {getPasswordStrength(formData.password).level}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={getPasswordStrength(formData.password).percentage} 
+                          className="h-2"
+                        />
+                        {getPasswordStrength(formData.password).feedback.length > 0 && (
+                          <ul className="text-xs text-muted-foreground space-y-1">
+                            {getPasswordStrength(formData.password).feedback.map((tip, index) => (
+                              <li key={index} className="flex items-center gap-1">
+                                <span className="w-1 h-1 bg-muted-foreground rounded-full flex-shrink-0" />
+                                {tip}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                    
+                    {errors.password && (
+                      <p className="text-sm text-destructive">{errors.password}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -208,7 +281,10 @@ const Register = () => {
                         type={showPassword.confirm ? "text" : "password"}
                         placeholder="Repita sua senha"
                         value={formData.confirmPassword}
-                        onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                        onChange={(e) => {
+                          updateFormData('confirmPassword', e.target.value);
+                          validateField('confirmPassword', e.target.value);
+                        }}
                         className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12"
                         required
                       />
@@ -220,6 +296,9 @@ const Register = () => {
                         {showPassword.confirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                    )}
                   </div>
                 </div>
 
@@ -245,7 +324,7 @@ const Register = () => {
                 <Button 
                   type="submit" 
                   className="w-full button-futuristic text-lg py-6" 
-                  disabled={isLoading}
+                  disabled={isLoading || !isValid}
                 >
                   {isLoading ? "Criando conta..." : "Criar Conta Grátis"}
                 </Button>
