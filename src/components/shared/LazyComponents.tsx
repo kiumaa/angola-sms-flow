@@ -3,6 +3,10 @@ import { Suspense, lazy } from "react";
 import MessageSendingLoader from "./MessageSendingLoader";
 
 // Lazy load heavy components for better performance
+// Auth Components
+export const LazyOTPLoginModal = lazy(() => import("@/components/auth/OTPLoginModal"));
+
+// Admin Components
 export const LazyAdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 export const LazyAdminUsers = lazy(() => import("@/pages/AdminUsers"));
 export const LazyAdminPackages = lazy(() => import("@/pages/AdminPackages"));

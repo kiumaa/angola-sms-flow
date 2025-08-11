@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Smartphone, ArrowLeft, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useOTP } from "@/hooks/useOTP";
 import { PhoneInput } from "@/components/shared/PhoneInput";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 interface OTPLoginModalProps {
   open: boolean;
@@ -175,7 +176,14 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
                   disabled={isRequestingOTP || !phone}
                   className="flex-1"
                 >
-                  {isRequestingOTP ? "Enviando..." : "Enviar Código"}
+                  {isRequestingOTP ? (
+                    <div className="flex items-center space-x-2">
+                      <LoadingSpinner size="sm" className="border-primary-foreground border-t-transparent" />
+                      <span>Enviando...</span>
+                    </div>
+                  ) : (
+                    "Enviar Código"
+                  )}
                 </Button>
               </div>
             </>
@@ -228,7 +236,14 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
                   disabled={isVerifying || code.length !== 6}
                   className="flex-1"
                 >
-                  {isVerifying ? "Verificando..." : "Entrar"}
+                  {isVerifying ? (
+                    <div className="flex items-center space-x-2">
+                      <LoadingSpinner size="sm" className="border-primary-foreground border-t-transparent" />
+                      <span>Verificando...</span>
+                    </div>
+                  ) : (
+                    "Entrar"
+                  )}
                 </Button>
               </div>
             </>

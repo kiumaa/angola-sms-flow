@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
 import { useFormValidation, loginSchema } from "@/hooks/useFormValidation";
 import OTPLoginModal from "@/components/auth/OTPLoginModal";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -35,27 +36,44 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form before submitting
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha email e senha.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       const { error } = await signIn(formData.email, formData.password);
       
       if (error) {
+        let errorMessage = "Credenciais inválidas";
+        
+        if (error.message?.includes("Invalid login credentials")) {
+          errorMessage = "Email ou senha incorretos";
+        } else if (error.message?.includes("Email not confirmed")) {
+          errorMessage = "Por favor, confirme seu email antes de fazer login";
+        } else if (error.message?.includes("Too many requests")) {
+          errorMessage = "Muitas tentativas. Tente novamente em alguns minutos";
+        }
+        
         toast({
           title: "Erro no login",
-          description: error.message || "Credenciais inválidas",
+          description: errorMessage,
           variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta à sua conta."
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Erro no login",
-        description: "Ocorreu um erro inesperado",
+        description: "Erro de conexão. Verifique sua internet e tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -63,9 +81,22 @@ const Login = () => {
     }
   };
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
+
+  // Debounced validation
+  const [validationTimeout, setValidationTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  const debouncedValidation = useCallback((field: string, value: string) => {
+    if (validationTimeout) {
+      clearTimeout(validationTimeout);
+    }
+    
+    setValidationTimeout(setTimeout(() => {
+      validateField(field, value);
+    }, 300));
+  }, [validateField, validationTimeout]);
 
   return (
     <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
@@ -105,18 +136,19 @@ const Login = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-base">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="seu@email.com" 
-                    value={formData.email} 
-                    onChange={(e) => {
-                      updateFormData('email', e.target.value);
-                      validateField('email', e.target.value);
-                    }}
-                    className="rounded-2xl h-14 text-base glass-card border-glass-border" 
-                    required 
-                  />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={formData.email} 
+                      onChange={(e) => {
+                        updateFormData('email', e.target.value);
+                        debouncedValidation('email', e.target.value);
+                      }}
+                      className="rounded-2xl h-14 text-base glass-card border-glass-border focus:ring-2 focus:ring-primary/20" 
+                      required 
+                      autoComplete="email"
+                    />
                   {errors.email && (
                     <p className="text-sm text-destructive">{errors.email}</p>
                   )}
@@ -132,10 +164,11 @@ const Login = () => {
                       value={formData.password} 
                       onChange={(e) => {
                         updateFormData('password', e.target.value);
-                        validateField('password', e.target.value);
+                        debouncedValidation('password', e.target.value);
                       }}
-                      className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12" 
+                      className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12 focus:ring-2 focus:ring-primary/20" 
                       required 
+                      autoComplete="current-password"
                     />
                     <button 
                       type="button" 
@@ -153,9 +186,16 @@ const Login = () => {
                 <Button 
                   type="submit" 
                   className="w-full button-futuristic text-lg py-6" 
-                  disabled={isLoading}
+                  disabled={isLoading || !formData.email.trim() || !formData.password.trim()}
                 >
-                  {isLoading ? "Entrando..." : "Entrar"}
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                      <span>Entrando...</span>
+                    </div>
+                  ) : (
+                    "Entrar"
+                  )}
                 </Button>
               </form>
 

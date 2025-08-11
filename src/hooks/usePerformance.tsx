@@ -1,6 +1,81 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-// Custom hook for scroll to top functionality
+interface PerformanceMetrics {
+  isLoading: boolean;
+  loadTime: number | null;
+  connectionSpeed: 'slow' | 'fast' | 'unknown';
+}
+
+export const usePerformance = (identifier?: string) => {
+  const [metrics, setMetrics] = useState<PerformanceMetrics>({
+    isLoading: true,
+    loadTime: null,
+    connectionSpeed: 'unknown'
+  });
+
+  useEffect(() => {
+    const startTime = performance.now();
+
+    // Detect connection speed
+    const connection = (navigator as any).connection;
+    let connectionSpeed: 'slow' | 'fast' | 'unknown' = 'unknown';
+    
+    if (connection) {
+      if (connection.effectiveType === '4g') {
+        connectionSpeed = 'fast';
+      } else if (connection.effectiveType === '3g' || connection.effectiveType === '2g') {
+        connectionSpeed = 'slow';
+      }
+    }
+
+    // Simulate completion
+    const timer = setTimeout(() => {
+      const endTime = performance.now();
+      const loadTime = endTime - startTime;
+      
+      setMetrics({
+        isLoading: false,
+        loadTime,
+        connectionSpeed
+      });
+
+      // Log performance for debugging
+      if (identifier && loadTime > 1000) {
+        console.warn(`Slow performance detected in ${identifier}: ${loadTime}ms`);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [identifier]);
+
+  return metrics;
+};
+
+// Hook for monitoring auth operations
+export const useAuthPerformance = () => {
+  const [authMetrics, setAuthMetrics] = useState({
+    loginDuration: 0,
+    isAuthSlow: false
+  });
+
+  const trackLogin = (startTime: number) => {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    setAuthMetrics({
+      loginDuration: duration,
+      isAuthSlow: duration > 3000 // 3 seconds threshold
+    });
+
+    if (duration > 3000) {
+      console.warn('Slow login detected:', duration, 'ms');
+    }
+  };
+
+  return { authMetrics, trackLogin };
+};
+
+// Hook for scroll to top functionality
 export const useScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -21,69 +96,9 @@ export const useScrollToTop = () => {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior: 'smooth'
     });
   };
 
   return { isVisible, scrollToTop };
-};
-
-// Custom hook for performance monitoring
-export const usePerformanceMonitor = () => {
-  useEffect(() => {
-    // Simple performance monitoring without external dependencies
-    if (typeof window !== 'undefined' && 'performance' in window) {
-      const observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        entries.forEach((entry) => {
-          // Log performance metrics for debugging (can be sent to analytics)
-          if (entry.entryType === 'navigation') {
-            console.log('Navigation timing:', entry);
-          }
-        });
-      });
-      
-      try {
-        observer.observe({ entryTypes: ['navigation', 'measure'] });
-      } catch (e) {
-        // Silently fail if browser doesn't support PerformanceObserver
-        console.log('Performance monitoring not supported');
-      }
-      
-      return () => observer.disconnect();
-    }
-  }, []);
-};
-
-// Custom hook for lazy loading images
-export const useLazyImage = (src: string, placeholder?: string) => {
-  const [imageSrc, setImageSrc] = useState(placeholder || '');
-  const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
-
-  useEffect(() => {
-    let observer: IntersectionObserver;
-    
-    if (imageRef && imageSrc !== src) {
-      observer = new IntersectionObserver(
-        entries => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              setImageSrc(src);
-              observer.unobserve(imageRef);
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
-      observer.observe(imageRef);
-    }
-    
-    return () => {
-      if (observer && observer.unobserve) {
-        observer.disconnect();
-      }
-    };
-  }, [imageRef, imageSrc, src]);
-
-  return [setImageRef, imageSrc];
 };
