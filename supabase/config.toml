@@ -9,8 +9,26 @@ verify_jwt = false
 [functions.send-sms-bulksms]
 verify_jwt = false
 
+[functions.send-otp]
+verify_jwt = true
+
 [functions.bulksms-delivery-webhook]
 verify_jwt = false
 
 [functions.bulksms-balance]
+verify_jwt = true
+
+[functions.webhooks-simulate]
+verify_jwt = false
+
+[functions.at-webhook]
+verify_jwt = false
+
+[functions.confirm-email]
+verify_jwt = false
+
+[functions.send-confirmation-email]
+verify_jwt = true
+
+[functions.test-smtp]
 verify_jwt = true

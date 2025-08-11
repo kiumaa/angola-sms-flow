@@ -11,6 +11,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ConsentHistory } from "@/components/settings/ConsentHistory";
 interface UserProfile {
   full_name: string;
   email: string;
@@ -427,7 +428,12 @@ const UserSettings = () => {
           </TabsContent>
 
           <TabsContent value="notifications" className="mt-8">
-            <Card className="card-futuristic">
+            <div className="space-y-8">
+              {/* Consent History */}
+              <ConsentHistory />
+              
+              {/* Notifications */}
+              <Card className="card-futuristic">
               <CardHeader>
                 <CardTitle className="text-2xl font-light gradient-text flex items-center space-x-3">
                   <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
@@ -508,6 +514,7 @@ const UserSettings = () => {
                 </div>
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

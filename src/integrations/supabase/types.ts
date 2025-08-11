@@ -516,6 +516,33 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       sms_campaigns: {
         Row: {
           created_at: string
@@ -819,6 +846,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_consents: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          document: string
+          id: string
+          ip_address: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          document: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          document?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

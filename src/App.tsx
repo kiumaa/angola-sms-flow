@@ -11,6 +11,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import MessageSendingLoader from "./components/shared/MessageSendingLoader";
 import { ThemeProvider } from "next-themes";
 import { BrandProvider } from "@/providers/BrandProvider";
+import { ConsentProvider } from "./components/shared/ConsentProvider";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,10 @@ const AdminSMSConfiguration = lazy(() => import("./pages/AdminSMSConfiguration")
 // 404 page
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Legal pages
+const Terms = lazy(() => import("./pages/legal/Terms"));
+const Privacy = lazy(() => import("./pages/legal/Privacy"));
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -64,7 +69,8 @@ function App() {
             <Sonner />
             <BrowserRouter>
               <BrandProvider>
-                <Suspense fallback={<MessageSendingLoader />}>
+                <ConsentProvider>
+                  <Suspense fallback={<MessageSendingLoader />}>
             <Routes>
               {/* Public routes */}
             <Route path="/" element={<Landing />} />
@@ -284,12 +290,17 @@ function App() {
                 }
               />
 
+              {/* Legal Pages */}
+              <Route path="/legal/terms" element={<Terms />} />
+              <Route path="/legal/privacy" element={<Privacy />} />
+
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Suspense>
-        </BrandProvider>
-      </BrowserRouter>
+                  </Suspense>
+                </ConsentProvider>
+              </BrandProvider>
+            </BrowserRouter>
     </TooltipProvider>
   </ThemeProvider>
 </AuthProvider>

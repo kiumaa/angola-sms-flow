@@ -196,43 +196,82 @@ export class BulkSMSGateway implements SMSGateway {
   }
 
   /**
-   * Send OTP code via SMS
+   * Send OTP code via SMS with retry logic and timeout
    */
   async sendOtpCode(phone: string, code: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader()
-        },
-        body: JSON.stringify({
-          messages: [{
-            to: phone,
-            from: 'SMSAO',
-            content: `Seu código de acesso é: ${code}`
-          }]
-        })
-      });
+    const maxRetries = 3;
+    const timeout = 10000; // 10 seconds
+    const sender = process.env.SMS_DEFAULT_SENDER || 'SMSAO';
 
-      const result = await response.json();
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      if (response.ok && Array.isArray(result) && result[0]?.id) {
-        return {
-          success: true,
-          messageId: result[0].id
-        };
-      } else {
-        return {
-          success: false,
-          error: result.detail || result.error?.description || `HTTP ${response.status}`
-        };
+        const response = await fetch(`${this.baseUrl}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.getAuthHeader()
+          },
+          body: JSON.stringify({
+            messages: [{
+              to: phone,
+              from: sender,
+              content: `Seu código de acesso é: ${code}`
+            }]
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        const result = await response.json();
+
+        if (response.ok && Array.isArray(result) && result[0]?.id) {
+          return {
+            success: true,
+            messageId: result[0].id
+          };
+        } 
+
+        // Don't retry on 4xx errors (client errors)
+        if (response.status >= 400 && response.status < 500) {
+          return {
+            success: false,
+            error: result.detail || result.error?.description || `HTTP ${response.status}`
+          };
+        }
+
+        // Retry on 5xx errors
+        if (attempt === maxRetries) {
+          return {
+            success: false,
+            error: result.detail || result.error?.description || `HTTP ${response.status}`
+          };
+        }
+
+        console.warn(`BulkSMS attempt ${attempt} failed, retrying...`, result);
+
+      } catch (error) {
+        // Retry on timeout or network errors, but not on final attempt
+        if (attempt === maxRetries || (error.name !== 'AbortError' && !error.message.includes('fetch'))) {
+          return {
+            success: false,
+            error: error.name === 'AbortError' ? 'Request timeout' : error.message
+          };
+        }
+
+        console.warn(`BulkSMS attempt ${attempt} failed with error, retrying...`, error.message);
+        
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
     }
+
+    return {
+      success: false,
+      error: 'Max retries exceeded'
+    };
   }
 }
