@@ -12,6 +12,7 @@ interface SMSRequest {
   senderId?: string
   campaignId?: string
   isTest?: boolean
+  userId?: string // For internal function calls
 }
 
 interface BulkSMSResponse {
@@ -65,29 +66,36 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('Missing authorization header')
-    }
-
-    // Create client with anon key for user authentication
-    const userSupabase = createClient(supabaseUrl, supabaseAnonKey)
-    
-    // Get user from auth header using the user token
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await userSupabase.auth.getUser(token)
-    
-    if (userError || !user) {
-      console.error('Authentication error:', userError)
-      throw new Error('Invalid authorization')
-    }
-
-    console.log(`Authenticated user: ${user.id}`)
-
     // Create admin client for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { contacts, message, senderId = 'SMSAO', campaignId, isTest = false }: SMSRequest = await req.json()
+    const { contacts, message, senderId = 'SMSAO', campaignId, isTest = false, userId }: SMSRequest = await req.json()
+
+    let user: any = null;
+    
+    // If userId is provided (internal call), use it directly
+    if (userId) {
+      user = { id: userId };
+      console.log(`Using provided user ID: ${userId}`)
+    } else {
+      // For external calls, authenticate via header
+      const authHeader = req.headers.get('Authorization')
+      if (!authHeader) {
+        throw new Error('Missing authorization header')
+      }
+
+      const userSupabase = createClient(supabaseUrl, supabaseAnonKey)
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user: authUser }, error: userError } = await userSupabase.auth.getUser(token)
+      
+      if (userError || !authUser) {
+        console.error('Authentication error:', userError)
+        throw new Error('Invalid authorization')
+      }
+      
+      user = authUser;
+      console.log(`Authenticated user: ${user.id}`)
+    }
 
     console.log('=== SMS Request Details ===')
     console.log('Contacts:', contacts)

@@ -76,17 +76,15 @@ serve(async (req) => {
       console.log(`Using default Sender ID: ${senderId}`)
     }
 
-    // Forward to BulkSMS function
+    // Forward to BulkSMS function (pass user ID internally)
     const { data: bulkSMSResponse, error: bulkSMSError } = await supabase.functions.invoke('send-sms-bulksms', {
       body: {
         contacts: [phoneNumber], // Convert single phone to array for BulkSMS function
         message,
         senderId,
         campaignId,
-        isTest
-      },
-      headers: {
-        Authorization: authHeader
+        isTest,
+        userId: user.id // Pass authenticated user ID instead of auth header
       }
     })
 
