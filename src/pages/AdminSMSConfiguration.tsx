@@ -30,7 +30,7 @@ export default function AdminSMSConfiguration() {
   const [testSMS, setTestSMS] = useState({
     phoneNumber: '+244',
     message: 'Teste de SMS via SMS.AO',
-    senderId: 'ONSMS'
+    senderId: 'SMSAO'
   });
   const [availableSenderIds, setAvailableSenderIds] = useState<any[]>([]);
 
@@ -482,10 +482,10 @@ export default function AdminSMSConfiguration() {
                   <SelectValue placeholder="Selecionar Sender ID" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Sempre mostrar ONSMS como padrão */}
-                  <SelectItem value="ONSMS">
+                  {/* Sempre mostrar SMSAO como padrão */}
+                  <SelectItem value="SMSAO">
                     <div className="flex items-center gap-2">
-                      ONSMS
+                      SMSAO
                       <Badge variant="secondary" className="text-xs">Padrão</Badge>
                     </div>
                   </SelectItem>
