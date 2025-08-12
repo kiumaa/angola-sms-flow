@@ -10,7 +10,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-otp]
-verify_jwt = true
+verify_jwt = false
 
 [functions.bulksms-delivery-webhook]
 verify_jwt = false
@@ -18,8 +18,6 @@ verify_jwt = false
 [functions.bulksms-balance]
 verify_jwt = true
 
-[functions.webhooks-simulate]
-verify_jwt = false
 
 [functions.at-webhook]
 verify_jwt = false

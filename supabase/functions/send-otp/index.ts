@@ -31,22 +31,7 @@ serve(async (req) => {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Authenticate user
-    const authHeader = req.headers.get('Authorization')!;
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      console.error('Authentication error:', authError);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    // OTP sending doesn't require authentication - users need to get OTP to login
 
     // Parse request body
     const { phone, code }: SendOTPRequest = await req.json();
@@ -90,17 +75,16 @@ serve(async (req) => {
       );
     }
 
-    // Log SMS in database
+    // Log SMS in database (without user_id since user is not authenticated yet)
     const logResult = await supabase
       .from('sms_logs')
       .insert({
-        gateway: 'bulksms',
-        sender: 'SMSAO',
-        to: phone,
+        gateway_used: 'bulksms',
+        phone_number: phone,
         message: `Seu código de acesso é: ${code}`,
-        batch_id: smsResult.messageId,
-        status: 'submitted',
-        user_id: user.id
+        gateway_message_id: smsResult.messageId,
+        status: 'sent',
+        user_id: null // No user context for OTP
       });
 
     if (logResult.error) {
