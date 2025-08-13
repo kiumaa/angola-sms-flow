@@ -12,6 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PhoneInput } from "@/components/shared/PhoneInput";
 import { useFormValidation, registerSchema } from "@/hooks/useFormValidation";
+import { useRegistrationSettings } from "@/hooks/useRegistrationSettings";
+import OTPRegistrationModal from "@/components/auth/OTPRegistrationModal";
+import { validateAngolanPhone, normalizeAngolanPhone } from "@/lib/validation";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -28,9 +31,12 @@ const Register = () => {
     confirm: false
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const navigate = useNavigate();
   const { signUp, user, loading } = useAuth();
   const { toast } = useToast();
+  const { settings } = useRegistrationSettings();
   const { errors, isValid, validateField, getPasswordStrength } = useFormValidation(registerSchema, formData);
 
   // Redirect if already logged in
@@ -61,6 +67,26 @@ const Register = () => {
       return;
     }
 
+    // Validar telefone obrigatório
+    if (!formData.phone || !validateAngolanPhone(formData.phone)) {
+      toast({
+        title: "Telefone obrigatório",
+        description: "Por favor, insira um número de telefone angolano válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Se OTP estiver habilitado e telefone não verificado, solicitar verificação
+    if (settings.otp_enabled && !phoneVerified) {
+      setShowOTPModal(true);
+      return;
+    }
+
+    await createAccount();
+  };
+
+  const createAccount = async () => {
     setIsLoading(true);
 
     try {
@@ -75,7 +101,7 @@ const Register = () => {
       } else {
         toast({
           title: "Conta criada com sucesso! 🎉",
-          description: "Bem-vindo à plataforma SMS.AO. Você ganhou 50 SMS grátis!",
+          description: `Bem-vindo à plataforma SMS.AO. Você ganhou ${settings.free_credits_new_user} SMS grátis!`,
         });
       }
     } catch (error) {
@@ -87,6 +113,11 @@ const Register = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePhoneVerified = () => {
+    setPhoneVerified(true);
+    createAccount();
   };
 
   const updateFormData = (field: string, value: any) => {
@@ -136,7 +167,7 @@ const Register = () => {
                   <div className="p-2 rounded-xl bg-gradient-primary shadow-glow">
                     <Gift className="h-5 w-5 text-white" />
                   </div>
-                  <span className="font-semibold gradient-text">🎉 50 SMS Grátis + Dashboard Premium</span>
+                  <span className="font-semibold gradient-text">🎉 {settings.free_credits_new_user} SMS Grátis + Dashboard Premium</span>
                 </div>
               </div>
             </CardHeader>
@@ -198,7 +229,7 @@ const Register = () => {
                     <Label htmlFor="phone" className="text-base">
                       <div className="flex items-center gap-2">
                         <Smartphone className="h-4 w-4" />
-                        Telefone (Opcional)
+                        Telefone *
                       </div>
                     </Label>
                     <PhoneInput
@@ -206,7 +237,19 @@ const Register = () => {
                       onChange={(value) => updateFormData('phone', value)}
                       placeholder="9XX XXX XXX"
                       className="h-14"
+                      required
                     />
+                    {formData.phone && !validateAngolanPhone(formData.phone) && (
+                      <p className="text-sm text-destructive">
+                        Por favor, insira um número angolano válido
+                      </p>
+                    )}
+                    {phoneVerified && (
+                      <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                        <Check className="h-4 w-4" />
+                        Telefone verificado
+                      </p>
+                    )}
                   </div>
                 </div>
                 
@@ -324,9 +367,9 @@ const Register = () => {
                 <Button 
                   type="submit" 
                   className="w-full button-futuristic text-lg py-6" 
-                  disabled={isLoading || !isValid}
+                  disabled={isLoading || !isValid || !formData.phone || !validateAngolanPhone(formData.phone)}
                 >
-                  {isLoading ? "Criando conta..." : "Criar Conta Grátis"}
+                  {isLoading ? "Criando conta..." : settings.otp_enabled && !phoneVerified ? "Verificar Telefone" : "Criar Conta Grátis"}
                 </Button>
               </form>
 
@@ -363,13 +406,21 @@ const Register = () => {
           </div>
         </div>
       </div>
+
+      {/* OTP Registration Modal */}
+      <OTPRegistrationModal 
+        open={showOTPModal}
+        onOpenChange={setShowOTPModal}
+        phone={normalizeAngolanPhone(formData.phone)}
+        onVerified={handlePhoneVerified}
+      />
     </div>
   );
 };
 
 const registrationBenefits = [
   {
-    title: "50 SMS Grátis",
+    title: "10 SMS Grátis",
     description: "Comece testando nossa plataforma sem custos e veja a qualidade do nosso serviço"
   },
   {
