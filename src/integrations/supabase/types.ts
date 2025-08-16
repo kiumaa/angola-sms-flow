@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -393,28 +393,34 @@ export type Database = {
       }
       otp_requests: {
         Row: {
+          attempts: number | null
           code: string
           created_at: string
           expires_at: string
           id: string
+          ip_address: unknown | null
           phone: string
           used: boolean
           user_id: string | null
         }
         Insert: {
+          attempts?: number | null
           code: string
           created_at?: string
           expires_at?: string
           id?: string
+          ip_address?: unknown | null
           phone: string
           used?: boolean
           user_id?: string | null
         }
         Update: {
+          attempts?: number | null
           code?: string
           created_at?: string
           expires_at?: string
           id?: string
+          ip_address?: unknown | null
           phone?: string
           used?: boolean
           user_id?: string | null
@@ -904,14 +910,18 @@ export type Database = {
     }
     Functions: {
       add_user_credits: {
-        Args: { user_id: string; credit_amount: number }
+        Args: { credit_amount: number; user_id: string }
         Returns: undefined
       }
       approve_credit_request: {
-        Args: { request_id: string; admin_user_id: string }
+        Args: { admin_user_id: string; request_id: string }
         Returns: boolean
       }
       clean_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      cleanup_expired_otps: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
@@ -929,13 +939,13 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       reject_credit_request: {
-        Args: { request_id: string; admin_user_id: string; notes?: string }
+        Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean
       }
     }
