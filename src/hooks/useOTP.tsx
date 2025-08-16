@@ -16,33 +16,24 @@ export const useOTP = () => {
     setError(null);
 
     try {
-      // Create OTP request payload
-      const otpPayload = OTPRequestModel.createRequestPayload(phone, user?.id);
-
-      // Insert OTP request into database
-      const { data, error: dbError } = await supabase
-        .from('otp_requests')
-        .insert(otpPayload)
-        .select()
-        .single();
-
-      if (dbError) {
-        setError('Erro ao criar solicitação OTP');
-        return { success: false, error: dbError.message };
-      }
-
-      // Send OTP via SMS using edge function
-      const { error: smsError } = await supabase.functions.invoke('send-otp', {
-        body: { 
-          phone: phone, 
-          code: otpPayload.code 
+      // Send OTP request to secure endpoint (no code generation on frontend)
+      const { data: smsData, error: smsError } = await supabase.functions.invoke('send-otp', {
+        body: {
+          phone
         }
       });
 
       if (smsError) {
-        console.error('Failed to send OTP SMS:', smsError);
-        setError('Erro ao enviar SMS');
-        return { success: false, error: 'Erro ao enviar SMS' };
+        console.error('Failed to send OTP request:', smsError);
+        const errorMessage = smsError.message || 'Erro ao enviar código OTP';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      if (!smsData?.success) {
+        const errorMessage = smsData?.error || 'Erro ao enviar código OTP';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
       
       return { success: true };
@@ -56,52 +47,42 @@ export const useOTP = () => {
   };
 
   /**
-   * Verify OTP code
+   * Verify OTP code and authenticate user
    */
-  const verifyOTP = async (phone: string, code: string): Promise<{ success: boolean; error?: string }> => {
+  const verifyOTP = async (phone: string, code: string): Promise<{ success: boolean; error?: string; isNewUser?: boolean }> => {
     setLoading(true);
     setError(null);
 
     try {
-      // Find valid OTP request
-      const { data: otpRequest, error: fetchError } = await supabase
-        .from('otp_requests')
-        .select('*')
-        .eq('phone', phone)
-        .eq('code', code)
-        .eq('used', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Verify OTP via secure endpoint
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
+        body: {
+          phone,
+          code
+        }
+      });
 
-      if (fetchError) {
-        setError('Erro ao verificar OTP');
-        return { success: false, error: fetchError.message };
+      if (verifyError) {
+        console.error('Failed to verify OTP:', verifyError);
+        const errorMessage = verifyError.message || 'Erro ao verificar código';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
 
-      if (!otpRequest) {
-        setError('Código OTP inválido ou expirado');
-        return { success: false, error: 'Código inválido' };
+      if (!verifyData?.success) {
+        const errorMessage = verifyData?.error || 'Código inválido ou expirado';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
 
-      // Check if OTP is still valid
-      if (!OTPRequestModel.isValid(otpRequest)) {
-        setError('Código OTP expirado');
-        return { success: false, error: 'Código expirado' };
+      // If we get a magic link, we can use it to authenticate
+      if (verifyData.magic_link) {
+        // Redirect to magic link for authentication
+        window.location.href = verifyData.magic_link;
+        return { success: true, isNewUser: verifyData.is_new_user };
       }
 
-      // Mark OTP as used
-      const { error: updateError } = await supabase
-        .from('otp_requests')
-        .update({ used: true })
-        .eq('id', otpRequest.id);
-
-      if (updateError) {
-        setError('Erro ao validar OTP');
-        return { success: false, error: updateError.message };
-      }
-
-      return { success: true };
+      return { success: true, isNewUser: verifyData.is_new_user };
     } catch (err) {
       const errorMessage = 'Erro ao verificar OTP';
       setError(errorMessage);
@@ -129,28 +110,22 @@ export const useOTP = () => {
   };
 
   /**
-   * Get OTP requests for current user (admin use)
+   * Clean expired OTP requests via admin function
    */
-  const getUserOTPRequests = async (userId?: string): Promise<{ data: OTPRequest[] | null; error?: string }> => {
+  const adminCleanExpiredOTPs = async (): Promise<{ success: boolean; deletedCount?: number; error?: string }> => {
     try {
-      const targetUserId = userId || user?.id;
-      if (!targetUserId) {
-        return { data: null, error: 'Usuário não autenticado' };
-      }
-
-      const { data, error } = await supabase
-        .from('otp_requests')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await supabase.functions.invoke('cleanup-otps', {});
+      
       if (error) {
-        return { data: null, error: error.message };
+        return { success: false, error: error.message };
       }
 
-      return { data };
+      return { 
+        success: data?.success || false, 
+        deletedCount: data?.deleted_count 
+      };
     } catch (err) {
-      return { data: null, error: 'Erro ao buscar solicitações OTP' };
+      return { success: false, error: 'Erro ao executar limpeza de OTPs' };
     }
   };
 
@@ -159,8 +134,8 @@ export const useOTP = () => {
     error,
     requestOTP,
     verifyOTP,
-    cleanExpiredOTPs,
-    getUserOTPRequests,
+    cleanExpiredOTPs, // Keep for backward compatibility (uses RPC)
+    adminCleanExpiredOTPs, // New secure admin function
     clearError: () => setError(null)
   };
 };

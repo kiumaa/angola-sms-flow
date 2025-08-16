@@ -12,12 +12,17 @@ verify_jwt = false
 [functions.send-otp]
 verify_jwt = false
 
+[functions.verify-otp]
+verify_jwt = false
+
+[functions.cleanup-otps]
+verify_jwt = true
+
 [functions.bulksms-delivery-webhook]
 verify_jwt = false
 
 [functions.bulksms-balance]
 verify_jwt = true
-
 
 [functions.at-webhook]
 verify_jwt = false
