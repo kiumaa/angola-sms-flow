@@ -1,8 +1,9 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, TestTube, BarChart3 } from "lucide-react";
+import { Activity, TestTube, BarChart3, Webhook } from "lucide-react";
 import SMSGatewayMonitoring from "@/components/admin/SMSGatewayMonitoring";
 import SMSGatewayTester from "@/components/admin/SMSGatewayTester";
+import SMSDeliveryDiagnostics from "@/components/admin/SMSDeliveryDiagnostics";
 import AdminLayout from "@/components/layout/AdminLayout";
 
 export default function AdminSMSMonitoring() {
@@ -22,10 +23,14 @@ export default function AdminSMSMonitoring() {
 
         {/* Tabs */}
         <Tabs defaultValue="monitoring" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="monitoring" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
               <span>Monitoramento</span>
+            </TabsTrigger>
+            <TabsTrigger value="diagnostics" className="flex items-center space-x-2">
+              <Webhook className="h-4 w-4" />
+              <span>Diagnóstico</span>
             </TabsTrigger>
             <TabsTrigger value="testing" className="flex items-center space-x-2">
               <TestTube className="h-4 w-4" />
@@ -35,6 +40,10 @@ export default function AdminSMSMonitoring() {
           
           <TabsContent value="monitoring" className="mt-6">
             <SMSGatewayMonitoring />
+          </TabsContent>
+
+          <TabsContent value="diagnostics" className="mt-6">
+            <SMSDeliveryDiagnostics />
           </TabsContent>
           
           <TabsContent value="testing" className="mt-6">

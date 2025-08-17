@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.test-smtp]
 verify_jwt = true
+
+[functions.webhooks-simulate]
+verify_jwt = false
