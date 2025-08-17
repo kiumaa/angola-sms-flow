@@ -669,9 +669,11 @@ export type Database = {
       sms_logs: {
         Row: {
           campaign_id: string | null
+          completed_at: string | null
           cost_credits: number | null
           created_at: string
           delivered_at: string | null
+          error_code: string | null
           error_message: string | null
           fallback_attempted: boolean | null
           gateway_message_id: string | null
@@ -679,16 +681,20 @@ export type Database = {
           id: string
           message: string
           original_gateway: string | null
+          payload: Json | null
           phone_number: string
           sent_at: string | null
           status: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           campaign_id?: string | null
+          completed_at?: string | null
           cost_credits?: number | null
           created_at?: string
           delivered_at?: string | null
+          error_code?: string | null
           error_message?: string | null
           fallback_attempted?: boolean | null
           gateway_message_id?: string | null
@@ -696,16 +702,20 @@ export type Database = {
           id?: string
           message: string
           original_gateway?: string | null
+          payload?: Json | null
           phone_number: string
           sent_at?: string | null
           status?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           campaign_id?: string | null
+          completed_at?: string | null
           cost_credits?: number | null
           created_at?: string
           delivered_at?: string | null
+          error_code?: string | null
           error_message?: string | null
           fallback_attempted?: boolean | null
           gateway_message_id?: string | null
@@ -713,9 +723,11 @@ export type Database = {
           id?: string
           message?: string
           original_gateway?: string | null
+          payload?: Json | null
           phone_number?: string
           sent_at?: string | null
           status?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
