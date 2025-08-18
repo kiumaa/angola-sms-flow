@@ -134,7 +134,7 @@ const Dashboard = () => {
             {quickActions.map((action, index) => <Card key={index} className={`card-futuristic cursor-pointer group relative overflow-hidden animate-slide-up-stagger ${action.primary ? 'ring-2 ring-primary shadow-glow' : ''}`} style={{
             animationDelay: `${index * 0.1 + 0.2}s`
           }} onClick={action.action}>
-                <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-10 transition-all duration-300`}></div>
+                
                 <CardHeader className="text-center relative">
                   <div className={`h-20 w-20 rounded-3xl bg-gradient-to-br ${action.gradient} shadow-glow flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300`}>
                     <action.icon className="h-10 w-10 text-white" />
