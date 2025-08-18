@@ -1,73 +1,59 @@
-# Welcome to your Lovable project
+# SMS Marketing Angola - Plataforma Completa
 
-## Project info
+Sistema completo de SMS Marketing para Angola com autenticação OTP, campanhas automatizadas, monitoramento em tempo real e painel administrativo.
 
-**URL**: https://lovable.dev/projects/7944b483-0d66-441c-b3a9-ed6bb359bf9e
+## 🚀 Deploy Rápido
 
-## How can I edit this code?
+1. **Lovable**: Clique "Publish" no editor
+2. **Vercel**: `git clone` → `npm install` → `vercel --prod`
+3. **Netlify**: Build: `npm run build`, Dir: `dist`
 
-There are several ways of editing your application.
+## ⚡ Características
 
-**Use Lovable**
+- ✅ Autenticação OTP via SMS
+- ✅ Campanhas automatizadas com scheduler
+- ✅ Monitoramento em tempo real
+- ✅ Dashboard administrativo completo
+- ✅ Sistema de créditos e transações
+- ✅ Gateways múltiplos (BulkSMS, Africa's Talking)
+- ✅ Analytics avançado com exportação
+- ✅ Notificações push em tempo real
+- ✅ Cache inteligente e otimizações
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7944b483-0d66-441c-b3a9-ed6bb359bf9e) and start prompting.
+## 🛠️ Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+**Frontend:** React 18 + TypeScript + Tailwind CSS + shadcn/ui  
+**Backend:** Supabase (PostgreSQL + Edge Functions)  
+**SMS:** BulkSMS, Africa's Talking  
+**Deploy:** Lovable, Vercel, Netlify
 
-**Use your preferred IDE**
+## 📋 Configuração
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Variáveis de Ambiente
+```env
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=sua_anon_key
+SUPABASE_SERVICE_ROLE_KEY=sua_service_key
+BULKSMS_TOKEN_ID=seu_token_id
+BULKSMS_TOKEN_SECRET=seu_token_secret
 ```
 
-**Edit a file directly in GitHub**
+### Comandos
+```bash
+npm run dev          # Desenvolvimento
+npm run build        # Build produção
+npm run preview      # Preview build
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📚 Documentação
 
-**Use GitHub Codespaces**
+- [Troubleshooting](docs/troubleshooting.md)
+- [Changelog](CHANGELOG.md)
+- [Suporte](mailto:suporte@smsmarketing.ao)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🌟 Status
 
-## What technologies are used for this project?
+**✅ COMPLETO** - Sistema pronto para produção com todas as funcionalidades implementadas.
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/7944b483-0d66-441c-b3a9-ed6bb359bf9e) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
+*Desenvolvido com ❤️ usando Lovable*

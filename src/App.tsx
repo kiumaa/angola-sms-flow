@@ -307,8 +307,8 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
                   </Suspense>
-                </ConsentProvider>
-              </BrandProvider>
+        </ConsentProvider>
+      </BrandProvider>
             </BrowserRouter>
     </TooltipProvider>
   </ThemeProvider>
