@@ -56,16 +56,14 @@ export const BrandCustomizationForm = () => {
     light_bg: '#F8FAFC',
     light_text: '#1F2937',
     font_family: 'Inter',
-    font_weight: '300',
-    font_sizes: {
-      h1: '1.75rem',
-      h2: '1.25rem',
-      h3: '1rem',
-      body: '1rem',
-      small: '0.875rem'
+    font_scale: {
+      xs: 12,
+      sm: 14,
+      base: 16,
+      lg: 18,
+      xl: 20,
+      "2xl": 24
     },
-    line_height: '1.5',
-    letter_spacing: '-0.01em',
     site_title: 'SMS AO',
     site_tagline: 'Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional',
     seo_title: '',
@@ -74,7 +72,6 @@ export const BrandCustomizationForm = () => {
     seo_twitter: '@smsao',
     robots_index: true,
     robots_follow: true,
-    theme_mode: 'system',
     custom_css: '',
     logo_light_url: '',
     logo_dark_url: '',
@@ -91,16 +88,14 @@ export const BrandCustomizationForm = () => {
         light_bg: settings.light_bg || '#F8FAFC',
         light_text: settings.light_text || '#1F2937',
         font_family: settings.font_family || 'Inter',
-        font_weight: settings.font_weight || '300',
-        font_sizes: settings.font_sizes || {
-          h1: '1.75rem',
-          h2: '1.25rem',
-          h3: '1rem',
-          body: '1rem',
-          small: '0.875rem'
+        font_scale: settings.font_scale || {
+          xs: 12,
+          sm: 14,
+          base: 16,
+          lg: 18,
+          xl: 20,
+          "2xl": 24
         },
-        line_height: settings.line_height || '1.5',
-        letter_spacing: settings.letter_spacing || '-0.01em',
         site_title: settings.site_title || 'SMS AO',
         site_tagline: settings.site_tagline || 'Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional',
         seo_title: settings.seo_title || '',
@@ -109,7 +104,6 @@ export const BrandCustomizationForm = () => {
         seo_twitter: settings.seo_twitter || '@smsao',
         robots_index: settings.robots_index ?? true,
         robots_follow: settings.robots_follow ?? true,
-        theme_mode: settings.theme_mode || 'system',
         custom_css: settings.custom_css || '',
         logo_light_url: settings.logo_light_url || '',
         logo_dark_url: settings.logo_dark_url || '',
@@ -126,11 +120,11 @@ export const BrandCustomizationForm = () => {
     }));
   };
 
-  const handleFontSizeChange = (type: string, value: string) => {
+  const handleFontScaleChange = (type: string, value: number) => {
     setFormData(prev => ({
       ...prev,
-      font_sizes: {
-        ...prev.font_sizes,
+      font_scale: {
+        ...prev.font_scale,
         [type]: value
       }
     }));
@@ -377,85 +371,78 @@ export const BrandCustomizationForm = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Peso Padrão</Label>
-                  <Select value={formData.font_weight} onValueChange={(value) => handleInputChange('font_weight', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONT_WEIGHTS.map(weight => (
-                        <SelectItem key={weight.value} value={weight.value}>{weight.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Line Height</Label>
-                  <Input
-                    value={formData.line_height}
-                    onChange={(e) => handleInputChange('line_height', e.target.value)}
-                    placeholder="1.5"
-                  />
-                </div>
-                <div>
-                  <Label>Letter Spacing</Label>
-                  <Input
-                    value={formData.letter_spacing}
-                    onChange={(e) => handleInputChange('letter_spacing', e.target.value)}
-                    placeholder="-0.01em"
-                  />
-                </div>
+               </CardContent>
+             </Card>
+
+             <Card>
+               <CardHeader>
+                 <CardTitle className="text-h3 font-light">Escala de Texto</CardTitle>
+               </CardHeader>
+               <CardContent className="space-y-4">
+                 <div>
+                   <Label>Extra Small (xs)</Label>
+                   <Input
+                     type="number"
+                     value={formData.font_scale.xs}
+                     onChange={(e) => handleFontScaleChange('xs', Number(e.target.value))}
+                     placeholder="12"
+                   />
+                 </div>
+                 <div>
+                   <Label>Small (sm)</Label>
+                   <Input
+                     type="number"
+                     value={formData.font_scale.sm}
+                     onChange={(e) => handleFontScaleChange('sm', Number(e.target.value))}
+                     placeholder="14"
+                   />
+                 </div>
+                 <div>
+                   <Label>Base</Label>
+                   <Input
+                     type="number"
+                     value={formData.font_scale.base}
+                     onChange={(e) => handleFontScaleChange('base', Number(e.target.value))}
+                     placeholder="16"
+                   />
+                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-h3 font-light">Tamanhos de Texto</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>H1 - Títulos Principais</Label>
-                  <Input
-                    value={formData.font_sizes.h1}
-                    onChange={(e) => handleFontSizeChange('h1', e.target.value)}
-                    placeholder="1.75rem"
-                  />
-                </div>
-                <div>
-                  <Label>H2 - Subtítulos</Label>
-                  <Input
-                    value={formData.font_sizes.h2}
-                    onChange={(e) => handleFontSizeChange('h2', e.target.value)}
-                    placeholder="1.25rem"
-                  />
-                </div>
-                <div>
-                  <Label>H3 - Seções</Label>
-                  <Input
-                    value={formData.font_sizes.h3}
-                    onChange={(e) => handleFontSizeChange('h3', e.target.value)}
-                    placeholder="1rem"
-                  />
-                </div>
-                <div>
-                  <Label>Body - Texto Padrão</Label>
-                  <Input
-                    value={formData.font_sizes.body}
-                    onChange={(e) => handleFontSizeChange('body', e.target.value)}
-                    placeholder="1rem"
-                  />
-                </div>
-                <div>
-                  <Label>Small - Texto Pequeno</Label>
-                  <Input
-                    value={formData.font_sizes.small}
-                    onChange={(e) => handleFontSizeChange('small', e.target.value)}
-                    placeholder="0.875rem"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+             <Card>
+               <CardHeader>
+                 <CardTitle className="text-h3 font-light">Escala Ampliada</CardTitle>
+               </CardHeader>
+               <CardContent className="space-y-4">
+                 <div>
+                   <Label>Large (lg)</Label>
+                   <Input
+                     type="number"
+                     value={formData.font_scale.lg}
+                     onChange={(e) => handleFontScaleChange('lg', Number(e.target.value))}
+                     placeholder="18"
+                   />
+                 </div>
+                 <div>
+                   <Label>Extra Large (xl)</Label>
+                   <Input
+                     type="number"
+                     value={formData.font_scale.xl}
+                     onChange={(e) => handleFontScaleChange('xl', Number(e.target.value))}
+                     placeholder="20"
+                   />
+                 </div>
+                 <div>
+                   <Label>2XL</Label>
+                   <Input
+                     type="number"
+                     value={formData.font_scale["2xl"]}
+                     onChange={(e) => handleFontScaleChange('2xl', Number(e.target.value))}
+                     placeholder="24"
+                   />
+                 </div>
+               </CardContent>
+             </Card>
           </div>
         </TabsContent>
 
