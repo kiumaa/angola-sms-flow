@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
+import { useQueryCache } from "./useCache";
 
 interface Campaign {
   id: string;
@@ -24,16 +25,20 @@ interface Campaign {
 }
 
 export const useCampaigns = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchCampaigns = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
+  // Use cache for campaigns data
+  const {
+    data: campaigns = [],
+    loading,
+    error,
+    refresh: refetchCampaigns,
+    invalidate
+  } = useQueryCache(
+    ['campaigns', user?.id],
+    async () => {
+      if (!user) return [];
       
       const { data, error } = await supabase
         .from('campaigns')
@@ -50,18 +55,15 @@ export const useCampaigns = () => {
 
       if (error) throw error;
       
-      setCampaigns(data || []);
-    } catch (error) {
-      console.error('Error fetching campaigns:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar campanhas.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      return data || [];
+    },
+    {
+      ttl: 2 * 60 * 1000, // 2 minutes cache for campaigns
+      enabled: !!user,
+      refetchInterval: 30000, // Auto refresh every 30 seconds
+      staleWhileRevalidate: true
     }
-  };
+  );
 
   const createCampaign = async (campaignData: any) => {
     try {
@@ -74,7 +76,9 @@ export const useCampaigns = () => {
 
       if (error) throw error;
       
-      await fetchCampaigns(); // Refresh list
+      // Invalidate cache and refresh
+      invalidate();
+      await refetchCampaigns();
       
       toast({
         title: "Sucesso",
@@ -104,7 +108,9 @@ export const useCampaigns = () => {
 
       if (error) throw error;
       
-      await fetchCampaigns(); // Refresh list
+      // Invalidate cache and refresh
+      invalidate();
+      await refetchCampaigns();
       
       toast({
         title: "Sucesso",
@@ -134,7 +140,8 @@ export const useCampaigns = () => {
 
       if (error) throw error;
       
-      setCampaigns(prev => prev.filter(c => c.id !== campaignId));
+      // Update cache immediately (optimistic update)
+      invalidate();
       
       toast({
         title: "Sucesso",
@@ -153,11 +160,34 @@ export const useCampaigns = () => {
     }
   };
 
+  // Handle realtime updates
   useEffect(() => {
-    if (user) {
-      fetchCampaigns();
-    }
-  }, [user]);
+    if (!user) return;
+
+    const channel = supabase
+      .channel('campaigns-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'campaigns',
+      }, () => {
+        // Invalidate cache when campaigns change
+        invalidate();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public', 
+        table: 'campaign_stats',
+      }, () => {
+        // Invalidate cache when stats change
+        invalidate();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, invalidate]);
 
   return {
     campaigns,
@@ -165,6 +195,6 @@ export const useCampaigns = () => {
     createCampaign,
     queueCampaign,
     deleteCampaign,
-    refetch: fetchCampaigns
+    refetch: refetchCampaigns
   };
 };

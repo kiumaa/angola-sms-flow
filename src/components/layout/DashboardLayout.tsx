@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
+import NotificationCenter from "@/components/shared/NotificationCenter";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -100,6 +101,7 @@ const DashboardLayout = ({
                 <span className="text-muted-foreground">Créditos:</span>
                 <span className="font-bold text-primary ml-1">{credits}</span>
               </div>
+              <NotificationCenter />
               <div className="text-sm text-muted-foreground">
                 {user?.email}
               </div>
