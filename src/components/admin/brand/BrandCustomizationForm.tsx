@@ -51,10 +51,10 @@ export const BrandCustomizationForm = () => {
   
   // Form state
   const [formData, setFormData] = useState({
-    primary_color: 'hsl(262, 83%, 58%)',
-    secondary_color: 'hsl(346, 77%, 49%)',
-    background_color: 'hsl(220, 14%, 96%)',
-    text_color: 'hsl(220, 39%, 11%)',
+    light_primary: '#8B5CF6',
+    light_secondary: '#EC4899',
+    light_bg: '#F8FAFC',
+    light_text: '#1F2937',
     font_family: 'Inter',
     font_weight: '300',
     font_sizes: {
@@ -67,16 +67,17 @@ export const BrandCustomizationForm = () => {
     line_height: '1.5',
     letter_spacing: '-0.01em',
     site_title: 'SMS AO',
-    site_subtitle: 'Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional',
-    meta_title_template: '{{page}} · {{siteTitle}}',
-    meta_description: 'Plataforma de SMS Marketing para Angola',
-    og_title: '',
-    og_description: '',
+    site_tagline: 'Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional',
+    seo_title: '',
+    seo_description: 'Plataforma de SMS Marketing para Angola',
+    seo_canonical: '',
+    seo_twitter: '@smsao',
     robots_index: true,
     robots_follow: true,
     theme_mode: 'system',
     custom_css: '',
-    logo_url: '',
+    logo_light_url: '',
+    logo_dark_url: '',
     favicon_url: '',
     og_image_url: ''
   });
@@ -85,10 +86,10 @@ export const BrandCustomizationForm = () => {
   useEffect(() => {
     if (settings) {
       setFormData({
-        primary_color: settings.primary_color || 'hsl(262, 83%, 58%)',
-        secondary_color: settings.secondary_color || 'hsl(346, 77%, 49%)',
-        background_color: settings.background_color || 'hsl(220, 14%, 96%)',
-        text_color: settings.text_color || 'hsl(220, 39%, 11%)',
+        light_primary: settings.light_primary || '#8B5CF6',
+        light_secondary: settings.light_secondary || '#EC4899',
+        light_bg: settings.light_bg || '#F8FAFC',
+        light_text: settings.light_text || '#1F2937',
         font_family: settings.font_family || 'Inter',
         font_weight: settings.font_weight || '300',
         font_sizes: settings.font_sizes || {
@@ -101,16 +102,17 @@ export const BrandCustomizationForm = () => {
         line_height: settings.line_height || '1.5',
         letter_spacing: settings.letter_spacing || '-0.01em',
         site_title: settings.site_title || 'SMS AO',
-        site_subtitle: settings.site_subtitle || 'Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional',
-        meta_title_template: settings.meta_title_template || '{{page}} · {{siteTitle}}',
-        meta_description: settings.meta_description || 'Plataforma de SMS Marketing para Angola',
-        og_title: settings.og_title || '',
-        og_description: settings.og_description || '',
+        site_tagline: settings.site_tagline || 'Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional',
+        seo_title: settings.seo_title || '',
+        seo_description: settings.seo_description || 'Plataforma de SMS Marketing para Angola',
+        seo_canonical: settings.seo_canonical || '',
+        seo_twitter: settings.seo_twitter || '@smsao',
         robots_index: settings.robots_index ?? true,
         robots_follow: settings.robots_follow ?? true,
         theme_mode: settings.theme_mode || 'system',
         custom_css: settings.custom_css || '',
-        logo_url: settings.logo_url || '',
+        logo_light_url: settings.logo_light_url || '',
+        logo_dark_url: settings.logo_dark_url || '',
         favicon_url: settings.favicon_url || '',
         og_image_url: settings.og_image_url || ''
       });
@@ -140,7 +142,7 @@ export const BrandCustomizationForm = () => {
       const url = await uploadFile(file, type);
       
       if (type === 'logo') {
-        handleInputChange('logo_url', url);
+        handleInputChange('logo_light_url', url);
       } else if (type === 'favicon') {
         handleInputChange('favicon_url', url);
       } else if (type === 'og_image') {
@@ -261,15 +263,15 @@ export const BrandCustomizationForm = () => {
                     placeholder="SMS AO"
                   />
                 </div>
-                <div>
-                  <Label>Subtítulo/Tagline</Label>
-                  <Textarea
-                    value={formData.site_subtitle}
-                    onChange={(e) => handleInputChange('site_subtitle', e.target.value)}
-                    placeholder="Conectando empresas aos seus clientes..."
-                    rows={3}
-                  />
-                </div>
+                 <div>
+                   <Label>Subtítulo/Tagline</Label>
+                   <Textarea
+                     value={formData.site_tagline}
+                     onChange={(e) => handleInputChange('site_tagline', e.target.value)}
+                     placeholder="Conectando empresas aos seus clientes..."
+                     rows={3}
+                   />
+                 </div>
               </CardContent>
             </Card>
 
@@ -280,74 +282,74 @@ export const BrandCustomizationForm = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Cor Primária</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="color"
-                        value={formData.primary_color.includes('hsl') ? '#8B5CF6' : formData.primary_color}
-                        onChange={(e) => handleInputChange('primary_color', e.target.value)}
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={formData.primary_color}
-                        onChange={(e) => handleInputChange('primary_color', e.target.value)}
-                        placeholder="hsl(262, 83%, 58%)"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Cor Secundária</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="color"
-                        value={formData.secondary_color.includes('hsl') ? '#EC4899' : formData.secondary_color}
-                        onChange={(e) => handleInputChange('secondary_color', e.target.value)}
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={formData.secondary_color}
-                        onChange={(e) => handleInputChange('secondary_color', e.target.value)}
-                        placeholder="hsl(346, 77%, 49%)"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Cor de Fundo</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="color"
-                        value={formData.background_color.includes('hsl') ? '#F8FAFC' : formData.background_color}
-                        onChange={(e) => handleInputChange('background_color', e.target.value)}
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={formData.background_color}
-                        onChange={(e) => handleInputChange('background_color', e.target.value)}
-                        placeholder="hsl(220, 14%, 96%)"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Cor do Texto</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="color"
-                        value={formData.text_color.includes('hsl') ? '#1F2937' : formData.text_color}
-                        onChange={(e) => handleInputChange('text_color', e.target.value)}
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={formData.text_color}
-                        onChange={(e) => handleInputChange('text_color', e.target.value)}
-                        placeholder="hsl(220, 39%, 11%)"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
+                   <div>
+                     <Label>Cor Primária</Label>
+                     <div className="flex items-center gap-2">
+                       <Input
+                         type="color"
+                         value={formData.light_primary}
+                         onChange={(e) => handleInputChange('light_primary', e.target.value)}
+                         className="w-16 h-10 p-1"
+                       />
+                       <Input
+                         value={formData.light_primary}
+                         onChange={(e) => handleInputChange('light_primary', e.target.value)}
+                         placeholder="#8B5CF6"
+                         className="flex-1"
+                       />
+                     </div>
+                   </div>
+                   <div>
+                     <Label>Cor Secundária</Label>
+                     <div className="flex items-center gap-2">
+                       <Input
+                         type="color"
+                         value={formData.light_secondary}
+                         onChange={(e) => handleInputChange('light_secondary', e.target.value)}
+                         className="w-16 h-10 p-1"
+                       />
+                       <Input
+                         value={formData.light_secondary}
+                         onChange={(e) => handleInputChange('light_secondary', e.target.value)}
+                         placeholder="#EC4899"
+                         className="flex-1"
+                       />
+                     </div>
+                   </div>
+                   <div>
+                     <Label>Cor de Fundo</Label>
+                     <div className="flex items-center gap-2">
+                       <Input
+                         type="color"
+                         value={formData.light_bg}
+                         onChange={(e) => handleInputChange('light_bg', e.target.value)}
+                         className="w-16 h-10 p-1"
+                       />
+                       <Input
+                         value={formData.light_bg}
+                         onChange={(e) => handleInputChange('light_bg', e.target.value)}
+                         placeholder="#F8FAFC"
+                         className="flex-1"
+                       />
+                     </div>
+                   </div>
+                   <div>
+                     <Label>Cor do Texto</Label>
+                     <div className="flex items-center gap-2">
+                       <Input
+                         type="color"
+                         value={formData.light_text}
+                         onChange={(e) => handleInputChange('light_text', e.target.value)}
+                         className="w-16 h-10 p-1"
+                       />
+                       <Input
+                         value={formData.light_text}
+                         onChange={(e) => handleInputChange('light_text', e.target.value)}
+                         placeholder="#1F2937"
+                         className="flex-1"
+                       />
+                     </div>
+                   </div>
                 </div>
               </CardContent>
             </Card>
@@ -477,10 +479,10 @@ export const BrandCustomizationForm = () => {
                     <p className="text-xs text-muted-foreground">SVG/PNG até 5MB</p>
                   </div>
                 </FileUpload>
-                {formData.logo_url && (
+                {formData.logo_light_url && (
                   <div className="text-center">
                     <img 
-                      src={formData.logo_url} 
+                      src={formData.logo_light_url} 
                       alt="Logo preview" 
                       className="h-16 w-auto mx-auto rounded border"
                     />
@@ -559,53 +561,49 @@ export const BrandCustomizationForm = () => {
               <CardHeader>
                 <CardTitle className="text-h3 font-light">Meta Tags</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Template de Título</Label>
-                  <Input
-                    value={formData.meta_title_template}
-                    onChange={(e) => handleInputChange('meta_title_template', e.target.value)}
-                    placeholder="{{page}} · {{siteTitle}}"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Use {'{{page}}'} e {'{{siteTitle}}'} como variáveis
-                  </p>
-                </div>
-                <div>
-                  <Label>Meta Description Padrão</Label>
-                  <Textarea
-                    value={formData.meta_description}
-                    onChange={(e) => handleInputChange('meta_description', e.target.value)}
-                    placeholder="Descrição da plataforma..."
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
+               <CardContent className="space-y-4">
+                 <div>
+                   <Label>SEO Título</Label>
+                   <Input
+                     value={formData.seo_title}
+                     onChange={(e) => handleInputChange('seo_title', e.target.value)}
+                     placeholder="Título para SEO"
+                   />
+                 </div>
+                 <div>
+                   <Label>SEO Descrição</Label>
+                   <Textarea
+                     value={formData.seo_description}
+                     onChange={(e) => handleInputChange('seo_description', e.target.value)}
+                     placeholder="Descrição da plataforma..."
+                     rows={3}
+                   />
+                 </div>
+               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle className="text-h3 font-light">Open Graph & Social</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>OG Título</Label>
-                  <Input
-                    value={formData.og_title}
-                    onChange={(e) => handleInputChange('og_title', e.target.value)}
-                    placeholder="Título para redes sociais"
-                  />
-                </div>
-                <div>
-                  <Label>OG Descrição</Label>
-                  <Textarea
-                    value={formData.og_description}
-                    onChange={(e) => handleInputChange('og_description', e.target.value)}
-                    placeholder="Descrição para redes sociais..."
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
+               <CardContent className="space-y-4">
+                 <div>
+                   <Label>Twitter Handle</Label>
+                   <Input
+                     value={formData.seo_twitter}
+                     onChange={(e) => handleInputChange('seo_twitter', e.target.value)}
+                     placeholder="@smsao"
+                   />
+                 </div>
+                 <div>
+                   <Label>URL Canônica</Label>
+                   <Input
+                     value={formData.seo_canonical}
+                     onChange={(e) => handleInputChange('seo_canonical', e.target.value)}
+                     placeholder="https://smsao.com"
+                   />
+                 </div>
+               </CardContent>
             </Card>
 
             <Card>
