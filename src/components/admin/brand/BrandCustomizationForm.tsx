@@ -467,7 +467,7 @@ export const BrandCustomizationForm = () => {
               <CardContent className="space-y-4">
                 <FileUpload
                   accept="image/*"
-                  maxSize={5 * 1024 * 1024}
+                  maxSize={2}
                   onFileSelect={(file) => handleFileUpload(file, 'logo')}
                   selectedFile={null}
                 >
@@ -497,7 +497,7 @@ export const BrandCustomizationForm = () => {
               <CardContent className="space-y-4">
                 <FileUpload
                   accept="image/*"
-                  maxSize={1 * 1024 * 1024}
+                  maxSize={1}
                   onFileSelect={(file) => handleFileUpload(file, 'favicon')}
                   selectedFile={null}
                 >
@@ -527,7 +527,7 @@ export const BrandCustomizationForm = () => {
               <CardContent className="space-y-4">
                 <FileUpload
                   accept="image/*"
-                  maxSize={2 * 1024 * 1024}
+                  maxSize={2}
                   onFileSelect={(file) => handleFileUpload(file, 'og_image')}
                   selectedFile={null}
                 >

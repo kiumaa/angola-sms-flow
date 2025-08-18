@@ -58,9 +58,18 @@ export function FileUpload({
 
     // Check file type
     const acceptedTypes = accept.split(',').map(type => type.trim());
-    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    const isValidType = acceptedTypes.some(acceptedType => {
+      if (acceptedType === 'image/*') {
+        return file.type.startsWith('image/');
+      }
+      if (acceptedType.startsWith('.')) {
+        const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+        return fileExtension === acceptedType;
+      }
+      return file.type === acceptedType;
+    });
     
-    if (!acceptedTypes.includes(fileExtension)) {
+    if (!isValidType) {
       setError(`Tipo de arquivo não suportado. Aceitos: ${accept}`);
       return;
     }
