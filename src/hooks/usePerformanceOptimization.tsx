@@ -84,16 +84,15 @@ export const usePerformanceMonitoring = () => {
     }
   }, []);
 
-  // Enhanced Supabase client with performance tracking
+  // Enhanced Supabase client with performance tracking for functions only
   const createOptimizedSupabaseClient = useCallback(() => {
-    const originalInvoke = supabase.functions.invoke.bind(supabase.functions);
-    const originalFrom = supabase.from.bind(supabase);
-
-    // Wrap function invocations
-    supabase.functions.invoke = async (functionName: string, options?: any) => {
+    // Only wrap function invocations to avoid TypeScript issues with table names
+    const originalInvoke = supabase.functions.invoke;
+    
+    const wrappedInvoke = async (functionName: string, options?: any) => {
       const startTime = performance.now();
       try {
-        const result = await originalInvoke(functionName, options);
+        const result = await originalInvoke.call(supabase.functions, functionName, options);
         const duration = performance.now() - startTime;
         trackApiCall(`function_${functionName}`, duration, !result.error);
         return result;
@@ -104,31 +103,13 @@ export const usePerformanceMonitoring = () => {
       }
     };
 
-    // Wrap table queries
-    const originalFromFunction = supabase.from;
-    supabase.from = (tableName: string) => {
-      const table = originalFromFunction(tableName);
-      const originalSelect = table.select.bind(table);
-      
-      table.select = (query?: string, options?: any) => {
-        const startTime = performance.now();
-        const promise = originalSelect(query, options);
-        
-        promise.then((result: any) => {
-          const duration = performance.now() - startTime;
-          trackApiCall(`table_${tableName}`, duration, !result.error);
-        }).catch(() => {
-          const duration = performance.now() - startTime;
-          trackApiCall(`table_${tableName}`, duration, false);
-        });
-        
-        return promise;
-      };
-      
-      return table;
+    return {
+      ...supabase,
+      functions: {
+        ...supabase.functions,
+        invoke: wrappedInvoke
+      }
     };
-
-    return supabase;
   }, [trackApiCall]);
 
   // Image optimization utilities
