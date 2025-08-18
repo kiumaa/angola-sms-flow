@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -8,12 +8,14 @@ import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { ADMIN_NAV_ITEMS, getActiveNavItem } from "@/config/adminNav";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
+
 const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar state
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,33 +40,38 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }));
 
   const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => (
-    <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-border">
+    <div className="flex flex-col h-full bg-card">
+      <div className="p-4 border-b border-border">
         <Link to="/admin" onClick={onItemClick} className="flex items-center">
-          <BrandAwareLogo className="h-8 w-auto mr-2" textClassName="font-bold text-lg" showText={!isDesktopSidebarCollapsed} />
+          <BrandAwareLogo 
+            className="h-8 w-auto" 
+            textClassName="font-bold text-lg" 
+            showText={!isDesktopSidebarCollapsed} 
+          />
         </Link>
       </div>
       
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-2">
         {navigation.map(item => (
           <Link
             key={item.name}
             to={item.href}
             onClick={onItemClick}
-            className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors relative group",
               item.current 
-                ? "bg-primary text-primary-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
-            }`}
+                ? "bg-primary text-primary-foreground" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
           >
-            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <item.icon className="h-4 w-4 flex-shrink-0" />
             {(!isDesktopSidebarCollapsed) && (
-              <span className="ml-3 text-sm font-normal truncate">{item.name}</span>
+              <span className="ml-3 truncate">{item.name}</span>
             )}
             {isDesktopSidebarCollapsed && (
-              <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded border shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 {item.name}
-              </span>
+              </div>
             )}
           </Link>
         ))}
@@ -74,24 +81,24 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border sticky top-0 z-40 w-full">
-        <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <header className="bg-card border-b border-border sticky top-0 z-50">
+        <div className="flex h-16 items-center px-4 lg:px-6">
           <div className="flex items-center gap-4">
-            {/* Mobile menu button */}
-            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+            {/* Mobile menu toggle */}
+            <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm" className="lg:hidden">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only">Abrir menu</span>
+                  <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-80">
-                <SidebarContent onItemClick={() => setIsSidebarOpen(false)} />
+                <SidebarContent onItemClick={() => setIsMobileSidebarOpen(false)} />
               </SheetContent>
             </Sheet>
 
-            {/* Desktop toggle */}
+            {/* Desktop sidebar toggle */}
             <Button
               variant="ghost"
               size="sm"
@@ -99,13 +106,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               className="hidden lg:flex"
             >
               <Menu className="h-5 w-5" />
-              <span className="sr-only">Alternar sidebar</span>
+              <span className="sr-only">Toggle sidebar</span>
             </Button>
 
+            {/* Mobile logo */}
             <div className="lg:hidden">
-              <Link to="/admin">
-                <BrandAwareLogo className="h-8 w-auto" textClassName="font-bold text-lg" showText={true} />
-              </Link>
+              <BrandAwareLogo className="h-8 w-auto" textClassName="font-bold text-lg" />
             </div>
           </div>
 
@@ -128,57 +134,26 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
       </header>
 
-      <div className="flex w-full">
-        {/* Desktop Sidebar - Always visible on desktop */}
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Desktop Sidebar */}
         <aside
-          data-testid="admin-sidebar"
-          className={`hidden lg:block bg-card/50 border-r border-border transition-all duration-300 ${
+          className={cn(
+            "hidden lg:flex flex-col bg-card border-r border-border transition-all duration-300 shrink-0",
             isDesktopSidebarCollapsed ? "w-16" : "w-64"
-          } min-h-[calc(100vh-64px)] sticky top-16 shrink-0`}
+          )}
         >
-          <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-border">
-              <Link to="/admin" className="flex items-center">
-                <BrandAwareLogo 
-                  className="h-8 w-auto mr-2" 
-                  textClassName="font-bold text-lg" 
-                  showText={!isDesktopSidebarCollapsed} 
-                />
-              </Link>
-            </div>
-            
-            <nav className="flex-1 p-4 space-y-1">
-              {navigation.map(item => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${
-                    item.current 
-                      ? "bg-primary text-primary-foreground shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {(!isDesktopSidebarCollapsed) && (
-                    <span className="ml-3 text-sm font-normal truncate">{item.name}</span>
-                  )}
-                  {isDesktopSidebarCollapsed && (
-                    <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border shadow-md">
-                      {item.name}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <SidebarContent />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 min-h-[calc(100vh-64px)] w-0">
-          {children}
+        <main className="flex-1 overflow-auto">
+          <div className="p-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>
   );
 };
+
 export default AdminLayout;
