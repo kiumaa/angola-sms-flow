@@ -1,10 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./hooks/useAuth";
 import AdminLayout from "./components/layout/AdminLayout";
@@ -13,47 +12,42 @@ import { ThemeProvider } from "next-themes";
 import { BrandProvider } from "@/providers/BrandProvider";
 import { ConsentProvider } from "./components/shared/ConsentProvider";
 
+// Import lazy components from the centralized file
+import {
+  LazyLanding,
+  LazyLogin, 
+  LazyRegister,
+  LazyForgotPassword,
+  LazyDashboard,
+  LazyCampaigns,
+  LazyNewCampaign,
+  LazyQuickSend,
+  LazyContacts,
+  LazyCredits,
+  LazyCheckout,
+  LazyCheckoutSuccess,
+  LazyReports,
+  LazyTransactions,
+  LazySenderIDs,
+  LazyUserSettings,
+  LazyAdminDashboard,
+  LazyAdminUsers,
+  LazyAdminPackages,
+  LazyAdminTransactions,
+  LazyAdminCreditRequests,
+  LazyAdminSenderIDs,
+  LazyAdminSMSGateways,
+  LazyAdminSMSMonitoring,
+  LazyAdminReports,
+  LazyAdminSettings,
+  LazyAdminBrand,
+  LazyAdminSMSConfiguration,
+  LazyNotFound,
+  LazyTerms,
+  LazyPrivacy
+} from "./components/shared/LazyComponents";
+
 const queryClient = new QueryClient();
-
-// Lazy load all pages
-const Landing = lazy(() => import("./pages/Landing"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Campaigns = lazy(() => import("./pages/Campaigns"));
-const NewCampaign = lazy(() => import("./pages/NewCampaign"));
-const QuickSend = lazy(() => import("./pages/QuickSend"));
-const Contacts = lazy(() => import("./pages/Contacts"));
-const Credits = lazy(() => import("./pages/Credits"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
-const Reports = lazy(() => import("./pages/Reports"));
-const Transactions = lazy(() => import("./pages/Transactions"));
-const SenderIDs = lazy(() => import("./pages/SenderIDs"));
-const UserSettings = lazy(() => import("./pages/UserSettings"));
-
-// Admin pages
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminUsers = lazy(() => import("./pages/AdminUsers"));
-const AdminPackages = lazy(() => import("./pages/AdminPackages"));
-const AdminTransactions = lazy(() => import("./pages/AdminTransactions"));
-const AdminCreditRequests = lazy(() => import("./pages/AdminCreditRequests"));
-const AdminSenderIDs = lazy(() => import("./pages/AdminSenderIDs"));
-
-const AdminSMSGateways = lazy(() => import("./pages/AdminSMSGateways"));
-const AdminSMSMonitoring = lazy(() => import("./pages/AdminSMSMonitoring"));
-const AdminReports = lazy(() => import("./pages/AdminReports"));
-const AdminSettings = lazy(() => import("./pages/AdminSettings"));
-const AdminBrand = lazy(() => import("./pages/AdminBrand"));
-const AdminSMSConfiguration = lazy(() => import("./pages/AdminSMSConfiguration"));
-
-// 404 page
-const NotFound = lazy(() => import("./pages/NotFound"));
-
-// Legal pages
-const Terms = lazy(() => import("./pages/legal/Terms"));
-const Privacy = lazy(() => import("./pages/legal/Privacy"));
 
 function App() {
   return (
@@ -74,17 +68,17 @@ function App() {
                   <Suspense fallback={<MessageSendingLoader />}>
             <Routes>
               {/* Public routes */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/" element={<LazyLanding />} />
+            <Route path="/login" element={<LazyLogin />} />
+            <Route path="/register" element={<LazyRegister />} />
+            <Route path="/forgot-password" element={<LazyForgotPassword />} />
 
               {/* Protected user routes */}
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <LazyDashboard />
                   </ProtectedRoute>
                 }
               />
@@ -92,7 +86,7 @@ function App() {
                 path="/campaigns"
                 element={
                   <ProtectedRoute>
-                    <Campaigns />
+                    <LazyCampaigns />
                   </ProtectedRoute>
                 }
               />
@@ -100,7 +94,7 @@ function App() {
                 path="/campaigns/new"
                 element={
                   <ProtectedRoute>
-                    <NewCampaign />
+                    <LazyNewCampaign />
                   </ProtectedRoute>
                 }
               />
@@ -108,7 +102,7 @@ function App() {
                 path="/quick-send"
                 element={
                   <ProtectedRoute>
-                    <QuickSend />
+                    <LazyQuickSend />
                   </ProtectedRoute>
                 }
               />
@@ -116,7 +110,7 @@ function App() {
                 path="/contacts"
                 element={
                   <ProtectedRoute>
-                    <Contacts />
+                    <LazyContacts />
                   </ProtectedRoute>
                 }
               />
@@ -124,7 +118,7 @@ function App() {
                 path="/credits"
                 element={
                   <ProtectedRoute>
-                    <Credits />
+                    <LazyCredits />
                   </ProtectedRoute>
                 }
               />
@@ -132,7 +126,7 @@ function App() {
                 path="/checkout/:packageId"
                 element={
                   <ProtectedRoute>
-                    <Checkout />
+                    <LazyCheckout />
                   </ProtectedRoute>
                 }
               />
@@ -140,7 +134,7 @@ function App() {
                 path="/checkout/success/:transactionId"
                 element={
                   <ProtectedRoute>
-                    <CheckoutSuccess />
+                    <LazyCheckoutSuccess />
                   </ProtectedRoute>
                 }
               />
@@ -148,7 +142,7 @@ function App() {
                 path="/reports"
                 element={
                   <ProtectedRoute>
-                    <Reports />
+                    <LazyReports />
                   </ProtectedRoute>
                 }
               />
@@ -156,7 +150,7 @@ function App() {
                 path="/transactions"
                 element={
                   <ProtectedRoute>
-                    <Transactions />
+                    <LazyTransactions />
                   </ProtectedRoute>
                 }
               />
@@ -164,7 +158,7 @@ function App() {
                 path="/sender-ids"
                 element={
                   <ProtectedRoute>
-                    <SenderIDs />
+                    <LazySenderIDs />
                   </ProtectedRoute>
                 }
               />
@@ -172,7 +166,7 @@ function App() {
                 path="/settings"
                 element={
                   <ProtectedRoute>
-                    <UserSettings />
+                    <LazyUserSettings />
                   </ProtectedRoute>
                 }
               />
@@ -183,7 +177,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminDashboard />
+                      <LazyAdminDashboard />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -193,7 +187,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminUsers />
+                      <LazyAdminUsers />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -203,7 +197,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminPackages />
+                      <LazyAdminPackages />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -213,7 +207,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminTransactions />
+                      <LazyAdminTransactions />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -223,7 +217,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminCreditRequests />
+                      <LazyAdminCreditRequests />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -233,7 +227,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminSenderIDs />
+                      <LazyAdminSenderIDs />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -243,7 +237,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminSMSGateways />
+                      <LazyAdminSMSGateways />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -253,7 +247,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminSMSMonitoring />
+                      <LazyAdminSMSMonitoring />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -263,7 +257,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminReports />
+                      <LazyAdminReports />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -273,7 +267,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminSettings />
+                      <LazyAdminSettings />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -283,7 +277,7 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminBrand />
+                      <LazyAdminBrand />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
@@ -293,18 +287,18 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLayout>
-                      <AdminSMSConfiguration />
+                      <LazyAdminSMSConfiguration />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
               />
 
               {/* Legal Pages */}
-              <Route path="/legal/terms" element={<Terms />} />
-              <Route path="/legal/privacy" element={<Privacy />} />
+              <Route path="/legal/terms" element={<LazyTerms />} />
+              <Route path="/legal/privacy" element={<LazyPrivacy />} />
 
               {/* 404 route */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<LazyNotFound />} />
             </Routes>
                   </Suspense>
         </ConsentProvider>
