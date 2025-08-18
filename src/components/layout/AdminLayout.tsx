@@ -129,18 +129,52 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       </header>
 
       <div className="flex w-full">
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar - Always visible on desktop */}
         <aside
           data-testid="admin-sidebar"
-          className={`hidden lg:flex flex-col bg-card/50 border-r border-border transition-all duration-300 ${
+          className={`hidden lg:block bg-card/50 border-r border-border transition-all duration-300 ${
             isDesktopSidebarCollapsed ? "w-16" : "w-64"
-          } min-h-[calc(100vh-64px)] sticky top-16`}
+          } min-h-[calc(100vh-64px)] sticky top-16 shrink-0`}
         >
-          <SidebarContent />
+          <div className="flex flex-col h-full">
+            <div className="p-6 border-b border-border">
+              <Link to="/admin" className="flex items-center">
+                <BrandAwareLogo 
+                  className="h-8 w-auto mr-2" 
+                  textClassName="font-bold text-lg" 
+                  showText={!isDesktopSidebarCollapsed} 
+                />
+              </Link>
+            </div>
+            
+            <nav className="flex-1 p-4 space-y-1">
+              {navigation.map(item => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                    item.current 
+                      ? "bg-primary text-primary-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {(!isDesktopSidebarCollapsed) && (
+                    <span className="ml-3 text-sm font-normal truncate">{item.name}</span>
+                  )}
+                  {isDesktopSidebarCollapsed && (
+                    <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border shadow-md">
+                      {item.name}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </nav>
+          </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 min-h-[calc(100vh-64px)]">
+        <main className="flex-1 p-6 min-h-[calc(100vh-64px)] w-0">
           {children}
         </main>
       </div>
