@@ -1248,6 +1248,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_default_sender_id: {
+        Args: { account_user_id?: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

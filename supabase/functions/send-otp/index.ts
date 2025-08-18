@@ -6,6 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// SENDER ID UTILITIES - MANDATO SMSAO
+const DEFAULT_SENDER_ID = 'SMSAO';
+const DEPRECATED_SENDER_IDS = ['ONSMS', 'SMS'];
+
+function resolveSenderId(input?: string | null): string {
+  if (!input || input.trim() === '') return DEFAULT_SENDER_ID;
+  const normalized = input.trim().toUpperCase();
+  if (DEPRECATED_SENDER_IDS.includes(normalized)) {
+    console.warn(`Sender ID depreciado detectado: ${input} → substituído por ${DEFAULT_SENDER_ID}`);
+    return DEFAULT_SENDER_ID;
+  }
+  if (!normalized.match(/^[A-Za-z0-9]{1,11}$/)) {
+    console.warn(`Sender ID inválido detectado: ${input} → substituído por ${DEFAULT_SENDER_ID}`);
+    return DEFAULT_SENDER_ID;
+  }
+  return normalized;
+}
+
 interface SendOTPRequest {
   phone: string;
 }
@@ -266,7 +284,7 @@ async function sendViaBulkSMS(
       body: JSON.stringify({
         messages: [{
           to: phone,
-          from: 'SMSAO',
+          from: resolveSenderId('SMSAO'), // Usar helper para garantir normalização
           content: `Seu código de acesso é: ${code}`
         }]
       })

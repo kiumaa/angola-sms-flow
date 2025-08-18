@@ -6,6 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// SENDER ID UTILITIES - MANDATO SMSAO
+const DEFAULT_SENDER_ID = 'SMSAO';
+const DEPRECATED_SENDER_IDS = ['ONSMS', 'SMS'];
+
+function resolveSenderId(input?: string | null): string {
+  if (!input || input.trim() === '') return DEFAULT_SENDER_ID;
+  const normalized = input.trim().toUpperCase();
+  if (DEPRECATED_SENDER_IDS.includes(normalized)) {
+    console.warn(`Sender ID depreciado detectado: ${input} → substituído por ${DEFAULT_SENDER_ID}`);
+    return DEFAULT_SENDER_ID;
+  }
+  if (!normalized.match(/^[A-Za-z0-9]{1,11}$/)) {
+    console.warn(`Sender ID inválido detectado: ${input} → substituído por ${DEFAULT_SENDER_ID}`);
+    return DEFAULT_SENDER_ID;
+  }
+  return normalized;
+}
+
 interface SMSRequest {
   contacts: string[]
   message: string
@@ -69,7 +87,7 @@ serve(async (req) => {
     // Create admin client for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { contacts, message, senderId = 'SMSAO', campaignId, isTest = false, userId }: SMSRequest = await req.json()
+    const { contacts, message, senderId, campaignId, isTest = false, userId }: SMSRequest = await req.json()
 
     let user: any = null;
     
@@ -97,10 +115,15 @@ serve(async (req) => {
       console.log(`Authenticated user: ${user.id}`)
     }
 
+    // Normalizar Sender ID usando helper
+    const resolvedSenderId = resolveSenderId(senderId);
+    console.log(`Sender ID normalizado: "${senderId}" → "${resolvedSenderId}"`);
+
     console.log('=== SMS Request Details ===')
     console.log('Contacts:', contacts)
     console.log('Message:', message)
-    console.log('Sender ID:', senderId)
+    console.log('Sender ID Original:', senderId)
+    console.log('Sender ID Resolved:', resolvedSenderId)
     console.log('Is Test:', isTest)
     console.log('User ID:', user.id)
 
@@ -112,24 +135,26 @@ serve(async (req) => {
       throw new Error('No message provided')
     }
 
-    // Validate Sender ID if not default (allow both SMSAO and SMS.AO as default)
-    const defaultSenderIds = ['SMSAO', 'SMS.AO']
-    if (!defaultSenderIds.includes(senderId)) {
+    // Validar Sender ID apenas se não for o padrão SMSAO
+    if (resolvedSenderId !== DEFAULT_SENDER_ID) {
       const { data: senderData, error: senderError } = await supabase
         .from('sender_ids')
         .select('*')
         .eq('user_id', user.id)
-        .eq('sender_id', senderId)
+        .eq('sender_id', resolvedSenderId)
         .eq('status', 'approved')
         .single()
 
       if (senderError || !senderData) {
-        throw new Error(`Sender ID "${senderId}" não está aprovado. Verifique seus Sender IDs em /sender-ids`)
+        console.warn(`Sender ID personalizado "${resolvedSenderId}" não aprovado, usando padrão ${DEFAULT_SENDER_ID}`);
+        // Forçar uso do padrão
+        const finalSenderId = DEFAULT_SENDER_ID;
+        console.log(`Using default Sender ID: ${finalSenderId}`)
+      } else {
+        console.log(`Using approved Sender ID: ${resolvedSenderId} for user: ${user.id}`)
       }
-
-      console.log(`Using approved Sender ID: ${senderId} for user: ${user.id}`)
     } else {
-      console.log(`Using default Sender ID: ${senderId}`)
+      console.log(`Using default Sender ID: ${resolvedSenderId}`)
     }
 
     // Buscar credenciais do banco de dados
@@ -143,13 +168,13 @@ serve(async (req) => {
 
     console.log(`Using BulkSMS Token ID: ${bulkSMSTokenId.substring(0, 8)}...`)
     console.log(`Token Secret available: ${!!bulkSMSTokenSecret}`)
-    console.log(`Sending SMS to ${contacts.length} contacts with sender: ${senderId}`)
+    console.log(`Sending SMS to ${contacts.length} contacts with sender: ${resolvedSenderId}`)
 
     // Send SMS via BulkSMS API v1
     const bulkSMSResponse = await sendViaBulkSMSProduction(
       contacts,
       message,
-      senderId,
+      resolvedSenderId, // Usar sender ID normalizado
       bulkSMSTokenId,
       bulkSMSTokenSecret,
       isTest

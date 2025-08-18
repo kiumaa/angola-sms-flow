@@ -6,6 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// SENDER ID UTILITIES - MANDATO SMSAO
+const DEFAULT_SENDER_ID = 'SMSAO';
+const DEPRECATED_SENDER_IDS = ['ONSMS', 'SMS'];
+
+function resolveSenderId(input?: string | null): string {
+  if (!input || input.trim() === '') return DEFAULT_SENDER_ID;
+  const normalized = input.trim().toUpperCase();
+  if (DEPRECATED_SENDER_IDS.includes(normalized)) {
+    console.warn(`Sender ID depreciado detectado: ${input} → substituído por ${DEFAULT_SENDER_ID}`);
+    return DEFAULT_SENDER_ID;
+  }
+  if (!normalized.match(/^[A-Za-z0-9]{1,11}$/)) {
+    console.warn(`Sender ID inválido detectado: ${input} → substituído por ${DEFAULT_SENDER_ID}`);
+    return DEFAULT_SENDER_ID;
+  }
+  return normalized;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -74,12 +92,15 @@ serve(async (req) => {
             renderedMessage = renderedMessage.replace('{nome}', 'Cliente')
           }
 
-          // Send SMS via BulkSMS
+          // Send SMS via BulkSMS com sender ID normalizado
+          const normalizedSenderId = resolveSenderId(target.campaigns.sender_id);
+          console.log(`Campaign ${target.campaigns.id} usando sender ID: "${target.campaigns.sender_id}" → "${normalizedSenderId}"`);
+          
           const smsResult = await supabaseClient.functions.invoke('send-sms-bulksms', {
             body: {
               to: target.phone_e164,
               message: renderedMessage,
-              sender_id: target.campaigns.sender_id || 'SMSao'
+              sender_id: normalizedSenderId
             }
           })
 
