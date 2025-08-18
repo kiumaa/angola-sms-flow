@@ -73,18 +73,28 @@ const AdminLayout = ({
         {/* Sidebar */}
         <aside 
           data-testid="admin-sidebar"
-          className={`${isSidebarOpen ? "w-64" : "w-16"} bg-card/30 backdrop-blur-sm border-r border-border transition-all duration-300 min-h-[calc(100vh-64px)]`}
+          className={`${isSidebarOpen ? "w-64" : "w-16"} bg-card border-r border-border transition-all duration-300 min-h-[calc(100vh-64px)] flex-shrink-0`}
         >
           <nav className="p-4 space-y-1">
-            {navigation.map(item => <Link key={item.name} to={item.href} className={`flex items-center px-3 py-3 rounded-minimal text-sm font-normal transition-all duration-300 ${item.current ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}>
-                <item.icon className="h-4 w-4" />
-                {isSidebarOpen && <span className="ml-3 font-normal text-sm">{item.name}</span>}
-              </Link>)}
+            {navigation.map(item => (
+              <Link 
+                key={item.name} 
+                to={item.href} 
+                className={`flex items-center px-3 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  item.current 
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                {isSidebarOpen && <span className="ml-3">{item.name}</span>}
+              </Link>
+            ))}
           </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 min-w-0">
           {children}
         </main>
       </div>
