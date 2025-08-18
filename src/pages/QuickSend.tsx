@@ -20,8 +20,12 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Loader2
+  Loader2,
+  Eye,
+  UserPlus
 } from "lucide-react";
+import { ContactSelectionModal } from "@/components/modals/ContactSelectionModal";
+import { MessagePreviewModal } from "@/components/modals/MessagePreviewModal";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useUserCredits } from "@/hooks/useUserCredits";
@@ -43,10 +47,12 @@ const QuickSend = () => {
   const [phoneInput, setPhoneInput] = useState("");
   const [bulkInput, setBulkInput] = useState("");
 
-  // Progress modal state
+  // Modal states
   const [showProgress, setShowProgress] = useState(false);
   const [currentJob, setCurrentJob] = useState<any>(null);
   const [jobStats, setJobStats] = useState<any>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Calculate message stats
   const segmentInfo = calculateSMSSegments(message);
@@ -119,6 +125,42 @@ const QuickSend = () => {
 
   const removeRecipient = (phone: string) => {
     setRecipients(recipients.filter(r => r !== phone));
+  };
+
+  const handleContactsSelected = (contacts: any[]) => {
+    const phoneNumbers = contacts
+      .filter(contact => contact.phone_e164)
+      .map(contact => contact.phone_e164);
+    
+    // Add to existing recipients and deduplicate
+    const newRecipients = [...recipients];
+    let addedCount = 0;
+    
+    phoneNumbers.forEach(phone => {
+      if (!newRecipients.includes(phone)) {
+        newRecipients.push(phone);
+        addedCount++;
+      }
+    });
+    
+    setRecipients(newRecipients);
+    
+    if (addedCount > 0) {
+      toast({
+        title: "Contatos Adicionados",
+        description: `${addedCount} contatos foram adicionados aos destinatários.`,
+      });
+    }
+  };
+
+  const handlePreviewMessage = () => {
+    if (!message.trim() || recipients.length === 0) return;
+    setShowPreviewModal(true);
+  };
+
+  const handleSendFromPreview = () => {
+    setShowPreviewModal(false);
+    handleSend();
   };
 
   const handleSend = async () => {
@@ -223,9 +265,10 @@ const QuickSend = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Tabs defaultValue="single" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="single">Número Único</TabsTrigger>
                     <TabsTrigger value="bulk">Lista/CSV</TabsTrigger>
+                    <TabsTrigger value="contacts">Contatos</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="single" className="space-y-4">
@@ -269,6 +312,19 @@ const QuickSend = () => {
                       <Button onClick={addBulkPhones} className="mt-2">
                         <Plus className="h-4 w-4 mr-2" />
                         Adicionar Lista
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="contacts" className="space-y-4">
+                    <div className="text-center py-6">
+                      <UserPlus className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                      <p className="text-muted-foreground mb-4">
+                        Selecione contatos da sua lista para adicionar aos destinatários
+                      </p>
+                      <Button onClick={() => setShowContactModal(true)}>
+                        <Users className="h-4 w-4 mr-2" />
+                        Selecionar dos Contatos
                       </Button>
                     </div>
                   </TabsContent>
@@ -350,6 +406,17 @@ const QuickSend = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Preview Button */}
+                <Button 
+                  variant="outline" 
+                  onClick={handlePreviewMessage}
+                  disabled={!message.trim() || recipients.length === 0}
+                  className="w-full"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Previsualizar
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -420,6 +487,25 @@ const QuickSend = () => {
           </div>
         </div>
       </div>
+
+      {/* Contact Selection Modal */}
+      <ContactSelectionModal
+        open={showContactModal}
+        onOpenChange={setShowContactModal}
+        onContactsSelected={handleContactsSelected}
+        selectedPhones={recipients}
+      />
+
+      {/* Message Preview Modal */}
+      <MessagePreviewModal
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        message={message}
+        recipients={recipients}
+        senderId={senderId}
+        creditsEstimated={creditsEstimated}
+        onSendNow={handleSendFromPreview}
+      />
 
       {/* Progress Modal */}
       <Dialog open={showProgress} onOpenChange={setShowProgress}>
