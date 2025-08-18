@@ -39,7 +39,7 @@ export const useContacts = () => {
       setLoading(true);
       
       const { data, error } = await supabase.functions.invoke('contacts-api', {
-        body: { action: 'list' }
+        method: 'GET'
       });
 
       if (error) throw error;
@@ -175,8 +175,8 @@ export const useContacts = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('contacts-api', {
+        method: 'GET',
         body: {
-          action: 'list',
           search: query
         }
       });

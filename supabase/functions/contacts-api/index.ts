@@ -85,13 +85,11 @@ Deno.serve(async (req) => {
       const size = Math.min(parseInt(url.searchParams.get('size') || '50'), 100);
       const offset = (page - 1) * size;
 
+      // Simple query first - get contacts with optional tags
       let query = supabase
         .from('contacts')
         .select(`
-          id, phone_e164, name, attributes, is_blocked, created_at, updated_at,
-          contact_tag_pivot!inner(
-            contact_tags!inner(id, name, color)
-          )
+          id, phone_e164, name, attributes, is_blocked, created_at, updated_at, tags
         `)
         .eq('account_id', accountId)
         .range(offset, offset + size - 1)
@@ -99,10 +97,6 @@ Deno.serve(async (req) => {
 
       if (search) {
         query = query.or(`name.ilike.%${search}%,phone_e164.ilike.%${search}%`);
-      }
-
-      if (tag) {
-        query = query.eq('contact_tag_pivot.contact_tags.name', tag);
       }
 
       const { data: contacts, error } = await query;
