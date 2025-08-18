@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Send, Calendar, Users, BarChart3, Clock, Eye, Play, Pause, Trash2, Mail } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Send, Calendar, Users, BarChart3, Clock, Eye, Trash2, Activity } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useCampaigns } from "@/hooks/useCampaigns";
+import CampaignMonitoringDashboard from "@/components/admin/CampaignMonitoringDashboard";
 
 const Campaigns = () => {
   const navigate = useNavigate();
@@ -72,7 +74,34 @@ const Campaigns = () => {
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Tabs */}
+        <Tabs defaultValue="list" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="list" className="flex items-center space-x-2">
+              <Send className="h-4 w-4" />
+              <span>Minhas Campanhas</span>
+            </TabsTrigger>
+            <TabsTrigger value="monitoring" className="flex items-center space-x-2">
+              <Activity className="h-4 w-4" />
+              <span>Monitoramento</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="list">
+            {renderCampaignsList()}
+          </TabsContent>
+
+          <TabsContent value="monitoring">
+            <CampaignMonitoringDashboard />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </DashboardLayout>
+  );
+
+  function renderCampaignsList() {
+    return (
+      <div className="space-y-6">{/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
             { title: "Total Enviado", value: "2.4K", icon: Send, color: "text-blue-500" },
@@ -185,8 +214,8 @@ const Campaigns = () => {
           )}
         </div>
       </div>
-    </DashboardLayout>
-  );
+    );
+  }
 };
 
 export default Campaigns;

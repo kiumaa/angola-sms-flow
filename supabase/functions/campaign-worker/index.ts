@@ -230,35 +230,57 @@ async function createCampaignTargets(supabase: any, campaign: any) {
 }
 
 async function processSendingTargets(supabase: any) {
-  // Get targets ready to send (limit to prevent overwhelming the system)
+  // Get targets ready to send with rate limiting and priority
   const { data: targets } = await supabase
     .from('campaign_targets')
     .select(`
       *,
-      campaigns!inner(status, account_id, sender_id)
+      campaigns!inner(status, account_id, sender_id, created_at)
     `)
     .eq('status', 'queued')
     .eq('campaigns.status', 'sending')
+    .lt('tries', 3) // Max 3 attempts per target
     .order('queued_at', { ascending: true })
-    .limit(50) // Process max 50 at a time
+    .limit(100) // Increased batch size
 
   if (!targets || targets.length === 0) {
+    console.log('No targets ready for sending')
     return
   }
 
   console.log(`Processing ${targets.length} targets for sending`)
 
-  // Process targets in smaller batches to respect rate limits
-  const batchSize = 10
-  for (let i = 0; i < targets.length; i += batchSize) {
-    const batch = targets.slice(i, i + batchSize)
-    
-    // Process batch with delay
-    await Promise.all(batch.map(target => sendSMS(supabase, target)))
-    
-    // Small delay between batches to respect rate limits
-    if (i + batchSize < targets.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+  // Group targets by account to implement per-account rate limiting
+  const targetsByAccount = targets.reduce((acc, target) => {
+    const accountId = target.campaigns.account_id
+    if (!acc[accountId]) acc[accountId] = []
+    acc[accountId].push(target)
+    return acc
+  }, {} as Record<string, any[]>)
+
+  // Process each account's targets with rate limiting
+  await Promise.all(
+    Object.entries(targetsByAccount).map(([accountId, accountTargets]) =>
+      processAccountTargets(supabase, accountId, accountTargets)
+    )
+  )
+}
+
+async function processAccountTargets(supabase: any, accountId: string, targets: any[]) {
+  console.log(`Processing ${targets.length} targets for account ${accountId}`)
+  
+  // Rate limit: 5 SMS per second per account
+  const rateLimit = 5
+  const delayMs = 1000 / rateLimit
+
+  for (const target of targets) {
+    try {
+      await sendSMS(supabase, target)
+      // Respect rate limit
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+    } catch (error) {
+      console.error(`Error processing target ${target.id}:`, error)
+      // Continue with next target
     }
   }
 }

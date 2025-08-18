@@ -1,178 +1,172 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface BulkSMSDeliveryReport {
-  message_id?: string
-  batch_id?: string
-  to?: string
-  status?: string
-  error_code?: string | null
-  completed_at?: string
-  payload?: any
-  // Legacy EAPI format support
-  id?: string
+interface BulkSMSDeliveryUpdate {
+  id: string; // BulkSMS message ID
+  status: {
+    type: string; // DELIVERED, FAILED, etc.
+    subtype?: string;
+  };
+  submission: {
+    date: string;
+  };
+  relatedSentMessageId: string;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { 
+      status: 405, 
+      headers: corsHeaders 
+    })
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-    console.log('BulkSMS delivery webhook received')
-
-    const deliveryReport: BulkSMSDeliveryReport = await req.json()
-    console.log('Delivery report data:', JSON.stringify(deliveryReport, null, 2))
-
-    // Support both API v1 and Legacy EAPI formats
-    const messageId = deliveryReport.message_id || deliveryReport.batch_id || deliveryReport.id
-    
-    if (!messageId) {
-      console.error('Missing message ID in delivery report')
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Missing message ID or batch ID in delivery report' 
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-
-    // Map BulkSMS status to our internal status
-    let internalStatus = 'pending'
-    const statusType = deliveryReport.status?.toLowerCase() || 'unknown'
-    
-    switch (statusType) {
-      case 'submitted':
-      case 'sent':
-      case 'accepted':
-        internalStatus = 'sent'
-        break
-      case 'delivered':
-        internalStatus = 'delivered'
-        break
-      case 'failed':
-      case 'rejected':
-      case 'expired':
-        internalStatus = 'failed'
-        break
-      default:
-        internalStatus = statusType
-    }
-
-    console.log(`Processing delivery report for message ID: ${messageId}, status: ${statusType} -> ${internalStatus}`)
-
-    const deliveredAt = internalStatus === 'delivered' ? new Date().toISOString() : null
-
-    // Upsert into sms_logs table (original functionality)
-    const { data, error } = await supabase
-      .from('sms_logs')
-      .upsert({
-        gateway_message_id: messageId,
-        gateway_used: 'bulksms',
-        phone_number: deliveryReport.to || '',
-        message: 'Delivery report update',
-        status: internalStatus,
-        error_code: deliveryReport.error_code,
-        completed_at: deliveryReport.completed_at ? new Date(deliveryReport.completed_at).toISOString() : null,
-        payload: deliveryReport,
-        delivered_at: deliveredAt,
-        updated_at: new Date().toISOString(),
-        user_id: '00000000-0000-0000-0000-000000000000' // Default system user for webhook updates
-      }, {
-        onConflict: 'gateway_message_id',
-        ignoreDuplicates: false
-      })
-
-    if (error) {
-      console.error('Error upserting SMS log:', error)
-      // Try to update existing record if upsert failed
-      const { error: updateError } = await supabase
-        .from('sms_logs')
-        .update({
-          status: internalStatus,
-          error_code: deliveryReport.error_code,
-          completed_at: deliveryReport.completed_at ? new Date(deliveryReport.completed_at).toISOString() : null,
-          payload: deliveryReport,
-          delivered_at: deliveredAt,
-          updated_at: new Date().toISOString()
-        })
-        .eq('gateway_message_id', messageId)
-        .eq('gateway_used', 'bulksms')
-
-      if (updateError) {
-        console.error('Error updating SMS log:', updateError)
-        throw updateError
-      }
-    }
-
-    // Also update campaign targets if this is a campaign SMS (new functionality)
-    const { data: targetData, error: targetError } = await supabase
-      .from('campaign_targets')
-      .update({
-        status: internalStatus,
-        delivered_at: deliveredAt,
-        error_code: internalStatus === 'failed' ? deliveryReport.error_code : null,
-        error_detail: internalStatus === 'failed' ? deliveryReport.status : null
-      })
-      .eq('bulksms_message_id', messageId)
-      .select('campaign_id')
-
-    if (targetError) {
-      console.error('Error updating campaign target:', targetError)
-      // Don't throw - this is not critical for SMS logs
-    } else if (targetData && targetData.length > 0) {
-      const campaign_id = targetData[0].campaign_id
-      console.log(`Updated campaign target for campaign ${campaign_id}`)
-      
-      // Update campaign stats
-      try {
-        await supabase.rpc('update_campaign_stats', { _campaign_id: campaign_id })
-        console.log(`Updated stats for campaign ${campaign_id}`)
-      } catch (statsError) {
-        console.warn('Failed to update campaign stats:', statsError)
-      }
-    }
-
-    console.log(`Successfully processed delivery report for message ID: ${messageId}`)
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Delivery report processed successfully',
-        message_id: messageId,
-        status: internalStatus
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    const updates: BulkSMSDeliveryUpdate[] = await req.json()
+    console.log(`Received ${updates.length} delivery updates from BulkSMS`)
+
+    for (const update of updates) {
+      await processDeliveryUpdate(supabase, update)
+    }
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      processed: updates.length 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
 
   } catch (error) {
-    console.error('BulkSMS delivery webhook error:', error)
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Unknown error processing delivery report'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    )
+    console.error('Webhook processing error:', error)
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
   }
 })
+
+async function processDeliveryUpdate(supabase: any, update: BulkSMSDeliveryUpdate) {
+  try {
+    console.log(`Processing delivery update for message ${update.id}: ${update.status.type}`)
+
+    // Find the campaign target by BulkSMS message ID
+    const { data: targets, error: findError } = await supabase
+      .from('campaign_targets')
+      .select('id, campaign_id, status')
+      .eq('bulksms_message_id', update.id)
+      .limit(1)
+
+    if (findError) {
+      console.error('Error finding target:', findError)
+      return
+    }
+
+    if (!targets || targets.length === 0) {
+      console.log(`No target found for BulkSMS message ID ${update.id}`)
+      return
+    }
+
+    const target = targets[0]
+    const newStatus = mapBulkSMSStatus(update.status.type)
+    
+    // Only update if status changed
+    if (target.status === newStatus) {
+      console.log(`Target ${target.id} already has status ${newStatus}`)
+      return
+    }
+
+    // Update campaign target status
+    const updateData: any = {
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    }
+
+    if (newStatus === 'delivered') {
+      updateData.delivered_at = new Date().toISOString()
+    } else if (newStatus === 'failed') {
+      updateData.error_code = update.status.subtype || 'DELIVERY_FAILED'
+      updateData.error_detail = `BulkSMS delivery failed: ${update.status.type}`
+    }
+
+    const { error: updateError } = await supabase
+      .from('campaign_targets')
+      .update(updateData)
+      .eq('id', target.id)
+
+    if (updateError) {
+      console.error(`Error updating target ${target.id}:`, updateError)
+      return
+    }
+
+    console.log(`Updated target ${target.id} to status ${newStatus}`)
+
+    // Update campaign stats
+    await supabase.rpc('update_campaign_stats', { 
+      _campaign_id: target.campaign_id 
+    })
+
+    // Check if campaign is complete
+    await checkCampaignCompletion(supabase, target.campaign_id)
+
+  } catch (error) {
+    console.error(`Error processing delivery update for ${update.id}:`, error)
+  }
+}
+
+function mapBulkSMSStatus(bulkSMSStatus: string): string {
+  switch (bulkSMSStatus.toLowerCase()) {
+    case 'delivered':
+      return 'delivered'
+    case 'failed':
+    case 'rejected':
+    case 'unknown':
+      return 'failed'
+    case 'buffered':
+    case 'submitted':
+      return 'sent'
+    default:
+      return 'sent'
+  }
+}
+
+async function checkCampaignCompletion(supabase: any, campaignId: string) {
+  try {
+    // Check if all targets are in final states
+    const { data: pendingTargets } = await supabase
+      .from('campaign_targets')
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .not('status', 'in', '("delivered","failed","undeliverable")')
+      .limit(1)
+
+    if (!pendingTargets || pendingTargets.length === 0) {
+      // All targets processed - mark campaign as completed
+      await supabase
+        .from('campaigns')
+        .update({ 
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', campaignId)
+        .eq('status', 'sending') // Only update if still in sending status
+
+      console.log(`Campaign ${campaignId} marked as completed`)
+    }
+  } catch (error) {
+    console.error(`Error checking campaign completion for ${campaignId}:`, error)
+  }
+}
