@@ -34,10 +34,20 @@ export const useSenderIds = (userId?: string) => {
       setLoading(true);
       setError(null);
 
-      // Buscar sender IDs do usuário (excluindo arquivados)
+      // Buscar sender IDs do usuário com campos específicos
       const { data, error: fetchError } = await supabase
         .from('sender_ids')
-        .select('*')
+        .select(`
+          id,
+          sender_id,
+          status,
+          is_default,
+          bulksms_status,
+          supported_gateways,
+          user_id,
+          created_at,
+          updated_at
+        `)
         .eq('user_id', targetUserId)
         .neq('status', 'archived')
         .order('is_default', { ascending: false })
