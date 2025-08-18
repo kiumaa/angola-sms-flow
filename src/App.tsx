@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense } from "react";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./hooks/useAuth";
-import AdminLayout from "./components/layout/AdminLayout";
 import MessageSendingLoader from "./components/shared/MessageSendingLoader";
 import { ThemeProvider } from "next-themes";
 import { BrandProvider } from "@/providers/BrandProvider";
@@ -176,9 +175,7 @@ function App() {
                 path="/admin"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminDashboard />
-                    </AdminLayout>
+                    <LazyAdminDashboard />
                   </ProtectedRoute>
                 }
               />
@@ -186,9 +183,7 @@ function App() {
                 path="/admin/users"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminUsers />
-                    </AdminLayout>
+                    <LazyAdminUsers />
                   </ProtectedRoute>
                 }
               />
@@ -196,9 +191,7 @@ function App() {
                 path="/admin/packages"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminPackages />
-                    </AdminLayout>
+                    <LazyAdminPackages />
                   </ProtectedRoute>
                 }
               />
@@ -206,9 +199,7 @@ function App() {
                 path="/admin/transactions"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminTransactions />
-                    </AdminLayout>
+                    <LazyAdminTransactions />
                   </ProtectedRoute>
                 }
               />
@@ -216,9 +207,7 @@ function App() {
                 path="/admin/credit-requests"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminCreditRequests />
-                    </AdminLayout>
+                    <LazyAdminCreditRequests />
                   </ProtectedRoute>
                 }
               />
@@ -226,9 +215,7 @@ function App() {
                 path="/admin/sender-ids"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminSenderIDs />
-                    </AdminLayout>
+                    <LazyAdminSenderIDs />
                   </ProtectedRoute>
                 }
               />
@@ -236,9 +223,7 @@ function App() {
                 path="/admin/sms-gateway-settings"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminSMSGateways />
-                    </AdminLayout>
+                    <LazyAdminSMSGateways />
                   </ProtectedRoute>
                 }
               />
@@ -246,9 +231,7 @@ function App() {
                 path="/admin/sms-monitoring"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminSMSMonitoring />
-                    </AdminLayout>
+                    <LazyAdminSMSMonitoring />
                   </ProtectedRoute>
                 }
               />
@@ -256,9 +239,7 @@ function App() {
                 path="/admin/reports"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminReports />
-                    </AdminLayout>
+                    <LazyAdminReports />
                   </ProtectedRoute>
                 }
               />
@@ -266,9 +247,7 @@ function App() {
                 path="/admin/settings"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminSettings />
-                    </AdminLayout>
+                    <LazyAdminSettings />
                   </ProtectedRoute>
                 }
               />
@@ -276,9 +255,7 @@ function App() {
                 path="/admin/brand"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminBrand />
-                    </AdminLayout>
+                    <LazyAdminBrand />
                   </ProtectedRoute>
                 }
               />
@@ -286,9 +263,7 @@ function App() {
                 path="/admin/sms-configuration"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <LazyAdminSMSConfiguration />
-                    </AdminLayout>
+                    <LazyAdminSMSConfiguration />
                   </ProtectedRoute>
                 }
               />

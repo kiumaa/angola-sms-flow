@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, Users, Package, CreditCard, BarChart3, Settings, LogOut, Menu, MessageSquare, Send, FileText, Wifi, Palette } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { ADMIN_NAV_ITEMS, getActiveNavItem } from "@/config/adminNav";
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
@@ -30,47 +31,13 @@ const AdminLayout = ({
     });
     navigate("/");
   };
-  const navigation = [{
-    name: "Home",
-    href: "/admin",
-    icon: Home,
-    current: location.pathname === "/admin"
-  }, {
-    name: "Usuários",
-    href: "/admin/users",
-    icon: Users,
-    current: location.pathname.startsWith("/admin/users")
-  }, {
-    name: "Pacotes",
-    href: "/admin/packages",
-    icon: Package,
-    current: location.pathname.startsWith("/admin/packages")
-  }, {
-    name: "Transações",
-    href: "/admin/transactions",
-    icon: CreditCard,
-    current: location.pathname.startsWith("/admin/transactions")
-  }, {
-    name: "Sender IDs",
-    href: "/admin/sender-ids",
-    icon: Send,
-    current: location.pathname.startsWith("/admin/sender-ids")
-  }, {
-    name: "Relatórios",
-    href: "/admin/reports",
-    icon: BarChart3,
-    current: location.pathname.startsWith("/admin/reports")
-  }, {
-    name: "Configurações",
-    href: "/admin/sms-configuration",
-    icon: Settings,
-    current: location.pathname.startsWith("/admin/sms-configuration")
-  }, {
-    name: "Personalização",
-    href: "/admin/brand",
-    icon: Palette,
-    current: location.pathname.startsWith("/admin/brand")
-  }];
+  const activeNavKey = getActiveNavItem(location.pathname);
+  
+  const navigation = ADMIN_NAV_ITEMS.map(item => ({
+    ...item,
+    name: item.label,
+    current: item.key === activeNavKey
+  }));
   return <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Top Navigation */}
       <nav className="bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -104,7 +71,10 @@ const AdminLayout = ({
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className={`${isSidebarOpen ? "w-64" : "w-16"} bg-card/30 backdrop-blur-sm border-r border-border transition-all duration-300 min-h-[calc(100vh-64px)]`}>
+        <aside 
+          data-testid="admin-sidebar"
+          className={`${isSidebarOpen ? "w-64" : "w-16"} bg-card/30 backdrop-blur-sm border-r border-border transition-all duration-300 min-h-[calc(100vh-64px)]`}
+        >
           <nav className="p-4 space-y-1">
             {navigation.map(item => <Link key={item.name} to={item.href} className={`flex items-center px-3 py-3 rounded-minimal text-sm font-normal transition-all duration-300 ${item.current ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}>
                 <item.icon className="h-4 w-4" />
