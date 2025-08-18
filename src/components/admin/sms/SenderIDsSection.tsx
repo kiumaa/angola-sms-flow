@@ -95,22 +95,9 @@ export default function SenderIDsSection() {
 
   const loadSenderIDs = async () => {
     try {
-        setLoading(true);
-        
-        // Query simples sem joins automáticos
         const { data, error } = await supabase
           .from('sender_ids')
-          .select(`
-            id,
-            sender_id,
-            user_id,
-            status,
-            bulksms_status,
-            supported_gateways,
-            is_default,
-            created_at,
-            updated_at
-          `)
+          .select('*')
           .order('created_at', { ascending: false });
 
         if (error) throw error;

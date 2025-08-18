@@ -236,36 +236,16 @@ export default function AdminSMSConfiguration() {
 
     const loadSenderIds = async () => {
       try {
-        // Query simples e específica para evitar problemas de relacionamento
         const { data, error } = await supabase
           .from('sender_ids')
-          .select(`
-            id,
-            sender_id,
-            status,
-            is_default,
-            user_id,
-            bulksms_status,
-            supported_gateways
-          `)
+          .select('*')
           .eq('status', 'approved')
-          .order('is_default', { ascending: false })
-          .order('created_at', { ascending: false });
+          .order('is_default', { ascending: false });
 
         if (error) throw error;
         setAvailableSenderIds(data || []);
       } catch (error) {
         console.error('Erro ao carregar Sender IDs:', error);
-        // Fallback para garantir que SMSAO esteja sempre disponível
-        setAvailableSenderIds([{
-          id: 'fallback-smsao',
-          sender_id: 'SMSAO',
-          status: 'approved',
-          is_default: true,
-          user_id: '',
-          bulksms_status: 'approved',
-          supported_gateways: ['bulksms']
-        }]);
       }
     };
 
