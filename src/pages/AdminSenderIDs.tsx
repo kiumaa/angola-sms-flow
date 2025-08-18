@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, X, Clock, User, Search, Edit, Trash2 } from "lucide-react";
+import { Check, X, Clock, User, Search, Edit, Trash2, Shield, Building2 } from "lucide-react";
 
 interface SenderIDRequest {
   id: string;
@@ -14,14 +14,19 @@ interface SenderIDRequest {
   status: string;
   created_at: string;
   user_id: string;
-  profiles: {
+  account_id: string | null;
+  is_default: boolean;
+  bulksms_status?: string;
+  profiles?: {
     email: string;
     full_name: string;
   };
+  is_system_default?: boolean;
 }
 
 const AdminSenderIDs = () => {
-  const [requests, setRequests] = useState<SenderIDRequest[]>([]);
+  const [systemSenderIds, setSystemSenderIds] = useState<SenderIDRequest[]>([]);
+  const [userSenderIds, setUserSenderIds] = useState<SenderIDRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -40,33 +45,49 @@ const AdminSenderIDs = () => {
           sender_id,
           status,
           created_at,
-          user_id
+          user_id,
+          account_id,
+          is_default,
+          bulksms_status
         `)
+        .order('account_id', { ascending: true, nullsFirst: true }) // Global primeiro
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Get profile data for each request
-      const requestsWithProfiles = await Promise.all(
-        (data || []).map(async (request) => {
+      // Separar sender IDs globais dos específicos por usuário
+      const globalSenderIds: SenderIDRequest[] = [];
+      const userSpecificSenderIds: SenderIDRequest[] = [];
+
+      // Processar dados e buscar perfis quando necessário
+      for (const request of data || []) {
+        let processedRequest: SenderIDRequest = {
+          ...request,
+          is_system_default: request.account_id === null && request.sender_id === 'SMSAO'
+        };
+
+        if (request.account_id === null) {
+          // Sender ID global (SMSAO)
+          globalSenderIds.push(processedRequest);
+        } else {
+          // Sender ID específico do usuário - buscar perfil
           const { data: profile } = await supabase
             .from('profiles')
             .select('email, full_name')
             .eq('user_id', request.user_id)
             .single();
           
-          return {
-            ...request,
-            profiles: profile || { email: '', full_name: '' }
-          };
-        })
-      );
+          processedRequest.profiles = profile || { email: '', full_name: '' };
+          userSpecificSenderIds.push(processedRequest);
+        }
+      }
 
-      setRequests(requestsWithProfiles);
+      setSystemSenderIds(globalSenderIds);
+      setUserSenderIds(userSpecificSenderIds);
     } catch (error: any) {
       console.error('Error fetching sender ID requests:', error);
       toast({
-        title: "Erro ao carregar solicitações",
+        title: "Erro ao carregar Sender IDs",
         description: error.message,
         variant: "destructive",
       });
@@ -105,8 +126,19 @@ const AdminSenderIDs = () => {
     }
   };
 
-  const deleteSenderID = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover este Sender ID?')) return;
+  const deleteSenderID = async (id: string, senderIdValue: string) => {
+    // Prevenir remoção do SMSAO global
+    const senderToDelete = [...systemSenderIds, ...userSenderIds].find(s => s.id === id);
+    if (senderToDelete?.is_system_default) {
+      toast({
+        title: "Não é possível remover",
+        description: "SMSAO é o Sender ID padrão do sistema e não pode ser removido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja remover o Sender ID "${senderIdValue}"?`)) return;
     
     setProcessing(true);
     try {
@@ -161,10 +193,10 @@ const AdminSenderIDs = () => {
     }
   };
 
-  const filteredRequests = requests.filter(request =>
+  const filteredUserSenderIds = userSenderIds.filter(request =>
     request.sender_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.profiles.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    request.profiles?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.profiles?.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -183,16 +215,62 @@ const AdminSenderIDs = () => {
       <div>
         <h1 className="text-3xl font-bold">Gerenciar Sender IDs</h1>
         <p className="text-muted-foreground mt-2">
-          Aprovar ou rejeitar solicitações de Sender IDs personalizados
+          Gerencie Sender IDs globais do sistema e personalizados por cliente
         </p>
       </div>
 
+      {/* Padrão do Sistema */}
+      <Card className="border-blue-200 bg-blue-50/50">
+        <CardHeader>
+          <CardTitle className="flex items-center text-blue-900">
+            <Shield className="h-5 w-5 mr-2" />
+            Padrão do Sistema
+          </CardTitle>
+          <CardDescription className="text-blue-700">
+            Sender ID global disponível para todos os usuários
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {systemSenderIds.length > 0 ? (
+            <div className="space-y-4">
+              {systemSenderIds.map((sender) => (
+                <div key={sender.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Shield className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-lg text-blue-900">{sender.sender_id}</span>
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                          Padrão do Sistema
+                        </Badge>
+                        {getStatusBadge(sender.status)}
+                      </div>
+                      <p className="text-sm text-blue-700">
+                        Usado automaticamente quando o cliente não tem Sender ID próprio aprovado
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-blue-700">Nenhum Sender ID global configurado</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Personalizados por Cliente */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <User className="h-5 w-5 mr-2" />
-            Solicitações de Sender IDs ({filteredRequests.length})
+            <Building2 className="h-5 w-5 mr-2" />
+            Personalizados por Cliente ({filteredUserSenderIds.length})
           </CardTitle>
+          <CardDescription>
+            Sender IDs específicos solicitados por clientes
+          </CardDescription>
           <div className="flex items-center space-x-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
@@ -204,11 +282,11 @@ const AdminSenderIDs = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredRequests.length === 0 ? (
+          {filteredUserSenderIds.length === 0 ? (
             <div className="text-center py-8">
-              <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Nenhuma solicitação de Sender ID encontrada
+                {searchTerm ? "Nenhum Sender ID encontrado com os filtros aplicados" : "Nenhuma solicitação de Sender ID personalizado"}
               </p>
             </div>
           ) : (
@@ -216,28 +294,31 @@ const AdminSenderIDs = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Sender ID</TableHead>
-                  <TableHead>Usuário</TableHead>
+                  <TableHead>Cliente</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data de Criação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequests.map((request) => (
+                {filteredUserSenderIds.map((request) => (
                   <TableRow key={request.id}>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         {getStatusIcon(request.status)}
                         <span className="font-medium">{request.sender_id}</span>
+                        {request.is_default && (
+                          <Badge variant="outline" className="text-xs">Default</Badge>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {request.profiles.full_name || "Sem nome"}
+                          {request.profiles?.full_name || "Sem nome"}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {request.profiles.email}
+                          {request.profiles?.email || "Sem email"}
                         </div>
                       </div>
                     </TableCell>
@@ -285,7 +366,7 @@ const AdminSenderIDs = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => deleteSenderID(request.id)}
+                          onClick={() => deleteSenderID(request.id, request.sender_id)}
                           disabled={processing}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -313,7 +394,8 @@ const AdminSenderIDs = () => {
                 • Sender ID deve ser relacionado ao negócio do cliente<br/>
                 • Máximo 11 caracteres alfanuméricos<br/>
                 • Não pode ser genérico (ex: SMS, TEST, etc.)<br/>
-                • Cliente deve ter histórico de uso responsável
+                • Cliente deve ter histórico de uso responsável<br/>
+                • SMSAO é reservado como padrão do sistema
               </p>
             </div>
           </div>

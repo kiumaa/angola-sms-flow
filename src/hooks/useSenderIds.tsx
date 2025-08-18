@@ -11,9 +11,11 @@ export interface SenderIdData {
   bulksms_status?: string;
   supported_gateways?: string[];
   user_id?: string;
+  account_id?: string | null;
   created_at?: string;
   updated_at?: string;
   display_name?: string;
+  is_system_default?: boolean; // Para identificar o SMSAO global
 }
 
 export const useSenderIds = (userId?: string) => {
@@ -34,12 +36,13 @@ export const useSenderIds = (userId?: string) => {
       setLoading(true);
       setError(null);
 
-      // Buscar sender IDs do usuário (excluindo arquivados)
+      // Buscar tanto o SMSAO global quanto os sender IDs do usuário
       const { data, error: fetchError } = await supabase
         .from('sender_ids')
         .select('*')
-        .eq('user_id', targetUserId)
+        .or(`account_id.is.null,and(user_id.eq.${targetUserId},account_id.not.is.null)`)
         .neq('status', 'archived')
+        .order('account_id', { ascending: true, nullsFirst: true }) // Global primeiro
         .order('is_default', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -47,14 +50,18 @@ export const useSenderIds = (userId?: string) => {
         throw fetchError;
       }
 
-      // Filtrar e normalizar dados
-      const rawSenderIds = data || [];
-      const filteredSenderIds = filterValidSenderIds(rawSenderIds);
-      const senderIdsWithSMSAO = ensureSMSAOInList(filteredSenderIds);
+      // Processar e marcar sender IDs
+      const processedSenderIds = (data || []).map(item => ({
+        ...item,
+        is_system_default: item.account_id === null && item.sender_id === DEFAULT_SENDER_ID,
+        display_name: item.account_id === null && item.sender_id === DEFAULT_SENDER_ID 
+          ? `${item.sender_id} (Padrão do Sistema)`
+          : item.sender_id
+      }));
 
-      console.log(`Carregados ${senderIdsWithSMSAO.length} sender IDs para usuário ${targetUserId}`);
+      console.log(`Carregados ${processedSenderIds.length} sender IDs (incluindo global) para usuário ${targetUserId}`);
       
-      setSenderIds(senderIdsWithSMSAO);
+      setSenderIds(processedSenderIds);
 
     } catch (err: any) {
       console.error('Erro ao carregar sender IDs:', err);
@@ -68,7 +75,9 @@ export const useSenderIds = (userId?: string) => {
         is_default: true,
         bulksms_status: 'approved',
         supported_gateways: ['bulksms'],
-        display_name: `${DEFAULT_SENDER_ID} (Padrão)`
+        display_name: `${DEFAULT_SENDER_ID} (Padrão do Sistema)`,
+        is_system_default: true,
+        account_id: null
       }]);
     } finally {
       setLoading(false);
@@ -81,20 +90,38 @@ export const useSenderIds = (userId?: string) => {
     try {
       const normalizedSenderId = resolveSenderId(senderIdInput);
       
-      // Verificar se já existe (case-insensitive)
-      const exists = senderIds.some(s => s.sender_id.toUpperCase() === normalizedSenderId);
+      // Bloquear criação de SMSAO por usuários
+      if (normalizedSenderId.toUpperCase() === 'SMSAO') {
+        throw new Error('SMSAO é reservado como padrão do sistema e não pode ser criado por usuários.');
+      }
+      
+      // Verificar se já existe (case-insensitive) - apenas nos sender IDs do usuário
+      const userSenderIds = senderIds.filter(s => s.account_id !== null);
+      const exists = userSenderIds.some(s => s.sender_id.toUpperCase() === normalizedSenderId.toUpperCase());
       if (exists) {
         throw new Error(`Sender ID "${normalizedSenderId}" já existe para este usuário.`);
+      }
+
+      // Obter account_id do usuário
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', targetUserId)
+        .single();
+
+      if (!profile) {
+        throw new Error('Perfil do usuário não encontrado.');
       }
 
       const { data, error } = await supabase
         .from('sender_ids')
         .insert({
           user_id: targetUserId,
+          account_id: profile.id,
           sender_id: normalizedSenderId,
-          status: normalizedSenderId === DEFAULT_SENDER_ID ? 'approved' : 'pending',
-          is_default: isDefault || normalizedSenderId === DEFAULT_SENDER_ID,
-          bulksms_status: normalizedSenderId === DEFAULT_SENDER_ID ? 'approved' : 'pending',
+          status: 'pending',
+          is_default: isDefault,
+          bulksms_status: 'pending',
           supported_gateways: ['bulksms']
         })
         .select()
@@ -142,9 +169,14 @@ export const useSenderIds = (userId?: string) => {
     try {
       const senderToDelete = senderIds.find(s => s.id === id);
       
-      // Prevenir exclusão do SMSAO
-      if (senderToDelete?.sender_id === DEFAULT_SENDER_ID) {
-        throw new Error(`${DEFAULT_SENDER_ID} é o Sender ID padrão e não pode ser removido.`);
+      // Prevenir exclusão do SMSAO global
+      if (senderToDelete?.is_system_default) {
+        throw new Error('SMSAO é o Sender ID padrão do sistema e não pode ser removido.');
+      }
+
+      // Só permitir deletar sender IDs próprios do usuário
+      if (senderToDelete?.account_id === null) {
+        throw new Error('Não é possível remover Sender IDs globais do sistema.');
       }
 
       const { error } = await supabase
@@ -196,7 +228,12 @@ export const useSenderIds = (userId?: string) => {
   };
 
   const getDefaultSenderId = (): SenderIdData | undefined => {
-    return senderIds.find(s => s.is_default) || senderIds.find(s => s.sender_id === DEFAULT_SENDER_ID);
+    // Preferir sender ID próprio do usuário marcado como default
+    const userDefault = senderIds.find(s => s.is_default && s.account_id !== null);
+    if (userDefault) return userDefault;
+    
+    // Fallback para o SMSAO global
+    return senderIds.find(s => s.is_system_default) || senderIds.find(s => s.sender_id === DEFAULT_SENDER_ID);
   };
 
   const getSenderIdForDropdown = () => {

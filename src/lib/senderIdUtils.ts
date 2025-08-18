@@ -82,41 +82,32 @@ export function filterValidSenderIds(senderIds: any[]): any[] {
 }
 
 /**
- * Garantir que SMSAO sempre está disponível na lista
- * Usado nos dropdowns para mostrar SMSAO mesmo se não estiver salvo
+ * DEPRECATED: Esta função não é mais necessária com SMSAO global
+ * Mantida por compatibilidade, mas sempre retorna a lista original
  */
 export function ensureSMSAOInList(senderIds: any[]): any[] {
-  const filtered = filterValidSenderIds(senderIds);
-  
-  // Verificar se SMSAO já está na lista
-  const hasSMSAO = filtered.some(item => 
-    item.sender_id?.toUpperCase() === DEFAULT_SENDER_ID
-  );
-  
-  if (!hasSMSAO) {
-    // Adicionar SMSAO como primeiro item
-    filtered.unshift({
-      id: 'default-smsao',
-      sender_id: DEFAULT_SENDER_ID,
-      status: 'approved',
-      is_default: true,
-      bulksms_status: 'approved',
-      display_name: `${DEFAULT_SENDER_ID} (Padrão)`
-    });
-  } else {
-    // Marcar SMSAO existente como padrão
-    const smsaoItem = filtered.find(item => 
-      item.sender_id?.toUpperCase() === DEFAULT_SENDER_ID
-    );
-    if (smsaoItem) {
-      smsaoItem.is_default = true;
-      smsaoItem.display_name = smsaoItem.display_name?.includes('(Padrão)') 
-        ? smsaoItem.display_name 
-        : `${smsaoItem.sender_id} (Padrão)`;
-    }
+  console.warn('ensureSMSAOInList está DEPRECATED - SMSAO agora é global no banco');
+  return filterValidSenderIds(senderIds);
+}
+
+/**
+ * Determinar qual sender ID usar para envio
+ */
+export function getEffectiveSenderId(userSenderIds: any[] = [], requestedSender?: string): string {
+  if (requestedSender?.toUpperCase() === DEFAULT_SENDER_ID) {
+    return DEFAULT_SENDER_ID; // Usar SMSAO global
   }
-  
-  return filtered;
+
+  if (requestedSender) {
+    const userSender = userSenderIds.find(s => 
+      s.sender_id?.toUpperCase() === requestedSender.toUpperCase() && 
+      s.status === 'approved' &&
+      s.account_id !== null
+    );
+    if (userSender) return userSender.sender_id;
+  }
+
+  return DEFAULT_SENDER_ID; // Fallback
 }
 
 /**
@@ -132,7 +123,7 @@ export function logSenderIdResolution(original: string | null | undefined, resol
  * Constantes para uso em componentes UI
  */
 export const SENDER_ID_UI = {
-  DEFAULT_LABEL: `${DEFAULT_SENDER_ID} (Padrão)`,
+  DEFAULT_LABEL: `${DEFAULT_SENDER_ID} (Padrão do Sistema)`,
   PLACEHOLDER: 'Selecione o remetente',
   HELPER_TEXT: 'O remetente que aparecerá no SMS enviado',
   MAX_LENGTH: 11,
