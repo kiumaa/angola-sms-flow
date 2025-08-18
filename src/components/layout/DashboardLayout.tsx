@@ -41,10 +41,16 @@ const DashboardLayout = ({
     icon: Layout,
     current: location.pathname === "/dashboard"
   }, {
-    name: "Campanhas",
+    name: "Envio Rápido",
+    href: "/quick-send",
+    icon: Send,
+    current: location.pathname.startsWith("/quick-send")
+  }, {
+    name: "Campanhas (Brevemente)",
     href: "/campaigns",
     icon: Mail,
-    current: location.pathname.startsWith("/campaigns")
+    current: location.pathname.startsWith("/campaigns"),
+    disabled: true
   }, {
     name: "Contatos",
     href: "/contacts",
@@ -118,10 +124,31 @@ const DashboardLayout = ({
         {/* Sidebar */}
         <aside className={`${isSidebarOpen ? "w-64" : "w-16"} bg-card border-r border-border transition-all duration-300 min-h-[calc(100vh-64px)]`}>
           <nav className="p-4 space-y-2">
-            {navigation.map(item => <Link key={item.name} to={item.href} className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${item.current ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-                <item.icon className="h-5 w-5" />
-                {isSidebarOpen && <span className="ml-3 text-sm font-normal">{item.name}</span>}
-              </Link>)}
+            {navigation.map(item => {
+              if (item.disabled) {
+                return (
+                  <div 
+                    key={item.name}
+                    className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
+                    title="Funcionalidade em desenvolvimento"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {isSidebarOpen && <span className="ml-3 text-sm font-normal">{item.name}</span>}
+                  </div>
+                );
+              }
+              
+              return (
+                <Link 
+                  key={item.name} 
+                  to={item.href} 
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${item.current ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {isSidebarOpen && <span className="ml-3 text-sm font-normal">{item.name}</span>}
+                </Link>
+              );
+            })}
           </nav>
         </aside>
 

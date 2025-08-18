@@ -772,6 +772,110 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_send_jobs: {
+        Row: {
+          account_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          credits_estimated: number
+          credits_spent: number
+          id: string
+          message: string
+          segments_avg: number
+          sender_id: string
+          status: string
+          total_recipients: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          credits_estimated?: number
+          credits_spent?: number
+          id?: string
+          message: string
+          segments_avg?: number
+          sender_id?: string
+          status?: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          credits_estimated?: number
+          credits_spent?: number
+          id?: string
+          message?: string
+          segments_avg?: number
+          sender_id?: string
+          status?: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quick_send_targets: {
+        Row: {
+          bulksms_message_id: string | null
+          contact_id: string | null
+          created_at: string
+          delivered_at: string | null
+          error_code: string | null
+          error_detail: string | null
+          id: string
+          job_id: string
+          phone_e164: string
+          rendered_message: string
+          segments: number
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          bulksms_message_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_code?: string | null
+          error_detail?: string | null
+          id?: string
+          job_id: string
+          phone_e164: string
+          rendered_message: string
+          segments?: number
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          bulksms_message_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_code?: string | null
+          error_detail?: string | null
+          id?: string
+          job_id?: string
+          phone_e164?: string
+          rendered_message?: string
+          segments?: number
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_send_targets_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "quick_send_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sender_ids: {
         Row: {
           bulksms_status: string | null
