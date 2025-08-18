@@ -149,6 +149,166 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_stats: {
+        Row: {
+          campaign_id: string
+          credits_spent: number | null
+          delivered: number | null
+          failed: number | null
+          queued: number | null
+          sending: number | null
+          sent: number | null
+          undeliverable: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          campaign_id: string
+          credits_spent?: number | null
+          delivered?: number | null
+          failed?: number | null
+          queued?: number | null
+          sending?: number | null
+          sent?: number | null
+          undeliverable?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          credits_spent?: number | null
+          delivered?: number | null
+          failed?: number | null
+          queued?: number | null
+          sending?: number | null
+          sent?: number | null
+          undeliverable?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_stats_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_targets: {
+        Row: {
+          account_id: string
+          bulksms_message_id: string | null
+          campaign_id: string
+          contact_id: string | null
+          cost_credits: number | null
+          delivered_at: string | null
+          error_code: string | null
+          error_detail: string | null
+          id: string
+          last_attempt_at: string | null
+          phone_e164: string
+          queued_at: string | null
+          rendered_message: string | null
+          segments: number
+          sent_at: string | null
+          status: string
+          tries: number | null
+        }
+        Insert: {
+          account_id: string
+          bulksms_message_id?: string | null
+          campaign_id: string
+          contact_id?: string | null
+          cost_credits?: number | null
+          delivered_at?: string | null
+          error_code?: string | null
+          error_detail?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          phone_e164: string
+          queued_at?: string | null
+          rendered_message?: string | null
+          segments?: number
+          sent_at?: string | null
+          status?: string
+          tries?: number | null
+        }
+        Update: {
+          account_id?: string
+          bulksms_message_id?: string | null
+          campaign_id?: string
+          contact_id?: string | null
+          cost_credits?: number | null
+          delivered_at?: string | null
+          error_code?: string | null
+          error_detail?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          phone_e164?: string
+          queued_at?: string | null
+          rendered_message?: string | null
+          segments?: number
+          sent_at?: string | null
+          status?: string
+          tries?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_targets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          created_by: string
+          est_credits: number | null
+          id: string
+          message_template: string
+          name: string
+          schedule_at: string | null
+          sender_id: string | null
+          status: string
+          timezone: string | null
+          total_targets: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          created_by: string
+          est_credits?: number | null
+          id?: string
+          message_template: string
+          name: string
+          schedule_at?: string | null
+          sender_id?: string | null
+          status?: string
+          timezone?: string | null
+          total_targets?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          created_by?: string
+          est_credits?: number | null
+          id?: string
+          message_template?: string
+          name?: string
+          schedule_at?: string | null
+          sender_id?: string | null
+          status?: string
+          timezone?: string | null
+          total_targets?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       contact_import_jobs: {
         Row: {
           account_id: string
@@ -501,6 +661,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      message_templates: {
+        Row: {
+          account_id: string
+          content: string
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          account_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          account_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       otp_requests: {
         Row: {
@@ -1052,6 +1236,15 @@ export type Database = {
         Args: { list_id: string }
         Returns: number
       }
+      debit_user_credits: {
+        Args: {
+          _account_id: string
+          _amount: number
+          _meta?: Json
+          _reason: string
+        }
+        Returns: boolean
+      }
       decrypt_smtp_password: {
         Args: { encrypted_password: string }
         Returns: string
@@ -1074,6 +1267,10 @@ export type Database = {
       reject_credit_request: {
         Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean
+      }
+      update_campaign_stats: {
+        Args: { _campaign_id: string }
+        Returns: undefined
       }
     }
     Enums: {

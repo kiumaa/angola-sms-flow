@@ -75,7 +75,9 @@ serve(async (req) => {
 
     console.log(`Processing delivery report for message ID: ${messageId}, status: ${statusType} -> ${internalStatus}`)
 
-    // Upsert into sms_logs table
+    const deliveredAt = internalStatus === 'delivered' ? new Date().toISOString() : null
+
+    // Upsert into sms_logs table (original functionality)
     const { data, error } = await supabase
       .from('sms_logs')
       .upsert({
@@ -87,7 +89,7 @@ serve(async (req) => {
         error_code: deliveryReport.error_code,
         completed_at: deliveryReport.completed_at ? new Date(deliveryReport.completed_at).toISOString() : null,
         payload: deliveryReport,
-        delivered_at: internalStatus === 'delivered' ? new Date().toISOString() : null,
+        delivered_at: deliveredAt,
         updated_at: new Date().toISOString(),
         user_id: '00000000-0000-0000-0000-000000000000' // Default system user for webhook updates
       }, {
@@ -105,7 +107,7 @@ serve(async (req) => {
           error_code: deliveryReport.error_code,
           completed_at: deliveryReport.completed_at ? new Date(deliveryReport.completed_at).toISOString() : null,
           payload: deliveryReport,
-          delivered_at: internalStatus === 'delivered' ? new Date().toISOString() : null,
+          delivered_at: deliveredAt,
           updated_at: new Date().toISOString()
         })
         .eq('gateway_message_id', messageId)
@@ -114,6 +116,34 @@ serve(async (req) => {
       if (updateError) {
         console.error('Error updating SMS log:', updateError)
         throw updateError
+      }
+    }
+
+    // Also update campaign targets if this is a campaign SMS (new functionality)
+    const { data: targetData, error: targetError } = await supabase
+      .from('campaign_targets')
+      .update({
+        status: internalStatus,
+        delivered_at: deliveredAt,
+        error_code: internalStatus === 'failed' ? deliveryReport.error_code : null,
+        error_detail: internalStatus === 'failed' ? deliveryReport.status : null
+      })
+      .eq('bulksms_message_id', messageId)
+      .select('campaign_id')
+
+    if (targetError) {
+      console.error('Error updating campaign target:', targetError)
+      // Don't throw - this is not critical for SMS logs
+    } else if (targetData && targetData.length > 0) {
+      const campaign_id = targetData[0].campaign_id
+      console.log(`Updated campaign target for campaign ${campaign_id}`)
+      
+      // Update campaign stats
+      try {
+        await supabase.rpc('update_campaign_stats', { _campaign_id: campaign_id })
+        console.log(`Updated stats for campaign ${campaign_id}`)
+      } catch (statsError) {
+        console.warn('Failed to update campaign stats:', statsError)
       }
     }
 
