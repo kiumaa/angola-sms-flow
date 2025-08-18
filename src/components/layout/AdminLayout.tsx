@@ -51,11 +51,6 @@ const AdminLayout = ({
     icon: CreditCard,
     current: location.pathname.startsWith("/admin/transactions")
   }, {
-    name: "Campanhas",
-    href: "/admin/reports",
-    icon: MessageSquare,
-    current: location.pathname.startsWith("/admin/reports")
-  }, {
     name: "Sender IDs",
     href: "/admin/sender-ids",
     icon: Send,
