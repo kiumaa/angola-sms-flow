@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu } from "lucide-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { ADMIN_NAV_ITEMS, getActiveNavItem } from "@/config/adminNav";
 interface AdminLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 const AdminLayout = ({
   children
-}: AdminLayoutProps) => {
+}: AdminLayoutProps = {}) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
@@ -95,7 +95,7 @@ const AdminLayout = ({
 
         {/* Main Content */}
         <main className="flex-1 p-6 min-w-0">
-          {children}
+          {children || <Outlet />}
         </main>
       </div>
     </div>;

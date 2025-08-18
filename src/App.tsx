@@ -10,6 +10,7 @@ import MessageSendingLoader from "./components/shared/MessageSendingLoader";
 import { ThemeProvider } from "next-themes";
 import { BrandProvider } from "@/providers/BrandProvider";
 import { ConsentProvider } from "./components/shared/ConsentProvider";
+import AdminLayout from "./components/layout/AdminLayout";
 
 // Import lazy components from the centralized file
 import {
@@ -170,103 +171,28 @@ function App() {
                 }
               />
 
-              {/* Protected admin routes */}
+              {/* Protected admin routes with nested layout */}
               <Route
                 path="/admin"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <LazyAdminDashboard />
+                    <AdminLayout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminUsers />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/packages"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminPackages />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/transactions"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminTransactions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/credit-requests"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminCreditRequests />
-                  </ProtectedRoute>
-                }
-              />
-               <Route
-                path="/admin/sender-ids"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminSenderIDs />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/sms-gateway-settings"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminSMSGateways />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/sms-monitoring"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminSMSMonitoring />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/reports"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminReports />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/settings"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminSettings />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/brand"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminBrand />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/sms-configuration"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <LazyAdminSMSConfiguration />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route index element={<LazyAdminDashboard />} />
+                <Route path="users" element={<LazyAdminUsers />} />
+                <Route path="packages" element={<LazyAdminPackages />} />
+                <Route path="transactions" element={<LazyAdminTransactions />} />
+                <Route path="credit-requests" element={<LazyAdminCreditRequests />} />
+                <Route path="sender-ids" element={<LazyAdminSenderIDs />} />
+                <Route path="sms-gateway-settings" element={<LazyAdminSMSGateways />} />
+                <Route path="sms-monitoring" element={<LazyAdminSMSMonitoring />} />
+                <Route path="reports" element={<LazyAdminReports />} />
+                <Route path="settings" element={<LazyAdminSettings />} />
+                <Route path="brand" element={<LazyAdminBrand />} />
+                <Route path="sms-configuration" element={<LazyAdminSMSConfiguration />} />
+              </Route>
 
               {/* Legal Pages */}
               <Route path="/legal/terms" element={<LazyTerms />} />
