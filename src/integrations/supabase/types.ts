@@ -149,6 +149,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_import_jobs: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          error: string | null
+          file_path: string
+          finished_at: string | null
+          id: string
+          original_name: string | null
+          status: string
+          totals: Json | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          error?: string | null
+          file_path: string
+          finished_at?: string | null
+          id?: string
+          original_name?: string | null
+          status?: string
+          totals?: Json | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          error?: string | null
+          file_path?: string
+          finished_at?: string | null
+          id?: string
+          original_name?: string | null
+          status?: string
+          totals?: Json | null
+        }
+        Relationships: []
+      }
       contact_list_members: {
         Row: {
           added_at: string
@@ -187,61 +223,136 @@ export type Database = {
       }
       contact_lists: {
         Row: {
+          account_id: string
           created_at: string
           description: string | null
           id: string
           name: string
+          rule: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_id: string
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          rule?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_id?: string
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          rule?: Json | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
       }
+      contact_tag_pivot: {
+        Row: {
+          contact_id: string
+          created_at: string | null
+          tag_id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string | null
+          tag_id: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string | null
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_tag_pivot_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_tag_pivot_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "contact_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_tags: {
+        Row: {
+          account_id: string
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          account_id: string
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          account_id?: string
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
+          account_id: string
+          attributes: Json | null
           created_at: string
           email: string | null
           id: string
+          is_blocked: boolean | null
           name: string
           notes: string | null
           phone: string
+          phone_e164: string | null
           tags: string[] | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_id: string
+          attributes?: Json | null
           created_at?: string
           email?: string | null
           id?: string
+          is_blocked?: boolean | null
           name: string
           notes?: string | null
           phone: string
+          phone_e164?: string | null
           tags?: string[] | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_id?: string
+          attributes?: Json | null
           created_at?: string
           email?: string | null
           id?: string
+          is_blocked?: boolean | null
           name?: string
           notes?: string | null
           phone?: string
+          phone_e164?: string | null
           tags?: string[] | null
           updated_at?: string
           user_id?: string
@@ -947,6 +1058,10 @@ export type Database = {
       }
       encrypt_smtp_password: {
         Args: { password_text: string }
+        Returns: string
+      }
+      get_current_account_id: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       has_role: {
