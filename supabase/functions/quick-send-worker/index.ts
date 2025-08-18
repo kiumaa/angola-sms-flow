@@ -24,7 +24,8 @@ async function sendViaBulkSMS(phone: string, message: string, senderId: string) 
     encoding: 'AUTO'
   }
 
-  console.log(`Sending SMS via BulkSMS to ${phone}`)
+  console.log(`Sending SMS via BulkSMS to ${phone} from ${senderId}`)
+  console.log('BulkSMS payload:', JSON.stringify(payload))
   const startTime = Date.now()
 
   const response = await fetch('https://api.bulksms.com/v1/messages', {
@@ -37,14 +38,24 @@ async function sendViaBulkSMS(phone: string, message: string, senderId: string) 
   })
 
   const responseTime = Date.now() - startTime
-  const responseData = await response.json()
+  let responseData
 
-  if (!response.ok) {
-    console.error('BulkSMS API error:', responseData)
-    throw new Error(responseData.detail?.message || 'BulkSMS API error')
+  try {
+    responseData = await response.json()
+  } catch (error) {
+    console.error('Failed to parse BulkSMS response as JSON:', error)
+    const responseText = await response.text()
+    console.error('Raw response:', responseText)
+    throw new Error(`BulkSMS API error: ${response.status} - ${responseText}`)
   }
 
-  console.log('BulkSMS response:', responseData)
+  console.log(`BulkSMS API response (${response.status}):`, responseData)
+
+  if (!response.ok) {
+    const errorMessage = responseData?.detail?.message || responseData?.message || `HTTP ${response.status}`
+    console.error('BulkSMS API error:', errorMessage, responseData)
+    throw new Error(`BulkSMS API error: ${errorMessage}`)
+  }
   
   return {
     messageId: responseData.id,
