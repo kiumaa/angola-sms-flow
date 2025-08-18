@@ -81,6 +81,7 @@ export type Database = {
           logo_light_url: string | null
           og_image_url: string | null
           robots_follow: boolean | null
+          robots_index: boolean | null
           seo_canonical: string | null
           seo_description: string | null
           seo_title: string | null
@@ -107,6 +108,7 @@ export type Database = {
           logo_light_url?: string | null
           og_image_url?: string | null
           robots_follow?: boolean | null
+          robots_index?: boolean | null
           seo_canonical?: string | null
           seo_description?: string | null
           seo_title?: string | null
@@ -133,6 +135,7 @@ export type Database = {
           logo_light_url?: string | null
           og_image_url?: string | null
           robots_follow?: boolean | null
+          robots_index?: boolean | null
           seo_canonical?: string | null
           seo_description?: string | null
           seo_title?: string | null
