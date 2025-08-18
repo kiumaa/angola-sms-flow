@@ -9,103 +9,41 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import CSVImport from "@/components/contacts/CSVImport";
+import { useContacts } from "@/hooks/useContacts";
 
 const Contacts = () => {
-  const [contacts, setContacts] = useState([]);
-  const [contactLists, setContactLists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [showImport, setShowImport] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { 
+    contacts, 
+    contactLists, 
+    loading: isLoading, 
+    deleteContact,
+    searchContacts,
+    refetch 
+  } = useContacts();
 
-  const mockContactLists = [
-    {
-      id: "1",
-      name: "Todos os Contatos",
-      description: "Lista principal com todos os contatos",
-      contactCount: 1250,
-      createdAt: "2024-01-10T10:00:00Z"
-    },
-    {
-      id: "2",
-      name: "Clientes Ativos",
-      description: "Clientes que fizeram compras nos últimos 6 meses",
-      contactCount: 850,
-      createdAt: "2024-01-15T14:30:00Z"
-    },
-    {
-      id: "3",
-      name: "Prospects",
-      description: "Leads interessados nos produtos",
-      contactCount: 350,
-      createdAt: "2024-01-20T09:15:00Z"
-    },
-    {
-      id: "4",
-      name: "Clientes VIP",
-      description: "Clientes premium com alto valor",
-      contactCount: 120,
-      createdAt: "2024-01-12T16:45:00Z"
-    }
-  ];
-
-  const mockContacts = [
-    {
-      id: "1",
-      name: "João Silva",
-      phone: "+244 900 123 456",
-      email: "joao@empresa.ao",
-      tags: ["Cliente", "VIP"],
-      lists: ["Clientes Ativos", "Clientes VIP"],
-      createdAt: "2024-01-10T10:00:00Z"
-    },
-    {
-      id: "2",
-      name: "Maria Santos",
-      phone: "+244 900 789 012",
-      email: "maria@negocio.ao",
-      tags: ["Prospect", "Hot Lead"],
-      lists: ["Prospects"],
-      createdAt: "2024-01-15T14:30:00Z"
-    },
-    {
-      id: "3",
-      name: "Carlos Mendes",
-      phone: "+244 900 345 678",
-      email: "carlos@tech.ao",
-      tags: ["Cliente", "Tecnologia"],
-      lists: ["Clientes Ativos"],
-      createdAt: "2024-01-20T09:15:00Z"
-    }
-  ];
-
+  // Handle search with debounce
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setContactLists(mockContactLists);
-      setContacts(mockContacts);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    if (searchTerm.trim()) {
+      const timeoutId = setTimeout(() => {
+        searchContacts(searchTerm);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      refetch();
+    }
+  }, [searchTerm]);
 
-  const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.phone.includes(searchTerm) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleDeleteContact = (contactId: string) => {
-    setContacts(contacts.filter(c => c.id !== contactId));
-    toast({
-      title: "Contato removido",
-      description: "O contato foi removido com sucesso.",
-    });
+  const handleDeleteContact = async (contactId: string) => {
+    await deleteContact(contactId);
   };
 
   const handleImportSuccess = (importedContacts: any[]) => {
-    setContacts([...contacts, ...importedContacts]);
     setShowImport(false);
+    refetch(); // Refresh the contacts list
     toast({
       title: "Importação concluída",
       description: `${importedContacts.length} contatos foram importados com sucesso.`,
@@ -194,11 +132,11 @@ const Contacts = () => {
               <CardHeader>
                 <CardTitle className="gradient-text">Lista de Contatos</CardTitle>
                 <CardDescription>
-                  {filteredContacts.length} contatos encontrados
+                  {contacts.length} contatos encontrados
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {filteredContacts.length === 0 ? (
+                {contacts.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="p-6 rounded-3xl bg-gradient-primary/10 w-fit mx-auto mb-6">
                       <Users className="h-12 w-12 text-primary mx-auto" />
@@ -234,11 +172,11 @@ const Contacts = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredContacts.map((contact) => (
+                        {contacts.map((contact) => (
                           <TableRow key={contact.id} className="hover:bg-muted/10">
                             <TableCell className="font-medium">{contact.name}</TableCell>
                             <TableCell>{contact.phone}</TableCell>
-                            <TableCell>{contact.email}</TableCell>
+                            <TableCell>{contact.email || '-'}</TableCell>
                             <TableCell>
                               <div className="flex gap-1 flex-wrap">
                                 {contact.tags?.map((tag, index) => (
@@ -286,19 +224,19 @@ const Contacts = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total de Contatos:</span>
-                  <span className="font-bold text-primary">1.250</span>
+                  <span className="font-bold text-primary">{contacts.length.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Listas Ativas:</span>
-                  <span className="font-bold">4</span>
+                  <span className="font-bold">{contactLists.length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Adicionados hoje:</span>
-                  <span className="font-bold text-green-500">+12</span>
+                  <span className="text-muted-foreground">Não bloqueados:</span>
+                  <span className="font-bold text-green-500">{contacts.filter(c => !c.is_blocked).length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Taxa de engajamento:</span>
-                  <span className="font-bold text-blue-500">94.5%</span>
+                  <span className="text-muted-foreground">Com email:</span>
+                  <span className="font-bold text-blue-500">{contacts.filter(c => c.email).length}</span>
                 </div>
               </CardContent>
             </Card>
@@ -320,16 +258,16 @@ const Contacts = () => {
                         <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
                           <FileText className="h-4 w-4 text-white" />
                         </div>
-                        <div>
-                          <h4 className="font-medium">{list.name}</h4>
-                          <p className="text-xs text-muted-foreground">
-                            {list.contactCount} contatos
-                          </p>
+                          <div>
+                            <h4 className="font-medium">{list.name}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {list.description}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {list.contactCount}
-                      </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Lista
+                        </Badge>
                     </div>
                   </Card>
                 ))}

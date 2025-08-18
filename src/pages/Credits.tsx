@@ -6,97 +6,63 @@ import { Zap, CreditCard, History, ShoppingCart, CheckCircle, Gift, TrendingUp }
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { usePackages } from "@/hooks/usePackages";
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Transaction {
+  id: string;
+  amount_kwanza: number;
+  credits_purchased: number;
+  status: string;
+  payment_method: string;
+  payment_reference: string;
+  created_at: string;
+}
 
 const Credits = () => {
-  const [currentCredits, setCurrentCredits] = useState(0);
-  const [packages, setPackages] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { packages, loading: packagesLoading } = usePackages();
+  const { credits, loading: creditsLoading, refetch: refetchCredits } = useUserCredits();
+  const { user } = useAuth();
 
-  const mockPackages = [
-    {
-      id: "1",
-      name: "Básico",
-      credits: 100,
-      price: 10000,
-      description: "100 SMS incluídos",
-      features: ["100 SMS incluídos", "Dashboard básico", "Suporte por email", "Validade: 90 dias", "Relatórios básicos"],
-      highlight: false,
-      savings: null
-    },
-    {
-      id: "2",
-      name: "Intermediário",
-      credits: 400,
-      price: 38000,
-      description: "400 SMS incluídos",
-      features: ["400 SMS incluídos", "Suporte prioritário", "Relatórios avançados", "Agendamento de campanhas", "Validade: 120 dias", "API básica"],
-      highlight: true,
-      savings: "5% de desconto"
-    },
-    {
-      id: "3",
-      name: "Avançado",
-      credits: 1000,
-      price: 90000,
-      description: "1.000 SMS incluídos",
-      features: ["1.000 SMS incluídos", "API completa", "Webhooks personalizados", "Suporte por telefone", "Validade: 180 dias", "Relatórios premium"],
-      highlight: false,
-      savings: "10% de desconto"
-    },
-    {
-      id: "4",
-      name: "Empresarial",
-      credits: 5000,
-      price: 400000,
-      description: "5.000 SMS incluídos",
-      features: ["5.000 SMS incluídos", "Gerente de conta dedicado", "SLA garantido", "Integrações customizadas", "Validade: 365 dias", "Analytics avançados"],
-      highlight: false,
-      savings: "20% de desconto"
-    }
-  ];
+  const fetchTransactions = async () => {
+    if (!user) return;
+    
+    try {
+      setTransactionsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-  const mockTransactions = [
-    {
-      id: "1",
-      type: "purchase",
-      description: "Pacote Intermediário - 400 SMS",
-      amount: 38000,
-      credits: 400,
-      status: "completed",
-      date: "2024-01-20T10:00:00Z"
-    },
-    {
-      id: "2",
-      type: "bonus",
-      description: "Bônus de boas-vindas",
-      amount: 0,
-      credits: 50,
-      status: "completed",
-      date: "2024-01-15T09:30:00Z"
-    },
-    {
-      id: "3",
-      type: "usage",
-      description: "Campanha: Promoção Black Friday",
-      amount: 0,
-      credits: -125,
-      status: "completed",
-      date: "2024-01-18T14:20:00Z"
+      if (error) throw error;
+      
+      setTransactions(data || []);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar histórico de transações.",
+        variant: "destructive"
+      });
+    } finally {
+      setTransactionsLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setCurrentCredits(325); // 400 + 50 - 125
-      setPackages(mockPackages);
-      setTransactions(mockTransactions);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    if (user) {
+      fetchTransactions();
+    }
+  }, [user]);
 
   const handlePurchase = (packageId: string) => {
     navigate(`/checkout/${packageId}`);
@@ -117,19 +83,11 @@ const Credits = () => {
     );
   };
 
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
-      case 'purchase':
-        return <ShoppingCart className="h-4 w-4" />;
-      case 'bonus':
-        return <Gift className="h-4 w-4" />;
-      case 'usage':
-        return <TrendingUp className="h-4 w-4" />;
-      default:
-        return <History className="h-4 w-4" />;
-    }
+  const getTransactionIcon = () => {
+    return <ShoppingCart className="h-4 w-4" />;
   };
 
+  const isLoading = packagesLoading || creditsLoading || transactionsLoading;
 
   if (isLoading) {
     return (
@@ -167,7 +125,7 @@ const Credits = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Saldo Atual</p>
-                    <p className="text-3xl font-light gradient-text">{currentCredits.toLocaleString()}</p>
+                    <p className="text-3xl font-light gradient-text">{credits?.toLocaleString() || "0"}</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">SMS disponíveis</p>
@@ -189,16 +147,14 @@ const Credits = () => {
             {packages.map((pkg, index) => (
               <Card 
                 key={pkg.id} 
-                className={`relative transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden animate-slide-up-stagger ${
-                  pkg.highlight 
-                    ? 'card-futuristic border-2 border-primary shadow-glow scale-105' 
-                    : 'card-futuristic border-glass-border'
+                className={`relative transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden animate-slide-up-stagger card-futuristic border-glass-border ${
+                  index === 1 ? 'border-2 border-primary shadow-glow scale-105' : ''
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {pkg.highlight && <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>}
+                {index === 1 && <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>}
                 
-                {pkg.highlight && (
+                {index === 1 && (
                   <div className="flex justify-center mb-4">
                     <Badge className="bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow">
                       ⭐ Mais Popular
@@ -209,33 +165,30 @@ const Credits = () => {
                 <CardHeader className="text-center pb-8 relative">
                   <CardTitle className="gradient-text font-medium text-xl">{pkg.name}</CardTitle>
                   <div className="mt-6">
-                    <span className="text-4xl font-light gradient-text">{(pkg.price / 1000).toFixed(0)}.000</span>
+                    <span className="text-4xl font-light gradient-text">{(pkg.price_kwanza / 1000).toFixed(0)}.000</span>
                     <span className="text-muted-foreground text-lg"> Kz</span>
                   </div>
-                  <CardDescription className="mt-4 text-base">{pkg.description}</CardDescription>
-                  {pkg.savings && (
-                    <Badge className="mt-3 bg-green-500/20 text-green-400">
-                      {pkg.savings}
-                    </Badge>
-                  )}
+                  <CardDescription className="mt-4 text-base">{pkg.description || `${pkg.credits} SMS incluídos`}</CardDescription>
                 </CardHeader>
                 
                 <CardContent className="pt-0 relative">
                   <ul className="space-y-4 mb-8">
-                    {pkg.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start text-sm">
-                        <CheckCircle className="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
+                      <span>{pkg.credits} SMS incluídos</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
+                      <span>Dashboard básico</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
+                      <span>Suporte por email</span>
+                    </li>
                   </ul>
                   <Button 
                     onClick={() => handlePurchase(pkg.id)}
-                    className={`w-full rounded-3xl transition-all duration-300 hover:scale-105 text-base py-6 ${
-                      pkg.highlight 
-                        ? 'button-futuristic' 
-                        : 'glass-card border-glass-border hover:bg-primary hover:text-white'
-                    }`} 
+                    className="w-full rounded-3xl transition-all duration-300 hover:scale-105 text-base py-6 button-futuristic"
                     size="lg"
                   >
                     Escolher Pacote
@@ -277,13 +230,12 @@ const Credits = () => {
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow">
-                        {getTransactionIcon(transaction.type)}
-                        <span className="text-white">{getTransactionIcon(transaction.type)}</span>
+                        <ShoppingCart className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <h4 className="font-medium">{transaction.description}</h4>
+                        <h4 className="font-medium">Pacote de {transaction.credits_purchased} SMS</h4>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(transaction.date).toLocaleDateString('pt-BR', {
+                          {new Date(transaction.created_at).toLocaleDateString('pt-BR', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
@@ -297,18 +249,12 @@ const Credits = () => {
                     <div className="text-right">
                       <div className="flex items-center gap-3">
                         <div>
-                          <p className={`font-medium ${
-                            transaction.credits > 0 ? 'text-green-500' : 
-                            transaction.credits < 0 ? 'text-red-500' : 'text-muted-foreground'
-                          }`}>
-                            {transaction.credits > 0 && '+'}
-                            {transaction.credits} SMS
+                          <p className="font-medium text-green-500">
+                            +{transaction.credits_purchased} SMS
                           </p>
-                          {transaction.amount > 0 && (
-                            <p className="text-sm text-muted-foreground">
-                              {(transaction.amount / 1000).toFixed(0)}.000 Kz
-                            </p>
-                          )}
+                          <p className="text-sm text-muted-foreground">
+                            {(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz
+                          </p>
                         </div>
                         {getStatusBadge(transaction.status)}
                       </div>

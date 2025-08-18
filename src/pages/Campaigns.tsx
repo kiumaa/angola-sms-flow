@@ -6,59 +6,13 @@ import { Plus, Send, Calendar, Users, BarChart3, Clock, Eye, Play, Pause, Trash2
 import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { useCampaigns } from "@/hooks/useCampaigns";
 
 const Campaigns = () => {
-  const [campaigns, setCampaigns] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { campaigns, loading: isLoading, deleteCampaign } = useCampaigns();
 
-  const mockCampaigns = [
-    {
-      id: "1",
-      name: "Promoção Black Friday",
-      message: "🔥 BLACK FRIDAY: 50% OFF em todos os produtos! Use o código BLACK50. Válido até 30/11. Link: bit.ly/promo2024",
-      status: "sent",
-      totalRecipients: 1250,
-      totalSent: 1230,
-      totalFailed: 20,
-      creditsUsed: 1250,
-      createdAt: "2024-01-20T10:00:00Z",
-      scheduledAt: null
-    },
-    {
-      id: "2", 
-      name: "Lembrete de Pagamento",
-      message: "Olá {nome}! Lembrete amigável: sua fatura vence amanhã. Pague facilmente em nosso app ou site.",
-      status: "scheduled",
-      totalRecipients: 850,
-      totalSent: 0,
-      totalFailed: 0,
-      creditsUsed: 0,
-      createdAt: "2024-01-19T15:30:00Z",
-      scheduledAt: "2024-01-22T09:00:00Z"
-    },
-    {
-      id: "3",
-      name: "Pesquisa de Satisfação",
-      message: "Como foi sua experiência conosco? Avalie de 1-5 respondendo este SMS. Sua opinião é muito importante!",
-      status: "draft",
-      totalRecipients: 0,
-      totalSent: 0,
-      totalFailed: 0,
-      creditsUsed: 0,
-      createdAt: "2024-01-18T14:20:00Z",
-      scheduledAt: null
-    }
-  ];
-
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setCampaigns(mockCampaigns);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -76,12 +30,8 @@ const Campaigns = () => {
     );
   };
 
-  const handleDeleteCampaign = (campaignId: string) => {
-    setCampaigns(campaigns.filter(c => c.id !== campaignId));
-    toast({
-      title: "Campanha removida",
-      description: "A campanha foi removida com sucesso.",
-    });
+  const handleDeleteCampaign = async (campaignId: string) => {
+    await deleteCampaign(campaignId);
   };
 
   if (isLoading) {
@@ -184,32 +134,32 @@ const Campaigns = () => {
                           {getStatusBadge(campaign.status)}
                         </div>
                         <CardDescription className="text-base mb-4">
-                          {campaign.message.length > 100 
-                            ? `${campaign.message.substring(0, 100)}...`
-                            : campaign.message
+                          {campaign.message_template.length > 100 
+                            ? `${campaign.message_template.substring(0, 100)}...`
+                            : campaign.message_template
                           }
                         </CardDescription>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div className="flex items-center text-muted-foreground">
                             <Users className="h-4 w-4 mr-2" />
-                            {campaign.totalRecipients} destinatários
+                            {campaign.total_targets || 0} destinatários
                           </div>
-                          {campaign.status === 'sent' && (
+                          {campaign.stats && (
                             <>
                               <div className="flex items-center text-green-600">
                                 <Send className="h-4 w-4 mr-2" />
-                                {campaign.totalSent} enviados
+                                {campaign.stats.sent || 0} enviados
                               </div>
                               <div className="flex items-center text-red-600">
                                 <BarChart3 className="h-4 w-4 mr-2" />
-                                {campaign.totalFailed} falharam
+                                {campaign.stats.failed || 0} falharam
                               </div>
                             </>
                           )}
                           <div className="flex items-center text-purple-600">
                             <Clock className="h-4 w-4 mr-2" />
-                            {campaign.creditsUsed} créditos
+                            {campaign.est_credits || 0} créditos
                           </div>
                         </div>
                       </div>
