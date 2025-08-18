@@ -3,36 +3,53 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface BrandSettings {
-  id: string;
-  primary_color: string;
-  secondary_color: string;
-  background_color: string;
-  text_color: string;
+  id?: string;
+  site_title: string;
+  site_tagline: string;
+  // Light theme colors
+  light_primary: string;
+  light_secondary: string;
+  light_bg: string;
+  light_text: string;
+  // Dark theme colors
+  dark_primary: string;
+  dark_secondary: string;
+  dark_bg: string;
+  dark_text: string;
+  // Typography
   font_family: string;
-  font_weight: string;
-  font_sizes: {
-    h1: string;
-    h2: string;
-    h3: string;
-    body: string;
-    small: string;
-  } | any;
-  line_height: string;
-  letter_spacing: string;
-  logo_url?: string;
+  font_scale: any;
+  // Media
+  logo_light_url?: string;
+  logo_dark_url?: string;
   favicon_url?: string;
-  site_title?: string;
+  og_image_url?: string;
+  // SEO
+  seo_title?: string;
+  seo_description?: string;
+  seo_canonical?: string;
+  seo_twitter: string;
+  // Advanced
+  custom_css?: string;
+  updated_at?: string;
+  // Legacy compatibility
+  primary_color?: string;
+  secondary_color?: string;
+  background_color?: string;
+  text_color?: string;
+  font_sizes?: any;
   site_subtitle?: string;
+  font_weight?: string;
+  line_height?: string;
+  letter_spacing?: string;
+  logo_url?: string;
   meta_title_template?: string;
   meta_description?: string;
-  og_image_url?: string;
   og_title?: string;
   og_description?: string;
   robots_index?: boolean;
   robots_follow?: boolean;
   theme_mode?: string;
-  custom_css?: string;
-  is_active?: boolean;
 }
 
 export const useBrandSettings = () => {
@@ -56,18 +73,34 @@ export const useBrandSettings = () => {
         console.error('Error fetching brand settings:', error);
         setSettings(null);
       } else {
-        // Ensure font_sizes is properly typed
+        // Map new schema to legacy interface for backward compatibility
         const processedData = {
           ...data,
-          font_sizes: typeof data.font_sizes === 'string' 
-            ? JSON.parse(data.font_sizes) 
-            : data.font_sizes || {
-              h1: '1.75rem',
-              h2: '1.25rem',
-              h3: '1rem',
-              body: '1rem',
-              small: '0.875rem'
-            }
+          // Legacy mappings
+          primary_color: data.light_primary || '#1A1A1A',
+          secondary_color: data.light_secondary || '#666666',
+          background_color: data.light_bg || '#F5F6F8',
+          text_color: data.light_text || '#1A1A1A',
+          site_subtitle: data.site_tagline || '',
+          font_sizes: data.font_scale || {
+            h1: '1.75rem',
+            h2: '1.25rem',
+            h3: '1rem',
+            body: '1rem',
+            small: '0.875rem'
+          },
+          // Additional legacy mappings
+          font_weight: '400',
+          line_height: '1.5',
+          letter_spacing: '-0.01em',
+          logo_url: data.logo_light_url || '',
+          meta_title_template: data.seo_title || '{{page}} · {{siteTitle}}',
+          meta_description: data.seo_description || '',
+          og_title: data.seo_title || '',
+          og_description: data.seo_description || '',
+          robots_index: true,
+          robots_follow: true,
+          theme_mode: 'system'
         };
         setSettings(processedData as BrandSettings);
       }
@@ -92,9 +125,25 @@ export const useBrandSettings = () => {
 
       const processedData = {
         ...data,
-        font_sizes: typeof data.font_sizes === 'string' 
-          ? JSON.parse(data.font_sizes) 
-          : data.font_sizes
+        // Legacy mappings
+        primary_color: data.light_primary || '#1A1A1A',
+        secondary_color: data.light_secondary || '#666666',
+        background_color: data.light_bg || '#F5F6F8',
+        text_color: data.light_text || '#1A1A1A',
+        site_subtitle: data.site_tagline || '',
+        font_sizes: data.font_scale || {},
+        // Additional legacy mappings
+        font_weight: '400',
+        line_height: '1.5',
+        letter_spacing: '-0.01em',
+        logo_url: data.logo_light_url || '',
+        meta_title_template: data.seo_title || '{{page}} · {{siteTitle}}',
+        meta_description: data.seo_description || '',
+        og_title: data.seo_title || '',
+        og_description: data.seo_description || '',
+        robots_index: true,
+        robots_follow: true,
+        theme_mode: 'system'
       };
       setSettings(processedData as BrandSettings);
       applyBrandSettings(processedData as BrandSettings);
@@ -148,7 +197,9 @@ export const useBrandSettings = () => {
     const root = document.documentElement;
     
     // Apply color variables
-    const parseAndApplyColor = (colorValue: string, cssVarName: string) => {
+    const parseAndApplyColor = (colorValue: string | undefined, cssVarName: string) => {
+      if (!colorValue) return; // Guard against undefined/null values
+      
       if (colorValue.includes('hsl')) {
         const hslMatch = colorValue.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
         if (hslMatch) {
