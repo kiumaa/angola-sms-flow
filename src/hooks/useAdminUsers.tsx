@@ -1,232 +1,151 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "./useAuth";
+import { useToast } from "./use-toast";
 
-export interface User {
+export interface AdminUser {
   id: string;
   user_id: string;
   email: string;
   full_name: string;
-  company_name?: string;
-  phone?: string;
   credits: number;
-  user_status: 'active' | 'inactive' | 'suspended';
   created_at: string;
-  user_roles: { role: 'admin' | 'client' }[];
+  updated_at: string;
+  user_status: string;
+  phone?: string;
+  company_name?: string;
+  roles: string[];
+  last_login?: string;
+  total_campaigns?: number;
+  total_sent?: number;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalCreditsIssued: number;
+  totalCampaigns: number;
+  totalSMSSent: number;
+  activeUsers: number;
+  pendingCreditRequests: number;
+  recentSignups: number;
+  monthlyGrowth: number;
 }
 
 export const useAdminUsers = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
 
-  const fetchUsers = async (filters?: {
-    search?: string;
-    role?: string;
-    status?: string;
-    company?: string;
-  }) => {
+  const fetchUsers = async () => {
+    if (!user || !isAdmin) return;
+
     try {
       setLoading(true);
-      
-      // First get all profiles
-      let profileQuery = supabase
+
+      // Fetch users with their profiles and roles separately
+      const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Apply profile-based filters
-      if (filters?.search) {
-        profileQuery = profileQuery.or(`full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
-      }
-      
-      if (filters?.status && filters.status !== 'all') {
-        profileQuery = profileQuery.eq('user_status', filters.status);
-      }
-      
-      if (filters?.company) {
-        profileQuery = profileQuery.ilike('company_name', `%${filters.company}%`);
-      }
+      if (usersError) throw usersError;
 
-      const { data: profiles, error: profileError } = await profileQuery;
-      
-      if (profileError) throw profileError;
-
-      if (!profiles || profiles.length === 0) {
-        setUsers([]);
-        setTotalUsers(0);
-        return;
-      }
-
-      // Get user roles for all users
-      const userIds = profiles.map(p => p.user_id);
-      const { data: userRoles, error: roleError } = await supabase
+      // Get roles for each user
+      const { data: rolesData } = await supabase
         .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', userIds);
+        .select('user_id, role');
 
-      if (roleError) throw roleError;
+      // Transform data to include aggregated stats
+      const transformedUsers: AdminUser[] = await Promise.all(
+        (usersData || []).map(async (profile) => {
+          // Get campaign stats for each user
+          const { data: campaignStats } = await supabase
+            .from('campaigns')
+            .select('id, account_id')
+            .eq('account_id', profile.id);
 
-      // Combine data and ensure proper typing
-      const usersWithRoles: User[] = profiles.map(profile => {
-        const roles = userRoles?.filter(r => r.user_id === profile.user_id) || [];
-        return {
-          id: profile.id,
-          user_id: profile.user_id,
-          email: profile.email || '',
-          full_name: profile.full_name || '',
-          company_name: profile.company_name || undefined,
-          phone: profile.phone || undefined,
-          credits: profile.credits || 0,
-          user_status: (profile.user_status || 'active') as 'active' | 'inactive' | 'suspended',
-          created_at: profile.created_at,
-          user_roles: roles.map(r => ({ role: r.role }))
-        };
+          const { data: smsStats } = await supabase
+            .from('campaign_stats')
+            .select('sent')
+            .in('campaign_id', campaignStats?.map(c => c.id) || []);
+
+          const totalSent = smsStats?.reduce((sum, stat) => sum + (stat.sent || 0), 0) || 0;
+          const userRoles = (rolesData || []).filter(r => r.user_id === profile.user_id);
+
+          return {
+            id: profile.id,
+            user_id: profile.user_id,
+            email: profile.email || '',
+            full_name: profile.full_name || '',
+            credits: profile.credits || 0,
+            created_at: profile.created_at,
+            updated_at: profile.updated_at,
+            user_status: profile.user_status || 'active',
+            phone: profile.phone,
+            company_name: profile.company_name,
+            roles: userRoles.map(r => r.role),
+            total_campaigns: campaignStats?.length || 0,
+            total_sent: totalSent
+          };
+        })
+      );
+
+      setUsers(transformedUsers);
+
+      // Calculate admin stats
+      const totalUsers = transformedUsers.length;
+      const totalCreditsIssued = transformedUsers.reduce((sum, u) => sum + u.credits, 0);
+      const totalCampaigns = transformedUsers.reduce((sum, u) => sum + (u.total_campaigns || 0), 0);
+      const totalSMSSent = transformedUsers.reduce((sum, u) => sum + (u.total_sent || 0), 0);
+      const activeUsers = transformedUsers.filter(u => u.user_status === 'active').length;
+
+      // Get pending credit requests
+      const { data: creditRequests } = await supabase
+        .from('credit_requests')
+        .select('id')
+        .eq('status', 'pending');
+
+      const pendingCreditRequests = creditRequests?.length || 0;
+
+      // Calculate recent signups (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentSignups = transformedUsers.filter(
+        u => new Date(u.created_at) >= thirtyDaysAgo
+      ).length;
+
+      setStats({
+        totalUsers,
+        totalCreditsIssued,
+        totalCampaigns,
+        totalSMSSent,
+        activeUsers,
+        pendingCreditRequests,
+        recentSignups,
+        monthlyGrowth: totalUsers > 0 ? Math.round((recentSignups / totalUsers) * 100) : 0
       });
 
-      // Apply role filter
-      let filteredUsers = usersWithRoles;
-      if (filters?.role && filters.role !== 'all') {
-        filteredUsers = usersWithRoles.filter(user => 
-          user.user_roles.some(r => r.role === filters.role)
-        );
-      }
-      
-      setUsers(filteredUsers);
-      setTotalUsers(filteredUsers.length);
-    } catch (error: any) {
-      console.error('Error fetching users:', error);
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
       toast({
-        title: "Erro ao carregar usuários",
-        description: error.message,
-        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao carregar usuários.",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const createUser = async (userData: {
-    email: string;
-    password: string;
-    full_name: string;
-    company_name?: string;
-    phone?: string;
-    role: 'admin' | 'client';
-    initial_credits: number;
-  }) => {
+  const updateUserCredits = async (userId: string, credits: number, reason: string) => {
+    if (!isAdmin) return { error: 'Unauthorized' };
+
     try {
-      // Create auth user first
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: userData.email,
-        password: userData.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: userData.full_name,
-          company_name: userData.company_name,
-          phone: userData.phone,
-        }
-      });
-
-      if (authError) throw authError;
-
-      // Update profile with additional data
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: userData.full_name,
-          company_name: userData.company_name,
-          phone: userData.phone,
-          credits: userData.initial_credits,
-        })
-        .eq('user_id', authData.user.id);
-
-      if (profileError) throw profileError;
-
-      // Set user role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .update({ role: userData.role })
-        .eq('user_id', authData.user.id);
-
-      if (roleError) throw roleError;
-
-      toast({
-        title: "Usuário criado",
-        description: "Usuário criado com sucesso. Email de boas-vindas enviado.",
-      });
-
-      return authData.user;
-    } catch (error: any) {
-      console.error('Error creating user:', error);
-      toast({
-        title: "Erro ao criar usuário",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const updateUser = async (userId: string, updates: {
-    full_name?: string;
-    email?: string;
-    company_name?: string;
-    phone?: string;
-    role?: 'admin' | 'client';
-  }) => {
-    try {
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: updates.full_name,
-          company_name: updates.company_name,
-          phone: updates.phone,
-        })
-        .eq('user_id', userId);
-
-      if (profileError) throw profileError;
-
-      // Update email if changed
-      if (updates.email) {
-        const { error: emailError } = await supabase.auth.admin.updateUserById(userId, {
-          email: updates.email,
-        });
-        if (emailError) throw emailError;
-      }
-
-      // Update role if changed
-      if (updates.role) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .update({ role: updates.role })
-          .eq('user_id', userId);
-        if (roleError) throw roleError;
-      }
-
-      toast({
-        title: "Usuário atualizado",
-        description: "Dados do usuário atualizados com sucesso.",
-      });
-
-      await fetchUsers();
-    } catch (error: any) {
-      console.error('Error updating user:', error);
-      toast({
-        title: "Erro ao atualizar usuário",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const adjustCredits = async (userId: string, delta: number, reason: string, adjustmentType: 'manual' | 'bonus' | 'refund' = 'manual') => {
-    try {
-      // Get current balance
-      const { data: profile, error: fetchError } = await supabase
+      // Get current user data
+      const { data: currentUser, error: fetchError } = await supabase
         .from('profiles')
         .select('credits')
         .eq('user_id', userId)
@@ -234,93 +153,127 @@ export const useAdminUsers = () => {
 
       if (fetchError) throw fetchError;
 
-      const currentBalance = profile.credits || 0;
-      const newBalance = currentBalance + delta;
+      const newBalance = (currentUser.credits || 0) + credits;
 
-      if (newBalance < 0) {
-        throw new Error('Saldo não pode ficar negativo');
-      }
-
-      // Update credits
+      // Update user credits
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ credits: newBalance })
+        .update({ 
+          credits: newBalance,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', userId);
 
       if (updateError) throw updateError;
 
-      // Record adjustment
-      const { error: adjustmentError } = await supabase
+      // Log the adjustment
+      const { error: logError } = await supabase
         .from('credit_adjustments')
         .insert({
           user_id: userId,
-          admin_id: (await supabase.auth.getUser()).data.user?.id,
-          delta,
-          reason,
-          previous_balance: currentBalance,
+          admin_id: user?.id,
+          delta: credits,
+          previous_balance: currentUser.credits || 0,
           new_balance: newBalance,
-          adjustment_type: adjustmentType,
+          reason,
+          adjustment_type: credits > 0 ? 'admin_credit' : 'admin_debit'
         });
 
-      if (adjustmentError) throw adjustmentError;
+      if (logError) throw logError;
+
+      await fetchUsers(); // Refresh data
 
       toast({
-        title: "Créditos ajustados",
-        description: "Créditos ajustados. Usuário notificado por email.",
+        title: "Sucesso",
+        description: `Créditos ${credits > 0 ? 'adicionados' : 'removidos'} com sucesso.`,
       });
 
-      await fetchUsers();
-    } catch (error: any) {
-      console.error('Error adjusting credits:', error);
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating credits:', error);
       toast({
-        title: "Erro ao ajustar créditos",
-        description: error.message,
-        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao ajustar créditos.",
+        variant: "destructive"
       });
-      throw error;
+      return { error: 'Failed to update credits' };
     }
   };
 
-  const deleteUser = async (userId: string) => {
+  const updateUserStatus = async (userId: string, status: string) => {
+    if (!isAdmin) return { error: 'Unauthorized' };
+
     try {
-      // Soft delete by updating status
       const { error } = await supabase
         .from('profiles')
-        .update({ user_status: 'inactive' })
+        .update({ 
+          user_status: status,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', userId);
 
       if (error) throw error;
 
+      await fetchUsers(); // Refresh data
+
       toast({
-        title: "Usuário desativado",
-        description: "Usuário desativado com sucesso.",
+        title: "Sucesso",
+        description: `Status do usuário atualizado para ${status}.`,
       });
 
-      await fetchUsers();
-    } catch (error: any) {
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar status do usuário.",
+        variant: "destructive"
+      });
+      return { error: 'Failed to update status' };
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!isAdmin) return { error: 'Unauthorized' };
+
+    try {
+      // This will cascade delete profile due to foreign key
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) throw error;
+
+      await fetchUsers(); // Refresh data
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário removido com sucesso.",
+      });
+
+      return { success: true };
+    } catch (error) {
       console.error('Error deleting user:', error);
       toast({
-        title: "Erro ao desativar usuário",
-        description: error.message,
-        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao remover usuário.",
+        variant: "destructive"
       });
-      throw error;
+      return { error: 'Failed to delete user' };
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (user && isAdmin) {
+      fetchUsers();
+    }
+  }, [user, isAdmin]);
 
   return {
     users,
+    stats,
     loading,
-    totalUsers,
-    fetchUsers,
-    createUser,
-    updateUser,
-    adjustCredits,
+    updateUserCredits,
+    updateUserStatus,
     deleteUser,
-    refetch: fetchUsers,
+    refetch: fetchUsers
   };
 };

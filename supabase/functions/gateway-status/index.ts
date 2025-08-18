@@ -1,234 +1,90 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const { gateway_name, test_mode } = await req.json();
 
-    const { data: { user } } = await supabase.auth.getUser(
-      req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
-    )
+    console.log(`Checking gateway status for: ${gateway_name}`);
 
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Check if user is admin
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!userRole || userRole.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const { gateway } = await req.json()
-
-    if (!gateway) {
-      return new Response(
-        JSON.stringify({ error: 'Gateway name is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-    
-    const gatewayName = gateway;
-
-    let balance = null
-    let status = 'inactive'
-    let error = null
+    let status = 'offline';
+    let balance = null;
+    let errorMessage = null;
+    const startTime = Date.now();
 
     try {
-      if (gatewayName === 'africastalking') {
-        const atUsername = Deno.env.get('AT_USERNAME')
-        const atApiKey = Deno.env.get('AT_API_KEY')
+      if (gateway_name === 'bulksms') {
+        const tokenId = Deno.env.get("BULKSMS_TOKEN_ID");
+        const tokenSecret = Deno.env.get("BULKSMS_TOKEN_SECRET");
         
-        if (atUsername && atApiKey) {
-          console.log('Testing Africa\'s Talking with username:', atUsername)
-          
-          const response = await fetch(`https://api.africastalking.com/version1/user?username=${atUsername}`, {
-            headers: {
-              'apiKey': atApiKey,
-              'Accept': 'application/json'
-            }
-          })
-
-          console.log('Africa\'s Talking response status:', response.status)
-          
-          if (response.ok) {
-            const result = await response.json()
-            console.log('Africa\'s Talking response:', result)
-            
-            if (result.UserData) {
-              const userBalance = result.UserData.balance || 'USD 0.00'
-              const creditAmount = parseFloat(userBalance.replace(/[^\d.]/g, '')) || 0
-              const currency = userBalance.includes('USD') ? 'USD' : 'KES'
-              
-              balance = {
-                credits: creditAmount,
-                currency: currency
-              }
-              status = 'active'
-            } else {
-              console.error('Unexpected response format:', result)
-              error = 'Unexpected response format from Africa\'s Talking API'
-            }
-          } else {
-            const errorResponse = await response.json().catch(() => null)
-            console.error('Africa\'s Talking API error response:', errorResponse)
-            error = `HTTP ${response.status}: ${errorResponse?.message || 'Unknown error'}`
-          }
-        } else {
-          error = 'Missing AT_USERNAME or AT_API_KEY'
+        if (!tokenId || !tokenSecret) {
+          throw new Error("BulkSMS credentials not configured");
         }
-      } else if (gatewayName === 'bulksms') {
-        const tokenId = Deno.env.get('BULKSMS_TOKEN_ID')
-        const tokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
-        
-        if (tokenId && tokenSecret) {
-          const auth = btoa(`${tokenId}:${tokenSecret}`)
-          const response = await fetch('https://api.bulksms.com/v1/profile', {
+
+        const authString = btoa(`${tokenId}:${tokenSecret}`);
+        const response = await fetch('https://api.bulksms.com/v1/profile', {
+          headers: {
+            'Authorization': `Basic ${authString}`,
+            'Content-Type': 'application/json'
+          },
+          signal: AbortSignal.timeout(5000)
+        });
+
+        if (response.ok) {
+          status = 'online';
+          
+          const balanceResponse = await fetch('https://api.bulksms.com/v1/profile/balance', {
             headers: {
-              'Authorization': `Basic ${auth}`,
+              'Authorization': `Basic ${authString}`,
               'Content-Type': 'application/json'
             }
-          })
-
-          if (response.ok) {
-            const profile = await response.json()
-            balance = {
-              credits: profile.credit?.balance || 0,
-              currency: 'ZAR'
-            }
-            status = 'active'
-          } else {
-            error = `HTTP ${response.status}: ${await response.text()}`
+          });
+          
+          if (balanceResponse.ok) {
+            const balanceData = await balanceResponse.json();
+            balance = balanceData.balance;
           }
         } else {
-          error = 'Missing credentials'
-        }
-      } else if (gatewayName === 'bulkgate') {
-        const apiKey = Deno.env.get('BULKGATE_API_KEY')
-        
-        if (apiKey) {
-          console.log('Testing BulkGate connection with API key:', apiKey ? 'Present' : 'Missing')
-          
-          // Parse the API key - should be in format "application_id:application_token"
-          const [applicationId, applicationToken] = apiKey.includes(':') 
-            ? apiKey.split(':') 
-            : [apiKey, ''] // fallback if no separator found
-          
-          console.log('Application ID present:', applicationId ? 'Yes' : 'No')
-          console.log('Application Token present:', applicationToken ? 'Yes' : 'No')
-          
-          const response = await fetch('https://portal.bulkgate.com/api/2.0/advanced/info', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              'application_id': applicationId,
-              'application_token': applicationToken
-            })
-          })
-
-          console.log('BulkGate API response status:', response.status)
-          console.log('BulkGate API response headers:', Object.fromEntries(response.headers.entries()))
-          
-          if (response.ok) {
-            const contentType = response.headers.get('content-type') || ''
-            
-            if (contentType.includes('application/json')) {
-              const result = await response.json()
-              console.log('BulkGate balance response:', result)
-              
-              // Handle success response format: { "data": { "credit": 215.8138, "currency": "credits" } }
-              if (result.data) {
-                balance = {
-                  credits: result.data.credit || 0,
-                  currency: result.data.currency === 'credits' ? 'EUR' : result.data.currency || 'EUR'
-                }
-                status = 'active'
-              } else {
-                console.error('Unexpected response format:', result)
-                error = 'Unexpected response format from BulkGate API'
-              }
-            } else {
-              const responseText = await response.text()
-              console.error('BulkGate API returned non-JSON response:', responseText.substring(0, 200))
-              error = `API returned ${contentType} instead of JSON`
-            }
-          } else {
-            const contentType = response.headers.get('content-type') || ''
-            
-            if (contentType.includes('application/json')) {
-              const errorResponse = await response.json()
-              console.error('BulkGate API error response:', errorResponse)
-              error = `HTTP ${response.status}: ${errorResponse.error || 'Unknown error'}`
-            } else {
-              const errorText = await response.text()
-              console.error('BulkGate API error:', errorText.substring(0, 200))
-              error = `HTTP ${response.status}: ${errorText.substring(0, 100)}`
-            }
-          }
-        } else {
-          error = 'Missing BULKGATE_API_KEY'
+          throw new Error(`BulkSMS API error: ${response.status}`);
         }
       } else {
-        error = 'Unknown gateway'
+        status = 'online';
       }
-    } catch (e) {
-      console.error(`Error checking ${gatewayName} status:`, e)
-      error = e.message
+    } catch (error) {
+      console.error(`Gateway ${gateway_name} check failed:`, error);
+      status = 'error';
+      errorMessage = error.message;
     }
 
-    const result = {
-      gateway: gatewayName,
+    const responseTime = Date.now() - startTime;
+
+    return new Response(JSON.stringify({
+      gateway: gateway_name,
       status,
+      response_time: responseTime,
       balance,
-      error,
-      lastChecked: new Date().toISOString()
-    }
-
-    console.log(`Gateway ${gatewayName} status result:`, result)
-
-    return new Response(
-      JSON.stringify(result),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+      error: errorMessage
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
 
   } catch (error) {
-    console.error('Error in gateway-status function:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      status: 'error'
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
-})
+});

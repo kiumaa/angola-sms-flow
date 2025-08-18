@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Users, Search, Plus, Edit, Trash2, MoreHorizontal, Eye, CreditCard } from "lucide-react";
-import { useAdminUsers } from "@/hooks/useAdminUsers";
+import { useAdminUsers, AdminUser } from "@/hooks/useAdminUsers";
 import CreateUserModal from "@/components/admin/CreateUserModal";
 import { EditUserModal } from "@/components/admin/EditUserModal";
 import CreditAdjustmentModal from "@/components/admin/CreditAdjustmentModal";
@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 
-import { User } from "@/hooks/useAdminUsers";
+
 
 const AdminUsers = () => {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -33,18 +33,18 @@ const AdminUsers = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   // Selected user states
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const {
     users,
+    stats,
     loading,
-    createUser,
-    updateUser,
+    updateUserCredits,
+    updateUserStatus,
     deleteUser,
-    adjustCredits,
     refetch
   } = useAdminUsers();
 
@@ -56,7 +56,7 @@ const AdminUsers = () => {
       user.company_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
     const roleMatch = roleFilter === 'all' || 
-      (user.user_roles?.length > 0 && user.user_roles[0].role === roleFilter);
+      (user.roles?.length > 0 && user.roles[0] === roleFilter);
 
     const statusMatch = statusFilter === 'all' || user.user_status === statusFilter;
 
@@ -71,22 +71,22 @@ const AdminUsers = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: AdminUser) => {
     setSelectedUser(user);
     setEditModalOpen(true);
   };
 
-  const handleViewDetails = (user: User) => {
+  const handleViewDetails = (user: AdminUser) => {
     setSelectedUser(user);
     setDetailsDrawerOpen(true);
   };
 
-  const handleAdjustCredits = (user: User) => {
+  const handleAdjustCredits = (user: AdminUser) => {
     setSelectedUser(user);
     setCreditModalOpen(true);
   };
 
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = (user: AdminUser) => {
     setUserToDelete(user);
     setDeleteDialogOpen(true);
   };
@@ -231,9 +231,9 @@ const AdminUsers = () => {
                         <div>
                           <div className="font-medium">{user.full_name || "Sem nome"}</div>
                           <div className="text-sm text-muted-foreground">{user.email}</div>
-                          {user.user_roles && user.user_roles.length > 0 && (
-                            <Badge variant={user.user_roles[0].role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                              {user.user_roles[0].role === 'admin' ? 'Admin' : 'Cliente'}
+                          {user.roles && user.roles.length > 0 && (
+                            <Badge variant={user.roles[0] === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                              {user.roles[0] === 'admin' ? 'Admin' : 'Cliente'}
                             </Badge>
                           )}
                         </div>
@@ -309,15 +309,8 @@ const AdminUsers = () => {
           open={createModalOpen}
           onOpenChange={setCreateModalOpen}
           onCreateUser={async (userData) => {
-            await createUser({
-              email: userData.email!,
-              password: userData.password!,
-              full_name: userData.full_name!,
-              company_name: userData.company_name,
-              phone: userData.phone,
-              role: userData.role!,
-              initial_credits: userData.initial_credits || 50
-            });
+            // For now, just show a message - we'll implement createUser later
+            console.log('Create user:', userData);
             await refetch();
           }}
         />
@@ -334,7 +327,7 @@ const AdminUsers = () => {
             full_name: selectedUser.full_name || "",
             company_name: selectedUser.company_name || "",
             phone: selectedUser.phone || "",
-            role: selectedUser.user_roles?.[0]?.role || "client"
+            role: selectedUser.roles?.[0] || "client"
           } : null}
           onUserUpdated={refetch}
         />
@@ -348,7 +341,7 @@ const AdminUsers = () => {
             credits: selectedUser.credits || 0
           } : null}
           onAdjustCredits={async (userId, delta, reason, type) => {
-            await adjustCredits(userId, delta, reason, type);
+            await updateUserCredits(userId, delta, reason);
             await refetch();
           }}
         />
