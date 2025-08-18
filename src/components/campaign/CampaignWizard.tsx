@@ -20,9 +20,10 @@ interface CampaignWizardProps {
   onCancel: () => void;
   contacts: any[];
   contactLists: any[];
+  isSubmitting?: boolean;
 }
 
-export function CampaignWizard({ onSubmit, onCancel, contacts, contactLists }: CampaignWizardProps) {
+export function CampaignWizard({ onSubmit, onCancel, contacts, contactLists, isSubmitting = false }: CampaignWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [campaign, setCampaign] = useState({
     name: "",
@@ -425,9 +426,9 @@ export function CampaignWizard({ onSubmit, onCancel, contacts, contactLists }: C
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} className="bg-primary">
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-primary">
               <Send className="h-4 w-4 mr-2" />
-              Criar Campanha
+              {isSubmitting ? "Criando..." : "Criar Campanha"}
             </Button>
           )}
         </div>

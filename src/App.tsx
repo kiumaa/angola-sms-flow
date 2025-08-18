@@ -27,6 +27,7 @@ const QuickSend = lazy(() => import("./pages/QuickSend"));
 const Contacts = lazy(() => import("./pages/Contacts"));
 const Credits = lazy(() => import("./pages/Credits"));
 const Checkout = lazy(() => import("./pages/Checkout"));
+const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Transactions = lazy(() => import("./pages/Transactions"));
 const SenderIDs = lazy(() => import("./pages/SenderIDs"));
@@ -127,11 +128,19 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
+               <Route
                 path="/checkout/:packageId"
                 element={
                   <ProtectedRoute>
                     <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checkout/success/:transactionId"
+                element={
+                  <ProtectedRoute>
+                    <CheckoutSuccess />
                   </ProtectedRoute>
                 }
               />
