@@ -50,11 +50,30 @@ const CSVImport = ({ onImportComplete }: CSVImportProps) => {
     setLoading(true);
 
     try {
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      // Get user profile for account_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) {
+        throw new Error("Perfil do usuário não encontrado");
+      }
+
       const contacts = csvData.slice(1).map(row => ({
-        user_id: user?.id,
+        user_id: user.id,
+        account_id: profile.id,
         name: row[mapping.name!] || '',
         phone: row[mapping.phone!] || '',
+        phone_e164: row[mapping.phone!] || '', // Will be normalized
         email: mapping.email !== undefined ? row[mapping.email] : null,
+        attributes: {},
+        is_blocked: false
       })).filter(contact => contact.name && contact.phone);
 
       if (contacts.length === 0) {
