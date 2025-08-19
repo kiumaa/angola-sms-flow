@@ -34,5 +34,10 @@ export const useUserCredits = () => {
     }
   };
 
-  return { credits, loading, refetch: fetchCredits };
+  return { 
+    credits, 
+    loading, 
+    refetch: fetchCredits,
+    refresh: fetchCredits // Alias for easier usage
+  };
 };

@@ -84,3 +84,49 @@ export function batchNormalizePhones(phones: string[]): Array<{
     result: normalizePhoneAngola(phone)
   }));
 }
+
+/**
+ * Parses bulk input text (supporting newlines, commas, and semicolons)
+ */
+export function parseBulkPhoneInput(input: string): string[] {
+  return input
+    .split(/[\n,;]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Validates and normalizes phone numbers, returning valid and invalid lists
+ */
+export function validateAndNormalizePhones(phones: string[]): {
+  valid: string[];
+  invalid: { phone: string; error: string }[];
+  duplicates: number;
+} {
+  const validSet = new Set<string>();
+  const invalid: { phone: string; error: string }[] = [];
+  let duplicates = 0;
+
+  for (const phone of phones) {
+    const result = normalizePhoneAngola(phone);
+    
+    if (result.ok && result.e164) {
+      if (validSet.has(result.e164)) {
+        duplicates++;
+      } else {
+        validSet.add(result.e164);
+      }
+    } else {
+      invalid.push({
+        phone: phone,
+        error: result.reason || 'Formato inválido'
+      });
+    }
+  }
+
+  return {
+    valid: Array.from(validSet),
+    invalid,
+    duplicates
+  };
+}

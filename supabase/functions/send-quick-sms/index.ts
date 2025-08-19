@@ -2,6 +2,123 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { corsHeaders } from '../_shared/cors.ts';
 
+// Phone normalization utilities
+const ANGOLA_COUNTRY_CODE = '+244';
+
+interface PhoneNormalizationResult {
+  ok: boolean;
+  e164: string;
+  original: string;
+  error?: string;
+}
+
+function normalizePhoneAngola(phone: string): PhoneNormalizationResult {
+  const original = phone;
+  const cleaned = phone.replace(/[^\d+]/g, '');
+
+  // Already in E.164 format for Angola
+  if (/^\+2449\d{8}$/.test(cleaned)) {
+    return { ok: true, e164: cleaned, original };
+  }
+
+  // Angola mobile number without country code (9XXXXXXXX)
+  if (/^9\d{8}$/.test(cleaned)) {
+    return { ok: true, e164: `${ANGOLA_COUNTRY_CODE}${cleaned}`, original };
+  }
+
+  // Try to extract from longer strings with +244 prefix
+  const match = cleaned.match(/\+?2449(\d{8})/);
+  if (match) {
+    return { ok: true, e164: `+244${match[1]}`, original };
+  }
+
+  return {
+    ok: false,
+    e164: '',
+    original,
+    error: 'Formato inválido. Use 9XXXXXXXX ou +2449XXXXXXXX'
+  };
+}
+
+// SMS segment calculation utilities
+const GSM_7BIT_CHARS = new Set([
+  '@', '£', '$', '¥', 'è', 'é', 'ù', 'ì', 'ò', 'Ç', '\n', 'Ø', 'ø', '\r', 'Å', 'å',
+  'Δ', '_', 'Φ', 'Γ', 'Λ', 'Ω', 'Π', 'Ψ', 'Σ', 'Θ', 'Ξ', '\x1B', 'Æ', 'æ', 'ß', 'É',
+  ' ', '!', '"', '#', '¤', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?',
+  '¡', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+  'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'Ä', 'Ö', 'Ñ', 'Ü', '§',
+  '¿', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+  'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'ä', 'ö', 'ñ', 'ü', 'à'
+]);
+
+const GSM_EXTENDED_CHARS = new Set(['\\', '^', '{', '}', '[', ']', '~', '|', '€']);
+
+function isGSM7Compatible(text: string): boolean {
+  for (const char of text) {
+    if (!GSM_7BIT_CHARS.has(char) && !GSM_EXTENDED_CHARS.has(char)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function countGSMCharacters(text: string): number {
+  let count = 0;
+  for (const char of text) {
+    count += GSM_EXTENDED_CHARS.has(char) ? 2 : 1;
+  }
+  return count;
+}
+
+function calculateSMSSegments(text: string): { encoding: string; segments: number; characters: number } {
+  if (!text || text.length === 0) {
+    return { encoding: 'GSM7', segments: 0, characters: 0 };
+  }
+
+  const isUnicode = !isGSM7Compatible(text);
+  const characters = isUnicode ? text.length : countGSMCharacters(text);
+
+  if (isUnicode) {
+    const singleLimit = 70;
+    const multiLimit = 67;
+    const segments = characters <= singleLimit ? 1 : Math.ceil(characters / multiLimit);
+    return { encoding: 'UCS2', segments, characters };
+  } else {
+    const singleLimit = 160;
+    const multiLimit = 153;
+    const segments = characters <= singleLimit ? 1 : Math.ceil(characters / multiLimit);
+    return { encoding: 'GSM7', segments, characters };
+  }
+}
+
+// Rate limiting (simple in-memory implementation)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(userId: string): { allowed: boolean; error?: string } {
+  const now = Date.now();
+  const windowMs = 5 * 1000; // 5 seconds
+  const maxRequests = 1;
+  
+  const existing = rateLimitMap.get(userId);
+  
+  if (!existing || now >= existing.resetTime) {
+    rateLimitMap.set(userId, { count: 1, resetTime: now + windowMs });
+    return { allowed: true };
+  }
+  
+  if (existing.count >= maxRequests) {
+    return { 
+      allowed: false, 
+      error: `Rate limit exceeded. Try again in ${Math.ceil((existing.resetTime - now) / 1000)} seconds.`
+    };
+  }
+  
+  existing.count++;
+  rateLimitMap.set(userId, existing);
+  return { allowed: true };
+}
+
 interface SendQuickBody {
   sender_id?: string;
   recipients: string[];
@@ -53,7 +170,10 @@ serve(async (req) => {
   }
 
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+    return new Response(JSON.stringify({ 
+      error: 'METHOD_NOT_ALLOWED',
+      message: 'Method not allowed' 
+    }), {
       status: 405,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -66,10 +186,38 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Parse request body early to validate
+    let body: SendQuickBody;
+    try {
+      body = await req.json();
+    } catch (error) {
+      return new Response(JSON.stringify({
+        error: 'INVALID_PAYLOAD',
+        message: 'Invalid JSON payload'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Validate basic payload structure
+    if (!body || typeof body !== 'object') {
+      return new Response(JSON.stringify({
+        error: 'INVALID_PAYLOAD',
+        message: 'Request body must be a valid JSON object'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // Get authenticated user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({
+        error: 'UNAUTHORIZED',
+        message: 'Authorization header required'
+      }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -80,8 +228,23 @@ serve(async (req) => {
     );
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({
+        error: 'UNAUTHORIZED',
+        message: 'Invalid or expired token'
+      }), {
         status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check rate limit
+    const rateLimit = checkRateLimit(user.id);
+    if (!rateLimit.allowed) {
+      return new Response(JSON.stringify({
+        error: 'RATE_LIMIT_EXCEEDED',
+        message: rateLimit.error || 'Too many requests'
+      }), {
+        status: 429,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -94,34 +257,86 @@ serve(async (req) => {
       .single();
 
     if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: 'User profile not found' }), {
+      return new Response(JSON.stringify({
+        error: 'USER_NOT_FOUND',
+        message: 'User profile not found'
+      }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Parse request body
-    const body = (await req.json()) as SendQuickBody;
-    const senderId = body.sender_id || 'SMSAO';
+    // Extract and validate input
+    const senderId = (body.sender_id || 'SMSAO').trim();
     const message = (body.message || '').trim();
-    const recipients = Array.from(new Set(body.recipients || [])).filter(Boolean);
-    const estimatedCredits = body.estimate?.credits || recipients.length;
+    const rawRecipients = Array.isArray(body.recipients) ? body.recipients : [];
 
-    if (!message || recipients.length === 0) {
-      return new Response(JSON.stringify({ error: 'Mensagem e destinatários são obrigatórios' }), {
+    // Validate required fields
+    if (!message) {
+      return new Response(JSON.stringify({
+        error: 'INVALID_PAYLOAD',
+        message: 'Mensagem é obrigatória'
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Check if user has enough credits
-    if (profile.credits < estimatedCredits) {
-      return new Response(JSON.stringify({ 
-        error: 'Créditos insuficientes',
-        required: estimatedCredits,
-        available: profile.credits
+    if (rawRecipients.length === 0) {
+      return new Response(JSON.stringify({
+        error: 'INVALID_PAYLOAD',
+        message: 'Lista de destinatários não pode estar vazia'
       }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Normalize and validate phone numbers
+    const validRecipients = new Set<string>();
+    const invalidNumbers: string[] = [];
+
+    for (const rawPhone of rawRecipients) {
+      if (typeof rawPhone === 'string') {
+        const normalized = normalizePhoneAngola(rawPhone);
+        if (normalized.ok) {
+          validRecipients.add(normalized.e164);
+        } else {
+          invalidNumbers.push(rawPhone);
+        }
+      } else {
+        invalidNumbers.push(String(rawPhone));
+      }
+    }
+
+    const recipients = Array.from(validRecipients);
+
+    if (recipients.length === 0) {
+      return new Response(JSON.stringify({
+        error: 'INVALID_NUMBERS',
+        message: 'Nenhum número válido encontrado',
+        invalid_numbers: invalidNumbers
+      }), {
+        status: 422,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Recalculate segments and credits on backend
+    const segmentInfo = calculateSMSSegments(message);
+    const totalCreditsRequired = segmentInfo.segments * recipients.length;
+
+    // Check if user has enough credits
+    if (profile.credits < totalCreditsRequired) {
+      return new Response(JSON.stringify({
+        error: 'INSUFFICIENT_CREDITS',
+        message: 'Créditos insuficientes',
+        required: totalCreditsRequired,
+        available: profile.credits,
+        recipients: recipients.length,
+        segments: segmentInfo.segments
+      }), {
+        status: 402,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -131,21 +346,46 @@ serve(async (req) => {
     const bulkSmsTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET');
 
     if (!bulkSmsTokenId || !bulkSmsTokenSecret) {
-      return new Response(JSON.stringify({ error: 'BulkSMS credentials not configured' }), {
+      return new Response(JSON.stringify({
+        error: 'INTERNAL_ERROR',
+        message: 'SMS gateway not configured'
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Prepare authentication header
-    const credentials = btoa(`${bulkSmsTokenId}:${bulkSmsTokenSecret}`);
-    const authHeaderValue = `Basic ${credentials}`;
+    console.log(`Processing Quick SMS: ${recipients.length} recipients, ${segmentInfo.segments} segments each, ${totalCreditsRequired} total credits`);
 
-    // Send messages in batches to avoid API limits
+    // Debit credits BEFORE sending (atomic transaction)
+    const { error: debitError } = await supabase.rpc('debit_user_credits', {
+      _account_id: profile.id,
+      _amount: totalCreditsRequired,
+      _reason: `Quick SMS send (${recipients.length} recipients, ${segmentInfo.segments} segments each)`
+    });
+
+    if (debitError) {
+      console.error('Error debiting credits:', debitError);
+      return new Response(JSON.stringify({
+        error: 'INSUFFICIENT_CREDITS',
+        message: 'Failed to reserve credits for sending',
+        details: debitError.message
+      }), {
+        status: 402,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Prepare authentication header for BulkSMS
+    const credentials = btoa(`${bulkSmsTokenId}:${bulkSmsTokenSecret}`);
+    const bulkSmsAuthHeader = `Basic ${credentials}`;
+
+    // Send messages in batches of 100
     const batches = chunk(recipients, 100);
     const results: any[] = [];
     let totalSent = 0;
-    let totalCreditCost = 0;
+    let actualCreditCost = 0;
+    let totalFailed = 0;
 
     for (const batch of batches) {
       // Prepare BulkSMS payload
@@ -160,103 +400,145 @@ serve(async (req) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': authHeaderValue,
+            'Authorization': bulkSmsAuthHeader,
           },
           body: JSON.stringify(messages)
         });
 
-        const responseData = await response.json();
-
         if (!response.ok) {
-          console.error('BulkSMS API error:', responseData);
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error(`BulkSMS API error (${response.status}):`, errorData);
           
           // Log failed batch
           for (const recipient of batch) {
+            totalFailed++;
             await supabase.from('sms_logs').insert({
               user_id: user.id,
               phone_number: recipient,
               message,
               sender_id: senderId,
               status: 'failed',
-              gateway: 'bulksms',
-              error_message: responseData.detail?.message || 'Unknown error',
-              cost_credits: 0
+              gateway_used: 'bulksms',
+              error_message: errorData.detail?.message || `HTTP ${response.status}`,
+              cost_credits: 0,
+              payload: { batch_error: true, http_status: response.status }
             });
           }
 
-          continue; // Continue with next batch
+          // If this is a critical API error, abort
+          if (response.status >= 400 && response.status < 500) {
+            throw new Error(`BulkSMS API error: ${errorData.detail?.message || response.statusText}`);
+          }
+          
+          continue; // Continue with next batch for server errors
         }
+
+        const responseData = await response.json();
+        console.log(`BulkSMS batch response:`, responseData);
 
         // Process successful responses
         if (Array.isArray(responseData)) {
           for (const smsResponse of responseData as BulkSMSResponse[]) {
-            totalSent++;
-            totalCreditCost += smsResponse.creditCost || 1;
+            const isSuccess = smsResponse.status?.type === 'ACCEPTED';
+            if (isSuccess) {
+              totalSent++;
+              actualCreditCost += smsResponse.creditCost || segmentInfo.segments;
+            } else {
+              totalFailed++;
+            }
 
-            // Log successful SMS
+            // Log each SMS attempt
             await supabase.from('sms_logs').insert({
               user_id: user.id,
               phone_number: smsResponse.to,
               message: smsResponse.body,
-              sender_id: smsResponse.from,
-              status: smsResponse.status?.type === 'ACCEPTED' ? 'sent' : 'failed',
-              gateway: 'bulksms',
+              sender_id: smsResponse.from || senderId,
+              status: isSuccess ? 'sent' : 'failed',
+              gateway_used: 'bulksms',
               gateway_message_id: smsResponse.id,
-              cost_credits: smsResponse.creditCost || 1
+              cost_credits: smsResponse.creditCost || segmentInfo.segments,
+              error_message: !isSuccess ? `${smsResponse.status?.type}: ${smsResponse.status?.subtype}` : null,
+              payload: {
+                encoding: smsResponse.encoding,
+                parts: smsResponse.numberOfParts,
+                submission_date: smsResponse.submission?.date
+              }
             });
           }
           results.push(responseData);
         }
 
-      } catch (error) {
-        console.error('Error sending batch:', error);
+      } catch (error: any) {
+        console.error('Error sending batch to BulkSMS:', error);
         
-        // Log failed batch
+        // Log network/system failures
         for (const recipient of batch) {
+          totalFailed++;
           await supabase.from('sms_logs').insert({
             user_id: user.id,
             phone_number: recipient,
             message,
             sender_id: senderId,
             status: 'failed',
-            gateway: 'bulksms',
+            gateway_used: 'bulksms',
             error_message: `Network error: ${error.message}`,
-            cost_credits: 0
+            cost_credits: 0,
+            payload: { network_error: true }
+          });
+        }
+
+        // If no messages were sent at all, return error
+        if (totalSent === 0) {
+          // Refund the debited credits
+          await supabase.rpc('add_user_credits', {
+            user_id: user.id,
+            credit_amount: totalCreditsRequired
+          });
+
+          return new Response(JSON.stringify({
+            error: 'BULKSMS_FAILURE',
+            message: 'Failed to send SMS via gateway',
+            details: error.message
+          }), {
+            status: 502,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
       }
     }
 
-    // Debit credits only for actually sent messages
-    if (totalSent > 0) {
-      const { error: debitError } = await supabase.rpc('debit_user_credits', {
-        _account_id: profile.id,
-        _amount: totalCreditCost,
-        _reason: `Quick SMS send to ${totalSent} recipient(s)`
+    // If we over-debited credits (rare case where actual cost < estimated), refund the difference
+    const creditDifference = totalCreditsRequired - actualCreditCost;
+    if (creditDifference > 0) {
+      console.log(`Refunding ${creditDifference} credits (over-debited)`);
+      await supabase.rpc('add_user_credits', {
+        user_id: user.id,
+        credit_amount: creditDifference
       });
-
-      if (debitError) {
-        console.error('Error debiting credits:', debitError);
-        // Don't fail the request as SMS were already sent
-      }
     }
+
+    console.log(`Quick SMS completed: ${totalSent} sent, ${totalFailed} failed, ${actualCreditCost} credits used`);
 
     return new Response(JSON.stringify({
       success: true,
       sent: totalSent,
+      failed: totalFailed,
       total_recipients: recipients.length,
-      credits_debited: totalCreditCost,
-      batches: results.length
+      credits_debited: actualCreditCost,
+      segments: segmentInfo.segments,
+      encoding: segmentInfo.encoding,
+      invalid_numbers: invalidNumbers.length > 0 ? invalidNumbers : undefined
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in send-quick-sms function:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error.message 
+    return new Response(JSON.stringify({
+      error: 'INTERNAL_ERROR',
+      message: 'Internal server error',
+      details: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

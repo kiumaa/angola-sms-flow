@@ -17,7 +17,7 @@ import { useUserCredits } from "@/hooks/useUserCredits";
 import { useContacts } from "@/hooks/useContacts";
 import { useSenderIds } from "@/hooks/useSenderIds";
 import { supabase } from "@/integrations/supabase/client";
-import { normalizePhoneAngola, batchNormalizePhones } from "@/lib/phoneNormalization";
+import { validateAndNormalizePhones, parseBulkPhoneInput } from "@/lib/phoneNormalization";
 import { calculateSMSSegments } from "@/lib/smsUtils";
 import { resolveSenderId } from "@/lib/senderIdUtils";
 
@@ -40,7 +40,7 @@ const QuickSend = () => {
 
   // Normalize all phone numbers
   const normalizedNumbers = useMemo(() => {
-    const numbers = [];
+    const numbers: string[] = [];
     
     // Add single number if provided
     if (singleNumber.trim()) {
@@ -48,37 +48,24 @@ const QuickSend = () => {
     }
     
     // Add bulk numbers
-    const bulkLines = bulkNumbers
-      .split(/[\n,;]+/)
-      .map(n => n.trim())
-      .filter(Boolean);
-    
+    const bulkLines = parseBulkPhoneInput(bulkNumbers);
     numbers.push(...bulkLines);
     
     // Add selected contacts
     const contactNumbers = selectedContacts
       .map(contactId => contacts.find(c => c.id === contactId)?.phone_e164)
-      .filter(Boolean);
+      .filter(Boolean) as string[];
     
     numbers.push(...contactNumbers);
     
-    // Normalize and deduplicate
-    const results = batchNormalizePhones(numbers);
-    const valid = new Set();
-    const invalid = [];
-    
-    results.forEach(result => {
-      if (result.result.ok) {
-        valid.add(result.result.e164);
-      } else {
-        invalid.push(result.original);
-      }
-    });
+    // Validate and normalize all numbers
+    const validation = validateAndNormalizePhones(numbers);
     
     return {
-      valid: Array.from(valid),
-      invalid,
-      total: numbers.length
+      valid: validation.valid,
+      invalid: validation.invalid.map(item => item.phone),
+      total: numbers.length,
+      duplicates: validation.duplicates
     };
   }, [singleNumber, bulkNumbers, selectedContacts, contacts]);
 
@@ -140,9 +127,12 @@ const QuickSend = () => {
       if (error) throw error;
 
       if (data?.success) {
+        const actualSent = data.sent || 0;
+        const actualCredits = data.credits_debited || 0;
+        
         toast({
           title: "SMS enviado com sucesso!",
-          description: `${normalizedNumbers.valid.length} mensagem(s) enviada(s) • ${totalSms} crédito(s) debitado(s)`
+          description: `${actualSent} de ${normalizedNumbers.valid.length} mensagem(s) enviada(s) • ${actualCredits} crédito(s) debitado(s)`
         });
 
         // Reset form
@@ -150,14 +140,49 @@ const QuickSend = () => {
         setBulkNumbers('');
         setMessage('');
         setSelectedContacts([]);
+        
+        // Refetch credits to show updated balance
+        setTimeout(() => {
+          // Allow a moment for the database to update
+          window.location.reload();
+        }, 1000);
       } else {
-        throw new Error(data?.error || 'Falha no envio');
+        // Handle standardized error responses
+        const errorCode = data?.error || 'UNKNOWN_ERROR';
+        let friendlyMessage = 'Erro desconhecido ao enviar SMS';
+        
+        switch (errorCode) {
+          case 'INSUFFICIENT_CREDITS':
+            friendlyMessage = `Créditos insuficientes. Necessários: ${data?.required || 0}, Disponíveis: ${data?.available || 0}`;
+            break;
+          case 'INVALID_NUMBERS':
+            friendlyMessage = 'Nenhum número válido encontrado';
+            break;
+          case 'RATE_LIMIT_EXCEEDED':
+            friendlyMessage = 'Muitas tentativas. Aguarde alguns segundos e tente novamente';
+            break;
+          case 'BULKSMS_FAILURE':
+            friendlyMessage = 'Falha na operadora SMS. Tente novamente em instantes';
+            break;
+          default:
+            friendlyMessage = data?.message || 'Erro ao processar solicitação';
+        }
+        
+        throw new Error(friendlyMessage);
       }
     } catch (error: any) {
       console.error('SMS send error:', error);
+      
+      let errorMessage = error.message || "Erro interno. Tente novamente mais tarde.";
+      
+      // Handle network errors
+      if (error.name === 'FunctionsError' || error.message?.includes('fetch')) {
+        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+      }
+      
       toast({
         title: "Erro ao enviar SMS",
-        description: error.message || "Tente novamente mais tarde.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
