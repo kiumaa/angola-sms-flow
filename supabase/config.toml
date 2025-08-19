@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.send-sms-bulksms]
 verify_jwt = false
 
+[functions.send-quick-sms]
+verify_jwt = true
+
 [functions.send-otp]
 verify_jwt = false
 
