@@ -20,13 +20,22 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== SMS Send Function Started ===');
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      throw new Error('Missing authorization header')
+      console.error('Missing authorization header');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Missing authorization header'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     // Create client with anon key for user authentication
@@ -38,7 +47,13 @@ serve(async (req) => {
     
     if (userError || !user) {
       console.error('Authentication error:', userError)
-      throw new Error('Invalid authorization')
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid authorization'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     console.log(`Authenticated user: ${user.id}`)
@@ -49,12 +64,32 @@ serve(async (req) => {
     const { phoneNumber, message, senderId = 'SMSAO', campaignId, isTest = false }: SMSRequest = await req.json()
 
     if (!phoneNumber) {
-      throw new Error('No phone number provided')
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No phone number provided'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     if (!message) {
-      throw new Error('No message provided')
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No message provided'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
+
+    console.log('SMS Request Details:', {
+      phoneNumber,
+      message: message.substring(0, 50) + '...',
+      senderId,
+      isTest,
+      userId: user.id
+    });
 
     // Validate Sender ID if not default (allow both SMSAO and SMS.AO as default)
     const defaultSenderIds = ['SMSAO', 'SMS.AO']
@@ -68,10 +103,12 @@ serve(async (req) => {
         .single()
 
       if (senderError || !senderData) {
-        throw new Error(`Sender ID "${senderId}" não está aprovado. Verifique seus Sender IDs em /sender-ids`)
+        console.warn(`Sender ID "${senderId}" not approved, using default SMSAO`);
+        // Use default instead of throwing error
+        senderId = 'SMSAO';
+      } else {
+        console.log(`Using approved Sender ID: ${senderId} for user: ${user.id}`)
       }
-
-      console.log(`Using approved Sender ID: ${senderId} for user: ${user.id}`)
     } else {
       console.log(`Using default Sender ID: ${senderId}`)
     }
@@ -89,8 +126,17 @@ serve(async (req) => {
     })
 
     if (bulkSMSError) {
-      throw bulkSMSError
+      console.error('BulkSMS function error:', bulkSMSError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: bulkSMSError.message || 'Failed to send SMS'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
+
+    console.log('BulkSMS response:', bulkSMSResponse);
 
     return new Response(
       JSON.stringify({
@@ -108,17 +154,17 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('SMS sending error:', error)
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error.message || 'Internal server error',
         gateway: 'bulksms'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 500,
       }
     )
   }

@@ -92,7 +92,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'BulkSMS Token ID não configurado' 
+          error: 'BulkSMS Token ID não configurado',
+          details: 'Configure as credenciais BulkSMS no painel administrativo'
         }),
         { 
           status: 400, 
@@ -107,13 +108,21 @@ serve(async (req) => {
     const authString = `${apiTokenId}:${apiTokenSecret || ''}`;
     console.log('Auth string format:', `${apiTokenId.substring(0, 8)}:${apiTokenSecret ? '***' : '(empty)'}`);
 
-    // Consultar saldo via BulkSMS API v1 usando endpoint profile
+    // Consultar saldo via BulkSMS API v1 usando endpoint profile com timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch('https://api.bulksms.com/v1/profile', {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${btoa(authString)}`
-      }
+        'Authorization': `Basic ${btoa(authString)}`,
+        'Accept': 'application/json',
+        'User-Agent': 'SMS-AO/1.0'
+      },
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     const data = await response.json();
     console.log('BulkSMS profile response:', data);
@@ -124,7 +133,8 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true,
           balance: data.credits.balance || 0,
-          currency: 'USD'
+          currency: 'USD',
+          last_checked: new Date().toISOString()
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -135,7 +145,9 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: data.detail || data.error?.description || 'Failed to fetch balance'
+          error: data.detail || data.error?.description || 'Failed to fetch balance',
+          details: `HTTP ${response.status}: ${response.statusText}`,
+          api_response: data
         }),
         { 
           status: 400, 
@@ -145,10 +157,17 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Error in bulksms-balance function:', error);
+    
+    let errorMessage = error.message;
+    if (error.name === 'AbortError') {
+      errorMessage = 'Timeout connecting to BulkSMS API';
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message 
+        error: errorMessage,
+        details: 'Check BulkSMS API credentials and network connectivity'
       }),
       { 
         status: 500, 

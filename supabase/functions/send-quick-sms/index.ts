@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
-import { corsHeaders } from '../_shared/cors.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 // Phone normalization utilities
 const ANGOLA_COUNTRY_CODE = '+244';
@@ -180,6 +184,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== Quick SMS Function Started ===');
+    
     // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -190,7 +196,9 @@ serve(async (req) => {
     let body: SendQuickBody;
     try {
       body = await req.json();
+      console.log('Request body parsed:', body);
     } catch (error) {
+      console.error('Error parsing JSON:', error);
       return new Response(JSON.stringify({
         error: 'INVALID_PAYLOAD',
         message: 'Invalid JSON payload'
@@ -228,6 +236,7 @@ serve(async (req) => {
     );
 
     if (authError || !user) {
+      console.error('Authentication error:', authError);
       return new Response(JSON.stringify({
         error: 'UNAUTHORIZED',
         message: 'Invalid or expired token'
@@ -236,6 +245,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    console.log('User authenticated:', user.id);
 
     // Check rate limit
     const rateLimit = checkRateLimit(user.id);
@@ -257,6 +268,7 @@ serve(async (req) => {
       .single();
 
     if (profileError || !profile) {
+      console.error('Profile error:', profileError);
       return new Response(JSON.stringify({
         error: 'USER_NOT_FOUND',
         message: 'User profile not found'
@@ -265,6 +277,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    console.log('User profile found:', profile);
 
     // Extract and validate input
     const senderId = (body.sender_id || 'SMSAO').trim();
@@ -322,9 +336,14 @@ serve(async (req) => {
       });
     }
 
+    console.log(`Valid recipients: ${recipients.length}, Invalid: ${invalidNumbers.length}`);
+
     // Recalculate segments and credits on backend
     const segmentInfo = calculateSMSSegments(message);
     const totalCreditsRequired = segmentInfo.segments * recipients.length;
+
+    console.log(`Segment info:`, segmentInfo);
+    console.log(`Total credits required: ${totalCreditsRequired}, Available: ${profile.credits}`);
 
     // Check if user has enough credits
     if (profile.credits < totalCreditsRequired) {
@@ -345,7 +364,8 @@ serve(async (req) => {
     const bulkSmsTokenId = Deno.env.get('BULKSMS_TOKEN_ID');
     const bulkSmsTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET');
 
-    if (!bulkSmsTokenId || !bulkSmsTokenSecret) {
+    if (!bulkSmsTokenId) {
+      console.error('BulkSMS credentials not configured');
       return new Response(JSON.stringify({
         error: 'INTERNAL_ERROR',
         message: 'SMS gateway not configured'
@@ -357,15 +377,52 @@ serve(async (req) => {
 
     console.log(`Processing Quick SMS: ${recipients.length} recipients, ${segmentInfo.segments} segments each, ${totalCreditsRequired} total credits`);
 
+    // Create a quick send job record
+    const { data: job, error: jobError } = await supabase
+      .from('quick_send_jobs')
+      .insert({
+        account_id: profile.id,
+        created_by: user.id,
+        message: message,
+        sender_id: senderId,
+        total_recipients: recipients.length,
+        segments_avg: segmentInfo.segments,
+        credits_estimated: totalCreditsRequired,
+        status: 'processing'
+      })
+      .select()
+      .single();
+
+    if (jobError) {
+      console.error('Error creating job:', jobError);
+      return new Response(JSON.stringify({
+        error: 'INTERNAL_ERROR',
+        message: 'Failed to create send job'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log('Quick send job created:', job.id);
+
     // Debit credits BEFORE sending (atomic transaction)
     const { error: debitError } = await supabase.rpc('debit_user_credits', {
       _account_id: profile.id,
       _amount: totalCreditsRequired,
-      _reason: `Quick SMS send (${recipients.length} recipients, ${segmentInfo.segments} segments each)`
+      _reason: `Quick SMS send (${recipients.length} recipients, ${segmentInfo.segments} segments each)`,
+      _meta: { job_id: job.id }
     });
 
     if (debitError) {
       console.error('Error debiting credits:', debitError);
+      
+      // Mark job as failed
+      await supabase
+        .from('quick_send_jobs')
+        .update({ status: 'failed' })
+        .eq('id', job.id);
+
       return new Response(JSON.stringify({
         error: 'INSUFFICIENT_CREDITS',
         message: 'Failed to reserve credits for sending',
@@ -376,8 +433,10 @@ serve(async (req) => {
       });
     }
 
+    console.log('Credits debited successfully');
+
     // Prepare authentication header for BulkSMS
-    const credentials = btoa(`${bulkSmsTokenId}:${bulkSmsTokenSecret}`);
+    const credentials = btoa(`${bulkSmsTokenId}:${bulkSmsTokenSecret || ''}`);
     const bulkSmsAuthHeader = `Basic ${credentials}`;
 
     // Send messages in batches of 100
@@ -387,7 +446,10 @@ serve(async (req) => {
     let actualCreditCost = 0;
     let totalFailed = 0;
 
-    for (const batch of batches) {
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} recipients`);
+
       // Prepare BulkSMS payload
       const messages: BulkSMSMessage[] = batch.map(recipient => ({
         to: recipient,
@@ -405,6 +467,8 @@ serve(async (req) => {
           body: JSON.stringify(messages)
         });
 
+        console.log(`BulkSMS API response status: ${response.status}`);
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
           console.error(`BulkSMS API error (${response.status}):`, errorData);
@@ -412,16 +476,14 @@ serve(async (req) => {
           // Log failed batch
           for (const recipient of batch) {
             totalFailed++;
-            await supabase.from('sms_logs').insert({
-              user_id: user.id,
-              phone_number: recipient,
-              message,
-              sender_id: senderId,
+            await supabase.from('quick_send_targets').insert({
+              job_id: job.id,
+              phone_e164: recipient,
+              rendered_message: message,
+              segments: segmentInfo.segments,
               status: 'failed',
-              gateway_used: 'bulksms',
-              error_message: errorData.detail?.message || `HTTP ${response.status}`,
-              cost_credits: 0,
-              payload: { batch_error: true, http_status: response.status }
+              error_code: `HTTP_${response.status}`,
+              error_detail: errorData.detail?.message || `HTTP ${response.status}`
             });
           }
 
@@ -448,21 +510,16 @@ serve(async (req) => {
             }
 
             // Log each SMS attempt
-            await supabase.from('sms_logs').insert({
-              user_id: user.id,
-              phone_number: smsResponse.to,
-              message: smsResponse.body,
-              sender_id: smsResponse.from || senderId,
+            await supabase.from('quick_send_targets').insert({
+              job_id: job.id,
+              phone_e164: smsResponse.to,
+              rendered_message: smsResponse.body,
+              segments: smsResponse.numberOfParts || segmentInfo.segments,
               status: isSuccess ? 'sent' : 'failed',
-              gateway_used: 'bulksms',
-              gateway_message_id: smsResponse.id,
-              cost_credits: smsResponse.creditCost || segmentInfo.segments,
-              error_message: !isSuccess ? `${smsResponse.status?.type}: ${smsResponse.status?.subtype}` : null,
-              payload: {
-                encoding: smsResponse.encoding,
-                parts: smsResponse.numberOfParts,
-                submission_date: smsResponse.submission?.date
-              }
+              bulksms_message_id: smsResponse.id,
+              error_code: !isSuccess ? smsResponse.status?.type : null,
+              error_detail: !isSuccess ? `${smsResponse.status?.type}: ${smsResponse.status?.subtype}` : null,
+              sent_at: isSuccess ? new Date().toISOString() : null
             });
           }
           results.push(responseData);
@@ -474,16 +531,14 @@ serve(async (req) => {
         // Log network/system failures
         for (const recipient of batch) {
           totalFailed++;
-          await supabase.from('sms_logs').insert({
-            user_id: user.id,
-            phone_number: recipient,
-            message,
-            sender_id: senderId,
+          await supabase.from('quick_send_targets').insert({
+            job_id: job.id,
+            phone_e164: recipient,
+            rendered_message: message,
+            segments: segmentInfo.segments,
             status: 'failed',
-            gateway_used: 'bulksms',
-            error_message: `Network error: ${error.message}`,
-            cost_credits: 0,
-            payload: { network_error: true }
+            error_code: 'NETWORK_ERROR',
+            error_detail: `Network error: ${error.message}`
           });
         }
 
@@ -494,6 +549,15 @@ serve(async (req) => {
             user_id: user.id,
             credit_amount: totalCreditsRequired
           });
+
+          // Mark job as failed
+          await supabase
+            .from('quick_send_jobs')
+            .update({ 
+              status: 'failed',
+              completed_at: new Date().toISOString()
+            })
+            .eq('id', job.id);
 
           return new Response(JSON.stringify({
             error: 'BULKSMS_FAILURE',
@@ -506,6 +570,16 @@ serve(async (req) => {
         }
       }
     }
+
+    // Update job with final results
+    await supabase
+      .from('quick_send_jobs')
+      .update({
+        status: totalSent > 0 ? 'completed' : 'failed',
+        credits_spent: actualCreditCost,
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', job.id);
 
     // If we over-debited credits (rare case where actual cost < estimated), refund the difference
     const creditDifference = totalCreditsRequired - actualCreditCost;
@@ -527,6 +601,7 @@ serve(async (req) => {
       credits_debited: actualCreditCost,
       segments: segmentInfo.segments,
       encoding: segmentInfo.encoding,
+      job_id: job.id,
       invalid_numbers: invalidNumbers.length > 0 ? invalidNumbers : undefined
     }), {
       status: 200,

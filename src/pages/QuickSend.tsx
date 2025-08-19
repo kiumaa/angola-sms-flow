@@ -112,6 +112,16 @@ const QuickSend = () => {
     setIsLoading(true);
     
     try {
+      console.log('Sending SMS with data:', {
+        sender_id: resolveSenderId(senderId),
+        recipients: normalizedNumbers.valid,
+        message: message.trim(),
+        estimate: {
+          segments: segmentInfo.segments,
+          credits: totalSms
+        }
+      });
+
       const { data, error } = await supabase.functions.invoke('send-quick-sms', {
         body: {
           sender_id: resolveSenderId(senderId),
@@ -123,6 +133,8 @@ const QuickSend = () => {
           }
         }
       });
+
+      console.log('SMS function response:', { data, error });
 
       if (error) throw error;
 
@@ -148,12 +160,12 @@ const QuickSend = () => {
         }, 1000);
       } else {
         // Handle standardized error responses
-        const errorCode = data?.error || 'UNKNOWN_ERROR';
-        let friendlyMessage = 'Erro desconhecido ao enviar SMS';
+        const errorCode = data?.error || error?.message || 'UNKNOWN_ERROR';
+        let friendlyMessage = data?.message || 'Erro desconhecido ao enviar SMS';
         
         switch (errorCode) {
           case 'INSUFFICIENT_CREDITS':
-            friendlyMessage = `Créditos insuficientes. Necessários: ${data?.required || 0}, Disponíveis: ${data?.available || 0}`;
+            friendlyMessage = `Créditos insuficientes. Necessários: ${data?.required || totalSms}, Disponíveis: ${data?.available || credits}`;
             break;
           case 'INVALID_NUMBERS':
             friendlyMessage = 'Nenhum número válido encontrado';
@@ -164,8 +176,14 @@ const QuickSend = () => {
           case 'BULKSMS_FAILURE':
             friendlyMessage = 'Falha na operadora SMS. Tente novamente em instantes';
             break;
+          case 'UNAUTHORIZED':
+            friendlyMessage = 'Erro de autenticação. Faça login novamente';
+            break;
+          case 'INTERNAL_ERROR':
+            friendlyMessage = 'Erro interno do sistema. Tente novamente';
+            break;
           default:
-            friendlyMessage = data?.message || 'Erro ao processar solicitação';
+            friendlyMessage = data?.message || data?.details || 'Erro ao processar solicitação';
         }
         
         throw new Error(friendlyMessage);
@@ -173,11 +191,16 @@ const QuickSend = () => {
     } catch (error: any) {
       console.error('SMS send error:', error);
       
-      let errorMessage = error.message || "Erro interno. Tente novamente mais tarde.";
+      let errorMessage = error.message || error.details || "Erro interno. Tente novamente mais tarde.";
       
       // Handle network errors
-      if (error.name === 'FunctionsError' || error.message?.includes('fetch')) {
+      if (error.name === 'FunctionsError' || error.message?.includes('fetch') || error.message?.includes('non-2xx')) {
         errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+      }
+
+      // Handle specific function errors
+      if (error.message?.includes('Edge Function returned a non-2xx status code')) {
+        errorMessage = "Erro no servidor SMS. Nossa equipe foi notificada. Tente novamente em alguns minutos.";
       }
       
       toast({
