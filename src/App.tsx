@@ -11,6 +11,7 @@ import { ThemeProvider } from "next-themes";
 import { BrandProvider } from "@/providers/BrandProvider";
 import { ConsentProvider } from "./components/shared/ConsentProvider";
 import AdminLayout from "./components/layout/AdminLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Import lazy components from the centralized file
 import {
@@ -51,21 +52,22 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider 
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange={false}
-        >
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <BrandProvider>
-                <ConsentProvider>
-                  <Suspense fallback={<MessageSendingLoader />}>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ThemeProvider 
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange={false}
+          >
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <BrandProvider>
+                  <ConsentProvider>
+                    <Suspense fallback={<MessageSendingLoader />}>
             <Routes>
               {/* Public routes */}
             <Route path="/" element={<LazyLanding />} />
@@ -201,14 +203,15 @@ function App() {
               {/* 404 route */}
               <Route path="*" element={<LazyNotFound />} />
             </Routes>
-                  </Suspense>
-        </ConsentProvider>
-      </BrandProvider>
-            </BrowserRouter>
-    </TooltipProvider>
-  </ThemeProvider>
-</AuthProvider>
-</QueryClientProvider>
+                    </Suspense>
+                  </ConsentProvider>
+                </BrandProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
