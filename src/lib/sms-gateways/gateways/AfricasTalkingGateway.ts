@@ -1,251 +1,26 @@
-import { SMSGateway } from '../interfaces/SMSGateway';
-import { SMSMessage, SMSResult, SMSBulkResult, SMSStatus, GatewayBalance } from '../interfaces/SMSTypes';
+// Stub implementation for Africa's Talking Gateway
+// This gateway has been removed from the project.
+
+import type { SMSMessage, SMSBulkResult, SMSStatus, GatewayBalance } from '../interfaces/SMSTypes';
+import type { SMSGateway } from '../interfaces/SMSGateway';
 
 export class AfricasTalkingGateway implements SMSGateway {
   name = 'africastalking';
-  displayName = "Africa's Talking";
-  
-  private username: string;
-  private apiKey: string;
-  private baseUrl = 'https://api.africastalking.com/version1';
-  private sandboxUrl = 'https://api.sandbox.africastalking.com/version1';
+  displayName = "Africa's Talking (Removed)";
 
-  constructor(username: string, apiKey: string, sandbox: boolean = false) {
-    this.username = username;
-    this.apiKey = apiKey;
-    this.baseUrl = sandbox ? this.sandboxUrl : this.baseUrl;
+  constructor() {
+    throw new Error("Africa's Talking SMS Gateway has been removed from this project.");
   }
 
-  private getHeaders(): Record<string, string> {
-    return {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'apiKey': this.apiKey,
-      'Accept': 'application/json'
-    };
-  }
-
-  private encodeFormData(data: Record<string, any>): string {
-    return Object.keys(data)
-      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
-      .join('&');
-  }
-
-  async sendSingle(message: SMSMessage): Promise<SMSResult> {
-    try {
-      // Garantir que números incluem código do país para Angola (+244)
-      const formattedPhone = this.formatAngolanPhone(message.to);
-
-      const payload = {
-        username: this.username,
-        to: formattedPhone,
-        message: message.text,
-        from: message.from || 'SMSao'
-      };
-
-      const response = await fetch(`${this.baseUrl}/messaging`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: this.encodeFormData(payload)
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.SMSMessageData) {
-        const recipients = result.SMSMessageData.Recipients;
-        
-        if (recipients && recipients.length > 0) {
-          const recipient = recipients[0];
-          
-          if (recipient.status === 'Success') {
-            return {
-              success: true,
-              messageId: recipient.messageId,
-              gateway: this.name,
-              cost: recipient.cost ? parseFloat(recipient.cost.replace(/[^\d.]/g, '')) : 1
-            };
-          } else {
-            return {
-              success: false,
-              error: `SMS failed: ${recipient.status}`,
-              gateway: this.name
-            };
-          }
-        } else {
-          return {
-            success: false,
-            error: 'No recipients found in response',
-            gateway: this.name
-          };
-        }
-      } else {
-        return {
-          success: false,
-          error: result.SMSMessageData?.Message || `HTTP ${response.status}`,
-          gateway: this.name
-        };
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        gateway: this.name
-      };
-    }
+  async sendSingle(message: SMSMessage): Promise<SMSStatus> {
+    throw new Error("Africa's Talking SMS Gateway has been removed from this project.");
   }
 
   async sendBulk(messages: SMSMessage[]): Promise<SMSBulkResult> {
-    const results: SMSResult[] = [];
-    let totalSent = 0;
-    let totalFailed = 0;
-
-    for (const message of messages) {
-      const result = await this.sendSingle(message);
-      results.push(result);
-      
-      if (result.success) {
-        totalSent++;
-      } else {
-        totalFailed++;
-      }
-    }
-
-    return {
-      success: totalSent > 0,
-      totalSent,
-      totalFailed,
-      results,
-      gateway: this.name
-    };
+    throw new Error("Africa's Talking SMS Gateway has been removed from this project.");
   }
 
   async getBalance(): Promise<GatewayBalance> {
-    try {
-      const response = await fetch(`${this.baseUrl}/user?username=${this.username}`, {
-        headers: {
-          'apiKey': this.apiKey,
-          'Accept': 'application/json'
-        }
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.UserData) {
-        const balance = result.UserData.balance || 'USD 0.00';
-        const creditAmount = parseFloat(balance.replace(/[^\d.]/g, '')) || 0;
-        const currency = balance.includes('USD') ? 'USD' : 'KES';
-
-        return {
-          credits: creditAmount,
-          currency,
-          lastUpdated: new Date().toISOString()
-        };
-      } else {
-        throw new Error(`Failed to get balance: ${result.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      throw new Error(`Failed to get balance: ${error.message}`);
-    }
-  }
-
-  async getStatus(messageId: string): Promise<SMSStatus> {
-    try {
-      const response = await fetch(`${this.baseUrl}/messaging?username=${this.username}&messageId=${messageId}`, {
-        headers: {
-          'apiKey': this.apiKey,
-          'Accept': 'application/json'
-        }
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.SMSMessageData) {
-        const recipients = result.SMSMessageData.Recipients;
-        
-        if (recipients && recipients.length > 0) {
-          const recipient = recipients[0];
-          
-          // Mapear status do Africa's Talking para nosso padrão
-          let status: 'pending' | 'sent' | 'delivered' | 'failed' = 'pending';
-          
-          switch (recipient.status) {
-            case 'Success':
-              status = 'sent';
-              break;
-            case 'Sent':
-              status = 'sent';
-              break;
-            case 'Delivered':
-              status = 'delivered';
-              break;
-            case 'Failed':
-              status = 'failed';
-              break;
-            default:
-              status = 'pending';
-          }
-
-          return {
-            messageId,
-            status,
-            deliveredAt: status === 'delivered' ? new Date().toISOString() : undefined,
-            error: status === 'failed' ? recipient.status : undefined
-          };
-        }
-      }
-      
-      throw new Error(`Failed to get status: ${result.message || 'Unknown error'}`);
-    } catch (error) {
-      throw new Error(`Failed to get status: ${error.message}`);
-    }
-  }
-
-  async validateSenderID(senderId: string): Promise<boolean> {
-    // Africa's Talking permite qualquer sender ID alfanumérico
-    const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(senderId);
-    const hasValidLength = senderId.length >= 3 && senderId.length <= 11;
-    
-    return isAlphanumeric && hasValidLength;
-  }
-
-  async isConfigured(): Promise<boolean> {
-    return !!(this.username && this.apiKey);
-  }
-
-  async testConnection(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.baseUrl}/user?username=${this.username}`, {
-        headers: {
-          'apiKey': this.apiKey,
-          'Accept': 'application/json'
-        }
-      });
-      
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }
-
-  private formatAngolanPhone(phone: string): string {
-    // Remove espaços e caracteres especiais
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    
-    // Se já tem +244, retorna como está
-    if (cleanPhone.startsWith('+244')) {
-      return cleanPhone;
-    }
-    
-    // Se tem 244 sem +, adiciona o +
-    if (cleanPhone.startsWith('244')) {
-      return '+' + cleanPhone;
-    }
-    
-    // Se começa com 9 e tem 9 dígitos, é um número angolano
-    if (cleanPhone.startsWith('9') && cleanPhone.length === 9) {
-      return '+244' + cleanPhone;
-    }
-    
-    // Se não tem código do país, assumir Angola
-    return '+244' + cleanPhone.replace(/^0+/, '');
+    return { balance: 0 } as GatewayBalance;
   }
 }
