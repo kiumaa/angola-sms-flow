@@ -1,7 +1,7 @@
 // Stub implementation for Africa's Talking Gateway
 // This gateway has been removed from the project.
 
-import type { SMSMessage, SMSBulkResult, SMSStatus, GatewayBalance } from '../interfaces/SMSTypes';
+import type { SMSMessage, SMSBulkResult, SMSStatus, GatewayBalance, SMSResult } from '../interfaces/SMSTypes';
 import type { SMSGateway } from '../interfaces/SMSGateway';
 
 export class AfricasTalkingGateway implements SMSGateway {
@@ -12,7 +12,7 @@ export class AfricasTalkingGateway implements SMSGateway {
     throw new Error("Africa's Talking SMS Gateway has been removed from this project.");
   }
 
-  async sendSingle(message: SMSMessage): Promise<SMSStatus> {
+  async sendSingle(message: SMSMessage): Promise<SMSResult> {
     throw new Error("Africa's Talking SMS Gateway has been removed from this project.");
   }
 
@@ -21,6 +21,22 @@ export class AfricasTalkingGateway implements SMSGateway {
   }
 
   async getBalance(): Promise<GatewayBalance> {
-    return { balance: 0 } as GatewayBalance;
+    return { credits: 0, lastUpdated: new Date().toISOString() };
+  }
+
+  async getStatus(messageId: string): Promise<SMSStatus> {
+    throw new Error("Africa's Talking SMS Gateway has been removed from this project.");
+  }
+
+  async validateSenderID(senderId: string): Promise<boolean> {
+    throw new Error("Africa's Talking SMS Gateway has been removed from this project.");
+  }
+
+  async isConfigured(): Promise<boolean> {
+    return false;
+  }
+
+  async testConnection(): Promise<boolean> {
+    return false;
   }
 }
