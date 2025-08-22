@@ -193,6 +193,7 @@ export default function ContactForm({
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Nome completo"
                 required
+                aria-label="Nome do contato (obrigatório)"
               />
             </div>
             
@@ -205,9 +206,13 @@ export default function ContactForm({
                 placeholder="923456789"
                 className={phoneError ? 'border-destructive' : ''}
                 required
+                aria-label="Número de telefone (obrigatório)"
+                aria-describedby={phoneError ? "phone-error" : undefined}
               />
               {phoneError && (
-                <p className="text-sm text-destructive mt-1">{phoneError}</p>
+                <p id="phone-error" className="text-sm text-destructive mt-1" role="alert">
+                  {phoneError}
+                </p>
               )}
             </div>
           </div>
@@ -221,6 +226,7 @@ export default function ContactForm({
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="email@exemplo.com"
+                aria-label="Endereço de email"
               />
             </div>
             
@@ -318,10 +324,19 @@ export default function ContactForm({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              aria-label="Cancelar edição do contato"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button 
+              type="submit" 
+              disabled={saving}
+              aria-label={saving ? 'Salvando contato...' : contact ? 'Salvar alterações do contato' : 'Criar novo contato'}
+            >
               {saving ? 'Salvando...' : contact ? 'Salvar' : 'Criar'}
             </Button>
           </DialogFooter>

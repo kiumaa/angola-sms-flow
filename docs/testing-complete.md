@@ -28,19 +28,24 @@ npm run coverage
 
 ### Componentes Testados
 - ✅ **ErrorBoundary**: Captura e exibe erros de renderização
-- ✅ **QuickSend**: Formulário de envio rápido de SMS
-- ✅ **ContactForm**: Formulário de criação/edição de contatos
+- ✅ **QuickSend**: Formulário de envio rápido de SMS  
+- ✅ **ContactForm**: Formulário completo com validação e acessibilidade
+- ✅ **ProtectedRoute**: Autenticação e autorização de rotas
 
 ### Utilitários Testados
 - ✅ **phoneNormalization**: Validação e normalização de números
 - ✅ **smsUtils**: Cálculo de segmentos SMS e charset
+- ✅ **credits**: Gestão de créditos e transações (mock)
 
 ### Cobertura de Testes
-- Validação de formulários
-- Cálculo de segmentos SMS (GSM7/Unicode)
-- Normalização de números de telefone Angola (+244)
-- Captura de erros com ErrorBoundary
-- Interações de usuário com componentes
+- ✅ Validação de formulários (casos de sucesso e erro)
+- ✅ Cálculo de segmentos SMS (GSM7/Unicode)
+- ✅ Normalização de números de telefone Angola (+244)
+- ✅ Captura de erros com ErrorBoundary
+- ✅ Interações de usuário com componentes
+- ✅ Autenticação e rotas protegidas
+- ✅ Gestão de créditos e validações
+- ✅ Acessibilidade (ARIA labels, keyboard navigation)
 
 ## Melhorias Implementadas
 
@@ -98,11 +103,18 @@ src/
 │   └── __tests__/
 │       ├── ErrorBoundary.test.tsx
 │       ├── QuickSend.test.tsx
-│       └── ContactForm.test.tsx
+│       ├── ContactForm.test.tsx
+│       ├── ContactForm.enhanced.test.tsx (novo)
+│       └── ProtectedRoute.test.tsx (novo)
 ├── lib/
 │   └── __tests__/
 │       ├── phoneNormalization.test.ts
-│       └── smsUtils.test.ts
+│       ├── smsUtils.test.ts
+│       └── credits.test.ts (novo)
 └── test/
     └── setup.ts
 ```
+
+### Novos Módulos
+- **smsFallback.ts**: Sistema de fallback para gateways SMS
+- **rateLimiting.ts**: Rate limiting para envios (já implementado)

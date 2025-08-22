@@ -3,6 +3,8 @@ import '@testing-library/jest-dom'
 // Add vitest globals
 import { expect, test, describe, it, vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 
+// Testing library utilities available globally via vitest setup
+
 // Make vitest globals available
 declare global {
   const expect: typeof import('vitest').expect
