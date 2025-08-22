@@ -57,17 +57,18 @@ const SystemHealthDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">System Health</h2>
+        <h2 className="text-2xl font-bold text-foreground">Saúde do Sistema</h2>
         <Button 
           onClick={runAllHealthChecks}
           variant="outline"
           size="sm"
           disabled={loading}
+          className="gap-2"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Atualizar
+          <RefreshCw className="h-4 w-4" />
+          Atualizar Status
         </Button>
       </div>
 
@@ -102,100 +103,111 @@ const SystemHealthDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* System Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-blue-500" />
-              <div>
-                <p className="text-sm font-medium">Total de Usuários</p>
-                <p className="text-2xl font-bold">{metrics.totalUsers.toLocaleString()}</p>
+      {/* System Metrics with improved spacing */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
+                <p className="text-3xl font-bold text-foreground">{metrics.totalUsers.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.activeUsers24h} ativos (24h)
+                  {metrics.activeUsers24h} ativos nas últimas 24h
                 </p>
+              </div>
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Send className="h-5 w-5 text-green-500" />
-              <div>
-                <p className="text-sm font-medium">Campanhas Totais</p>
-                <p className="text-2xl font-bold">{metrics.totalCampaigns.toLocaleString()}</p>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Campanhas Totais</p>
+                <p className="text-3xl font-bold text-foreground">{metrics.totalCampaigns.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.totalMessagesSent.toLocaleString()} mensagens
+                  {metrics.totalMessagesSent.toLocaleString()} mensagens enviadas
                 </p>
+              </div>
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <Send className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-purple-500" />
-              <div>
-                <p className="text-sm font-medium">Taxa de Entrega</p>
-                <p className="text-2xl font-bold">{metrics.averageDeliveryRate.toFixed(1)}%</p>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Taxa de Entrega</p>
+                <p className="text-3xl font-bold text-foreground">{metrics.averageDeliveryRate.toFixed(1)}%</p>
                 <p className="text-xs text-muted-foreground">
-                  Uptime: {metrics.systemUptime}%
+                  Uptime: {metrics.systemUptime}% hoje
                 </p>
+              </div>
+              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-orange-500" />
-              <div>
-                <p className="text-sm font-medium">Tempo de Resposta</p>
-                <p className="text-2xl font-bold">{metrics.responseTime}ms</p>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Tempo de Resposta</p>
+                <p className="text-3xl font-bold text-foreground">{metrics.responseTime}ms</p>
                 <p className="text-xs text-muted-foreground">
-                  Erro: {metrics.errorRate}%
+                  Taxa de erro: {metrics.errorRate}%
                 </p>
+              </div>
+              <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                <Clock className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detailed Health Checks */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Detalhes dos Componentes</CardTitle>
+      {/* Detailed Health Checks with improved spacing */}
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-xl font-semibold text-foreground">Detalhes dos Componentes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {healthChecks.map((check, index) => (
               <div key={check.component}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {getComponentIcon(check.component)}
-                    <div>
-                      <p className="font-medium">{check.component}</p>
+                <div className="flex items-center justify-between p-4 rounded-lg hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-2 bg-muted/30 rounded-lg">
+                      {getComponentIcon(check.component)}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-foreground">{check.component}</p>
                       <p className="text-sm text-muted-foreground">
                         {check.message}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right space-y-2">
                     <Badge 
                       variant={check.status === 'healthy' ? 'default' : 'destructive'}
+                      className="px-3 py-1"
                     >
-                      {getStatusIcon(check.status)} {check.status}
+                      {getStatusIcon(check.status)} {check.status.toUpperCase()}
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {check.responseTime}ms
+                    <p className="text-xs text-muted-foreground">
+                      Resposta: {check.responseTime}ms
                     </p>
                   </div>
                 </div>
-                {index < healthChecks.length - 1 && <Separator className="mt-4" />}
+                {index < healthChecks.length - 1 && <Separator className="mt-6" />}
               </div>
             ))}
           </div>

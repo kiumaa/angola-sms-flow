@@ -11,42 +11,42 @@ const AdminSystemMonitoring = () => {
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold flex items-center space-x-2">
-            <Activity className="h-8 w-8" />
+        <header className="space-y-4">
+          <h1 className="text-4xl font-bold text-foreground flex items-center gap-3">
+            <Activity className="h-10 w-10 text-primary" />
             <span>Monitoramento do Sistema</span>
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Monitore a saúde geral do sistema, campanhas e gateways SMS
+          <p className="text-lg text-muted-foreground max-w-3xl">
+            Visão centralizada da saúde do sistema, performance de campanhas e status dos gateways SMS
           </p>
-        </div>
+        </header>
 
-        {/* Tabs */}
+        {/* Unified Content Layout */}
         <Tabs defaultValue="health" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="health" className="flex items-center space-x-2">
-              <HeartHandshake className="h-4 w-4" />
-              <span>Saúde do Sistema</span>
+          <TabsList className="grid w-full grid-cols-3 h-14 mb-8">
+            <TabsTrigger value="health" className="flex items-center gap-2 py-4">
+              <HeartHandshake className="h-5 w-5" />
+              <span className="font-medium">Saúde do Sistema</span>
             </TabsTrigger>
-            <TabsTrigger value="campaigns" className="flex items-center space-x-2">
-              <BarChart3 className="h-4 w-4" />
-              <span>Campanhas</span>
+            <TabsTrigger value="campaigns" className="flex items-center gap-2 py-4">
+              <BarChart3 className="h-5 w-5" />
+              <span className="font-medium">Campanhas</span>
             </TabsTrigger>
-            <TabsTrigger value="gateways" className="flex items-center space-x-2">
-              <Settings className="h-4 w-4" />
-              <span>Gateways SMS</span>
+            <TabsTrigger value="gateways" className="flex items-center gap-2 py-4">
+              <Settings className="h-5 w-5" />
+              <span className="font-medium">Gateways SMS</span>
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="health" className="mt-6">
+          <TabsContent value="health" className="mt-8 space-y-8">
             <SystemHealthDashboard />
           </TabsContent>
 
-          <TabsContent value="campaigns" className="mt-6">
+          <TabsContent value="campaigns" className="mt-8 space-y-8">
             <CampaignMonitoringDashboard />
           </TabsContent>
           
-          <TabsContent value="gateways" className="mt-6">
+          <TabsContent value="gateways" className="mt-8 space-y-8">
             <SMSGatewayMonitoring />
           </TabsContent>
         </Tabs>

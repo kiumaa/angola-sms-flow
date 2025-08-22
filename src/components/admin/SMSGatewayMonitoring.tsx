@@ -183,145 +183,225 @@ export default function SMSGatewayMonitoring() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Real-time Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+    <div className="space-y-8">
+      {/* Real-time Stats Cards with improved spacing */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Últimas 24h</p>
-                <p className="text-2xl font-bold">{realtimeStats?.messagesLast24h || 0}</p>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Mensagens (24h)</p>
+                <p className="text-3xl font-bold text-foreground">{realtimeStats?.messagesLast24h || 0}</p>
+                <p className="text-xs text-muted-foreground">Últimas 24 horas</p>
               </div>
-              <Activity className="h-8 w-8 text-primary" />
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <Activity className="h-6 w-6 text-primary" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Últimos 7 dias</p>
-                <p className="text-2xl font-bold">{realtimeStats?.messagesLast7d || 0}</p>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Volume Semanal</p>
+                <p className="text-3xl font-bold text-foreground">{realtimeStats?.messagesLast7d || 0}</p>
+                <p className="text-xs text-muted-foreground">Últimos 7 dias</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-green-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Créditos Hoje</p>
-                <p className="text-2xl font-bold">{realtimeStats?.creditsUsedToday || 0}</p>
+                <p className="text-3xl font-bold text-foreground">{realtimeStats?.creditsUsedToday || 0}</p>
+                <p className="text-xs text-muted-foreground">Consumo diário</p>
               </div>
-              <Zap className="h-8 w-8 text-yellow-600" />
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                <Zap className="h-6 w-6 text-yellow-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Gateways Ativos</p>
-                <p className="text-2xl font-bold">{realtimeStats?.activeGateways || 0}</p>
+                <p className="text-3xl font-bold text-foreground">{realtimeStats?.activeGateways || 0}</p>
+                <p className="text-xs text-muted-foreground">Operacionais</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gateway Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance por Gateway</CardTitle>
-            <CardDescription>Taxa de sucesso dos últimos 7 dias</CardDescription>
+      {/* Gateway Performance with improved layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-foreground">Performance por Gateway</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
+              Taxa de sucesso dos últimos 7 dias
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={gatewayStats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="gateway" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="successRate" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
+          <CardContent className="pt-2">
+            {gatewayStats.length > 0 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={gatewayStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis 
+                    dataKey="gateway" 
+                    fontSize={12}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis 
+                    fontSize={12}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar dataKey="successRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-80 text-center space-y-4">
+                <div className="p-4 bg-muted/20 rounded-full">
+                  <BarChart className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-lg font-medium text-muted-foreground">Sem dados de performance</p>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    Nenhuma mensagem foi enviada nos últimos 7 dias. Os gráficos aparecerão assim que houver atividade.
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição de Mensagens</CardTitle>
-            <CardDescription>Por gateway nos últimos 7 dias</CardDescription>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-foreground">Distribuição de Mensagens</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
+              Volume por gateway nos últimos 7 dias
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={gatewayStats}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ gateway, totalSent }) => `${gateway}: ${totalSent}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="totalSent"
-                >
-                  {gatewayStats.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className="pt-2">
+            {gatewayStats.length > 0 && gatewayStats.some(g => g.totalSent > 0) ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <PieChart>
+                  <Pie
+                    data={gatewayStats.filter(g => g.totalSent > 0)}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ gateway, totalSent }) => `${gateway}: ${totalSent}`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="totalSent"
+                  >
+                    {gatewayStats.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-80 text-center space-y-4">
+                <div className="p-4 bg-muted/20 rounded-full">
+                  <Activity className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-lg font-medium text-muted-foreground">Nenhuma mensagem enviada</p>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    Aguardando atividade nos gateways para exibir a distribuição de mensagens.
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Gateway Status Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Status Detalhado dos Gateways</CardTitle>
-          <CardDescription>Estatísticas individuais de cada gateway</CardDescription>
+      {/* Gateway Status Details with improved spacing and empty states */}
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-xl font-semibold text-foreground">Status Detalhado dos Gateways</CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
+            Estatísticas individuais e performance de cada gateway configurado
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {gatewayStats.map((stats) => (
-              <div key={stats.gateway} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-lg">{stats.gateway.toUpperCase()}</h3>
-                  <Badge variant={stats.successRate >= 95 ? 'default' : stats.successRate >= 80 ? 'secondary' : 'destructive'}>
-                    {stats.successRate.toFixed(1)}% sucesso
-                  </Badge>
+          {gatewayStats.length > 0 ? (
+            <div className="space-y-6">
+              {gatewayStats.map((stats) => (
+                <div key={stats.gateway} className="border border-border rounded-lg p-6 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-xl text-foreground">{stats.gateway.toUpperCase()}</h3>
+                    <Badge variant={stats.successRate >= 95 ? 'default' : stats.successRate >= 80 ? 'secondary' : 'destructive'}>
+                      {stats.successRate.toFixed(1)}% sucesso
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground font-medium">Mensagens Enviadas</p>
+                      <p className="text-2xl font-bold text-green-600">{stats.totalSent}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground font-medium">Falhas</p>
+                      <p className="text-2xl font-bold text-red-600">{stats.totalFailed}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground font-medium">Último Uso</p>
+                      <p className="font-semibold text-foreground">{new Date(stats.lastUsed).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-muted-foreground font-medium">Taxa de Sucesso</p>
+                      <Progress value={stats.successRate} className="h-2" />
+                      <p className="text-xs text-muted-foreground">{stats.successRate.toFixed(1)}%</p>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Enviadas</p>
-                    <p className="font-medium text-green-600">{stats.totalSent}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Falharam</p>
-                    <p className="font-medium text-red-600">{stats.totalFailed}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Último Uso</p>
-                    <p className="font-medium">{new Date(stats.lastUsed).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Taxa de Sucesso</p>
-                    <Progress value={stats.successRate} className="mt-1" />
-                  </div>
-                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+              <div className="p-6 bg-muted/20 rounded-full">
+                <CheckCircle className="h-12 w-12 text-muted-foreground" />
               </div>
-            ))}
-          </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-muted-foreground">Nenhum gateway configurado</h3>
+                <p className="text-muted-foreground max-w-md">
+                  Configure pelo menos um gateway SMS para começar a monitorar as estatísticas de envio.
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
