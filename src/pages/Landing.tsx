@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap, Star, CheckCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { Testimonials } from "@/components/ui/testimonials-columns-1";
 import { Link } from "react-router-dom";
 const Landing = () => {
   return <div className="min-h-screen bg-gradient-hero">
@@ -138,59 +139,7 @@ const Landing = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="section-padding relative">
-        <div className="container-futuristic">
-          <div className="text-center mb-24">
-            <h2 className="text-5xl mb-8 tracking-tight md:text-4xl font-normal">
-              ⭐ O que nossos <span className="gradient-text">clientes dizem</span>
-            </h2>
-            <p className="text-muted-foreground leading-relaxed font-light text-xl">
-              Empresas angolanas que confiam na nossa plataforma para crescer seus negócios
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-10">
-            {[{
-            name: "Carlos Mendes",
-            company: "Tech Solutions Luanda",
-            text: "Aumentamos nossa taxa de conversão em 300% após começar a usar a plataforma. O suporte é excepcional!",
-            rating: 5
-          }, {
-            name: "Ana Silva",
-            company: "Comercial Benguela",
-            text: "Interface muito intuitiva e preços justos. Conseguimos alcançar mais clientes com o mesmo orçamento.",
-            rating: 5
-          }, {
-            name: "João Santos",
-            company: "Startup Huambo",
-            text: "A API é fantástica! Integramos em 2 dias e já estamos vendo resultados incríveis nas nossas campanhas.",
-            rating: 5
-          }].map((testimonial, index) => <Card key={index} className="card-futuristic animate-slide-up-stagger" style={{
-            animationDelay: `${index * 0.2}s`
-          }}>
-                <CardHeader>
-                  <div className="flex space-x-1 mb-6">
-                    {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />)}
-                  </div>
-                  <CardDescription className="italic leading-relaxed text-lg font-light">
-                    "{testimonial.text}"
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-4">
-                    <div className="h-16 w-16 bg-gradient-primary rounded-3xl flex items-center justify-center shadow-glow">
-                      <span className="text-white font-bold text-xl">{testimonial.name.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-lg gradient-text">{testimonial.name}</p>
-                      <p className="text-muted-foreground">{testimonial.company}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>)}
-          </div>
-        </div>
-      </section>
+      <Testimonials />
 
       {/* Revolutionary Pricing Section */}
       <section id="pricing" className="section-padding bg-muted/10 relative overflow-hidden">
