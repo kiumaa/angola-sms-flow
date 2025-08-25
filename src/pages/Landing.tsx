@@ -4,7 +4,67 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap, Star, CheckCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Testimonials } from "@/components/ui/testimonials-columns-1";
+import { Pricing } from "@/components/ui/pricing";
 import { Link } from "react-router-dom";
+
+const smsPlans = [
+  {
+    name: "BÁSICO",
+    price: "10000",
+    yearlyPrice: "8000",
+    period: "por pacote",
+    features: [
+      "100 SMS incluídos",
+      "Dashboard básico",
+      "Suporte por email",
+      "Validade: 90 dias",
+      "Relatórios básicos",
+    ],
+    description: "Perfeito para pequenos negócios e testes",
+    buttonText: "Começar Agora",
+    href: "/register",
+    isPopular: false,
+  },
+  {
+    name: "INTERMEDIÁRIO",
+    price: "38000",
+    yearlyPrice: "30000",
+    period: "por pacote",
+    features: [
+      "400 SMS incluídos",
+      "Dashboard avançado",
+      "Suporte prioritário",
+      "Validade: 120 dias",
+      "Relatórios detalhados",
+      "API de integração",
+      "Agenda de contatos",
+    ],
+    description: "Ideal para empresas em crescimento",
+    buttonText: "Mais Popular",
+    href: "/register",
+    isPopular: true,
+  },
+  {
+    name: "PROFISSIONAL",
+    price: "80000",
+    yearlyPrice: "64000",
+    period: "por pacote",
+    features: [
+      "1000 SMS incluídos",
+      "Dashboard completo",
+      "Suporte dedicado",
+      "Validade: 180 dias",
+      "Relatórios avançados",
+      "API completa",
+      "Campanhas programadas",
+      "Múltiplos usuários",
+    ],
+    description: "Para grandes empresas e alta demanda",
+    buttonText: "Contactar Vendas",
+    href: "/register",
+    isPopular: false,
+  },
+];
 const Landing = () => {
   return <div className="min-h-screen bg-gradient-hero">
       {/* Advanced Header with Glassmorphism */}
@@ -142,82 +202,11 @@ const Landing = () => {
       <Testimonials />
 
       {/* Revolutionary Pricing Section */}
-      <section id="pricing" className="section-padding bg-muted/10 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent"></div>
-        <div className="container-futuristic relative">
-          <div className="text-center mb-24">
-            <h2 className="text-5xl mb-8 tracking-tight font-normal md:text-4xl">
-              🔒 Preços <span className="gradient-text">Simples e Transparentes</span>
-            </h2>
-            <p className="text-muted-foreground leading-relaxed text-xl font-light">
-              Sem mensalidade. Pague apenas pelos SMS que usar. Preços em
-              <br />Kwanzas para sua conveniência
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto pt-12">
-            {[{
-            name: "Básico",
-            price: "10.000",
-            sms: "100",
-            description: "100 SMS incluídos",
-            features: ["100 SMS incluídos", "Dashboard básico", "Suporte por email", "Validade: 90 dias", "Relatórios básicos"],
-            highlight: false,
-            gradient: "from-blue-500 to-purple-600"
-          }, {
-            name: "Intermediário",
-            price: "38.000",
-            sms: "400",
-            description: "400 SMS incluídos",
-            features: ["400 SMS incluídos", "Suporte prioritário", "Relatórios avançados", "Agendamento de campanhas", "Validade: 120 dias", "API básica"],
-            highlight: true,
-            gradient: "from-green-500 to-emerald-600"
-          }, {
-            name: "Avançado",
-            price: "90.000",
-            sms: "1.000",
-            description: "1.000 SMS incluídos",
-            features: ["1.000 SMS incluídos", "API completa", "Webhooks personalizados", "Suporte por telefone", "Validade: 180 dias", "Relatórios premium"],
-            highlight: false,
-            gradient: "from-orange-500 to-red-600"
-          }].map((plan, index) => <Card key={index} className={`relative transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden ${plan.highlight ? 'card-futuristic border-2 border-primary shadow-glow scale-105' : 'card-futuristic border-glass-border'}`}>
-                {plan.highlight && <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>}
-                
-                {plan.highlight && <div className="flex justify-center mb-4">
-                    <Badge className="bg-gradient-primary text-white rounded-full px-6 py-2 shadow-glow">
-                      ⭐ Mais Popular
-                    </Badge>
-                  </div>}
-                
-                <CardHeader className="text-center pb-8 relative">
-                  <div className={`p-4 rounded-3xl bg-gradient-to-br ${plan.gradient} shadow-glow w-fit mx-auto mb-6`}>
-                    <MessageSquare className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="gradient-text font-medium text-xl">{plan.name}</CardTitle>
-                  <div className="mt-8">
-                    <span className="text-6xl font-light gradient-text">{plan.price}</span>
-                    <span className="text-muted-foreground text-xl"> Kz</span>
-                  </div>
-                  <CardDescription className="mt-4 text-lg">{plan.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="pt-0 relative">
-                  <ul className="space-y-5 mb-10">
-                    {plan.features.map((feature, featureIndex) => <li key={featureIndex} className="flex items-start text-base">
-                        <CheckCircle className="w-6 h-6 text-primary mr-4 mt-0.5 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>)}
-                  </ul>
-                  <Button asChild className={`w-full rounded-3xl transition-all duration-300 hover:scale-105 text-lg py-6 ${plan.highlight ? 'button-futuristic' : 'glass-card border-glass-border hover:bg-primary hover:text-white'}`} size="lg">
-                    <Link to="/register">
-                      Escolher Plano
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>)}
-          </div>
-        </div>
-      </section>
+      <Pricing 
+        plans={smsPlans}
+        title="Preços Simples e Transparentes"
+        description="Sem mensalidade. Pague apenas pelos SMS que usar. Preços em Kwanzas para sua conveniência."
+      />
 
       {/* Stats Section */}
       <section className="section-padding relative">
