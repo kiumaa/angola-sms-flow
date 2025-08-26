@@ -5,6 +5,7 @@ import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap, Star, 
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Testimonials } from "@/components/ui/testimonials-columns-1";
 import { Pricing } from "@/components/ui/pricing";
+import { HeroSection } from "@/components/ui/hero-section-1";
 import { Link } from "react-router-dom";
 
 const smsPlans = [
@@ -67,69 +68,8 @@ const smsPlans = [
 ];
 const Landing = () => {
   return <div className="min-h-screen bg-gradient-hero">
-      {/* Advanced Header with Glassmorphism */}
-      <header className="fixed top-0 w-full glass backdrop-blur-glass border-b border-glass-border z-50 transition-all duration-300">
-        <div className="container-futuristic">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center space-x-3 animate-slide-in">
-              <div className="p-3 rounded-3xl bg-gradient-primary shadow-glow">
-                <MessageSquare className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-xl font-semibold gradient-text">SMS.AO</span>
-            </div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:gradient-text">
-                Funcionalidades
-              </a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:gradient-text">
-                Preços
-              </a>
-              <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:gradient-text">
-                Contato
-              </a>
-            </nav>
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
-              <Button asChild variant="outline" size="sm" className="rounded-3xl glass-card border-glass-border hover:scale-105 transition-all duration-300">
-                <Link to="/login">Entrar</Link>
-              </Button>
-              <Button asChild size="sm" className="button-futuristic">
-                <Link to="/register">Criar conta grátis</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Revolutionary Hero Section */}
-      <section className="pt-40 pb-32 section-padding relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent animate-float"></div>
-        <div className="container-futuristic relative">
-          <div className="text-center max-w-6xl mx-auto py-[50px]">
-            <h1 className="text-6xl md:text-8xl font-light mb-12 tracking-tighter animate-slide-up">
-              <span className="gradient-text">SMS.AO</span>
-            </h1>
-            <p className="text-2xl md:text-3xl text-muted-foreground mb-16 max-w-4xl mx-auto font-light leading-relaxed animate-fade-in">
-              Conectando empresas aos seus clientes através de SMS
-              <br className="hidden md:block" />
-              marketing eficiente e profissional.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-slide-up mb-12">
-              <Button asChild size="lg" className="text-lg px-12 py-8 rounded-3xl button-futuristic hover:shadow-elevated w-48">
-                <Link to="/register">
-                  Começar Grátis
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="text-lg px-12 py-8 rounded-3xl border border-white/20 bg-transparent text-white hover:bg-white/5 hover:border-white/30 transition-all duration-300 w-48">
-                <a href="#pricing" className="px-0">Ver Preços</a>
-              </Button>
-            </div>
-            <p className="text-muted-foreground text-sm font-light">
-              Comece com 50 SMS grátis • Sem mensalidade • Preços em Kwanzas
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section */}
+      <HeroSection />
 
       {/* Advanced Features Section */}
       <section id="features" className="section-padding bg-muted/10 relative">
