@@ -101,9 +101,7 @@ export function HeroSection() {
               }} className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
                                     <div key={1} className="bg-foreground/10 rounded-[14px] border p-0.5">
                                         <Button asChild size="lg" className="rounded-xl px-5 text-base">
-                                            <Link to="/register">
-                                                <span className="text-nowrap">Começar Agora</span>
-                                            </Link>
+                                            
                                         </Button>
                                     </div>
                                     <Button key={2} asChild size="lg" variant="ghost" className="h-10.5 rounded-xl px-5">
