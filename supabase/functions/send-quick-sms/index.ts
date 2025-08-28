@@ -16,31 +16,65 @@ interface PhoneNormalizationResult {
   error?: string;
 }
 
-function normalizePhoneAngola(phone: string): PhoneNormalizationResult {
+function normalizePhoneInternational(phone: string): PhoneNormalizationResult {
   const original = phone;
-  const cleaned = phone.replace(/[^\d+]/g, '');
+  console.log(`🔄 Normalizing phone: ${phone}`);
+  
+  // Clean input but preserve + for international format
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  console.log(`🧹 Cleaned phone: ${cleaned}`);
 
-  // Already in E.164 format for Angola
-  if (/^\+2449\d{8}$/.test(cleaned)) {
-    return { ok: true, e164: cleaned, original };
+  // If already starts with +, validate international format
+  if (cleaned.startsWith('+')) {
+    if (/^\+[1-9][0-9]{6,14}$/.test(cleaned)) {
+      console.log(`✅ Valid international format: ${cleaned}`);
+      return { ok: true, e164: cleaned, original };
+    } else {
+      console.log(`❌ Invalid international format: ${cleaned}`);
+      return { ok: false, e164: '', original, error: 'Formato internacional inválido' };
+    }
   }
 
-  // Angola mobile number without country code (9XXXXXXXX)
+  // Angola specific patterns (priority for local users)
   if (/^9\d{8}$/.test(cleaned)) {
-    return { ok: true, e164: `${ANGOLA_COUNTRY_CODE}${cleaned}`, original };
+    const result = `${ANGOLA_COUNTRY_CODE}${cleaned}`;
+    console.log(`✅ Normalized as Angola number: ${result}`);
+    return { ok: true, e164: result, original };
   }
 
-  // Try to extract from longer strings with +244 prefix
-  const match = cleaned.match(/\+?2449(\d{8})/);
-  if (match) {
-    return { ok: true, e164: `+244${match[1]}`, original };
+  if (/^2449\d{8}$/.test(cleaned)) {
+    const result = `+${cleaned}`;
+    console.log(`✅ Normalized as Angola number: ${result}`);
+    return { ok: true, e164: result, original };
   }
 
+  // International patterns for testing/admin use
+  const internationalPatterns = [
+    // Portugal: +351XXXXXXXXX
+    { regex: /^351([0-9]{9})$/, format: (match: RegExpMatchArray) => `+351${match[1]}` },
+    // Brazil: +55XXXXXXXXXXX 
+    { regex: /^55([0-9]{10,11})$/, format: (match: RegExpMatchArray) => `+55${match[1]}` },
+    // Mozambique: +258XXXXXXXXX
+    { regex: /^258([0-9]{9})$/, format: (match: RegExpMatchArray) => `+258${match[1]}` },
+    // Cape Verde: +238XXXXXXX
+    { regex: /^238([0-9]{7})$/, format: (match: RegExpMatchArray) => `+238${match[1]}` },
+  ];
+
+  for (const pattern of internationalPatterns) {
+    const match = cleaned.match(pattern.regex);
+    if (match) {
+      const result = pattern.format(match);
+      console.log(`✅ Normalized as international number: ${result}`);
+      return { ok: true, e164: result, original };
+    }
+  }
+
+  console.log(`❌ Failed to normalize phone: ${phone}`);
   return {
     ok: false,
     e164: '',
     original,
-    error: 'Formato inválido. Use 9XXXXXXXX ou +2449XXXXXXXX'
+    error: 'Formato inválido. Suporta Angola (+244), Portugal (+351), Brasil (+55), Moçambique (+258), Cabo Verde (+238)'
   };
 }
 
@@ -325,11 +359,13 @@ serve(async (req) => {
 
     for (const rawPhone of rawRecipients) {
       if (typeof rawPhone === 'string') {
-        const normalized = normalizePhoneAngola(rawPhone);
+        const normalized = normalizePhoneInternational(rawPhone);
         if (normalized.ok) {
           validRecipients.add(normalized.e164);
+          console.log(`✅ ${rawPhone} → ${normalized.e164}`);
         } else {
           invalidNumbers.push(rawPhone);
+          console.log(`❌ ${rawPhone} → ${normalized.error}`);
         }
       } else {
         invalidNumbers.push(String(rawPhone));
@@ -377,11 +413,15 @@ serve(async (req) => {
     const bulkSmsTokenId = Deno.env.get('BULKSMS_TOKEN_ID');
     const bulkSmsTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET');
 
-    if (!bulkSmsTokenId) {
-      console.error('BulkSMS credentials not configured');
+    console.log(`🔑 BulkSMS Token ID: ${bulkSmsTokenId ? '✅ Configured' : '❌ Missing'}`);
+    console.log(`🔑 BulkSMS Token Secret: ${bulkSmsTokenSecret ? '✅ Configured' : '❌ Missing'}`);
+
+    if (!bulkSmsTokenId || !bulkSmsTokenSecret) {
+      console.error('❌ BulkSMS credentials not configured in Supabase Vault');
       return new Response(JSON.stringify({
         error: 'INTERNAL_ERROR',
-        message: 'SMS gateway not configured'
+        message: 'SMS gateway not configured',
+        details: 'Please configure BULKSMS_TOKEN_ID and BULKSMS_TOKEN_SECRET in Supabase Vault'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -471,6 +511,9 @@ serve(async (req) => {
       }));
 
       try {
+        console.log(`📤 Sending batch to BulkSMS: ${batch.length} messages`);
+        const startTime = Date.now();
+        
         const response = await fetch(BULKSMS_API_URL, {
           method: 'POST',
           headers: {
@@ -480,11 +523,12 @@ serve(async (req) => {
           body: JSON.stringify(messages)
         });
 
-        console.log(`BulkSMS API response status: ${response.status}`);
+        const responseTime = Date.now() - startTime;
+        console.log(`📊 BulkSMS API response: ${response.status} ${response.statusText} (${responseTime}ms)`);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.error(`BulkSMS API error (${response.status}):`, errorData);
+          console.error(`❌ BulkSMS API error (${response.status}):`, errorData);
           
           // Log failed batch
           for (const recipient of batch) {
@@ -509,7 +553,7 @@ serve(async (req) => {
         }
 
         const responseData = await response.json();
-        console.log(`BulkSMS batch response:`, responseData);
+        console.log(`✅ BulkSMS batch response: ${Array.isArray(responseData) ? responseData.length : 'not array'} messages processed`);
 
         // Process successful responses
         if (Array.isArray(responseData)) {
@@ -604,7 +648,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Quick SMS completed: ${totalSent} sent, ${totalFailed} failed, ${actualCreditCost} credits used`);
+    console.log(`🎉 Quick SMS completed: ${totalSent} sent, ${totalFailed} failed, ${actualCreditCost} credits used`);
 
     return new Response(JSON.stringify({
       success: true,

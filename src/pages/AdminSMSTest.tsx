@@ -51,9 +51,16 @@ const AdminSMSTest = () => {
     checkUserRole();
   }, []);
 
-  const handleQuickTest = () => {
+  const handleQuickTestAngola = () => {
+    setCountryCode('+244');
     setPhoneNumber('912345678');
-    setMessage('Teste SMS - Sistema funcionando corretamente! 🚀');
+    setMessage('Teste SMS Angola - Sistema funcionando corretamente! 🚀');
+  };
+
+  const handleQuickTestPortugal = () => {
+    setCountryCode('+351');
+    setPhoneNumber('912536682');
+    setMessage('Teste SMS Portugal - Verificação internacional do sistema SMS AO. 🇵🇹');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -271,14 +278,28 @@ const AdminSMSTest = () => {
                   </>
                 )}
               </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={handleQuickTest}
+                onClick={handleQuickTestAngola}
                 disabled={isLoading}
+                className="w-full"
               >
                 <Zap className="h-4 w-4 mr-2" />
-                Teste Rápido
+                Teste Angola
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleQuickTestPortugal}
+                disabled={isLoading}
+                className="w-full"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Teste Portugal
               </Button>
             </div>
           </form>
@@ -306,11 +327,16 @@ const AdminSMSTest = () => {
                         {new Date(result.timestamp).toLocaleString('pt-BR')}
                       </span>
                     </div>
-                    <div className="text-right">
+                     <div className="text-right">
                       <p className="text-sm font-medium">{result.response_time}ms</p>
                       <p className="text-xs text-muted-foreground">
                         {result.credits_used} créditos
                       </p>
+                      {result.status === 'success' && (
+                        <Badge variant="outline" className="text-xs mt-1">
+                          ✓ Enviado
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
