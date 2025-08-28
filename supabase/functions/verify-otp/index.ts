@@ -59,10 +59,24 @@ serve(async (req) => {
       );
     }
 
-    // Validate phone format
-    if (!/^\+\d{10,15}$/.test(phone)) {
+    // Validate international phone format
+    if (!/^\+\d{8,15}$/.test(phone)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid phone number format' }),
+        JSON.stringify({ error: 'Formato de telefone inválido' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Validate supported countries
+    const supportedCountries = ['+244', '+351', '+55', '+258', '+238', '+239'];
+    const isSupported = supportedCountries.some(code => phone.startsWith(code));
+    
+    if (!isSupported) {
+      return new Response(
+        JSON.stringify({ error: 'País não suportado' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

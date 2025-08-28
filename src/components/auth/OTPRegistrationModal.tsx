@@ -145,7 +145,10 @@ const OTPRegistrationModal = ({ open, onOpenChange, phone, onVerified }: OTPRegi
                 <p className="text-muted-foreground">
                   Digite o código de 6 dígitos enviado para:
                 </p>
-                <p className="font-semibold mt-1">{phone}</p>
+                <p className="font-semibold mt-1 text-lg">{phone}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Verifique sua caixa de SMS
+                </p>
               </div>
 
               <div className="space-y-4">

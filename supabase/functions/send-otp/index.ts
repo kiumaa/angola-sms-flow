@@ -106,10 +106,25 @@ serve(async (req) => {
       );
     }
 
-    // Validate phone format (basic validation)
-    if (!/^\+\d{10,15}$/.test(phone)) {
+    // Validate international phone format
+    if (!/^\+\d{8,15}$/.test(phone)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid phone number format' }),
+        JSON.stringify({ error: 'Formato de telefone inválido. Use formato internacional (+244...)' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Validate supported countries (Angola, Portugal, Brazil, Mozambique, Cape Verde, São Tomé)
+    const supportedCountries = ['+244', '+351', '+55', '+258', '+238', '+239'];
+    const countryCode = phone.slice(0, 4);
+    const isSupported = supportedCountries.some(code => phone.startsWith(code));
+    
+    if (!isSupported) {
+      return new Response(
+        JSON.stringify({ error: 'País não suportado. Suportamos: Angola, Portugal, Brasil, Moçambique, Cabo Verde e São Tomé e Príncipe' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

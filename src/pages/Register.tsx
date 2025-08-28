@@ -10,11 +10,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { PhoneInput } from "@/components/shared/PhoneInput";
+import { InternationalPhoneInput } from "@/components/shared/InternationalPhoneInput";
 import { useFormValidation, registerSchema } from "@/hooks/useFormValidation";
 import { useRegistrationSettings } from "@/hooks/useRegistrationSettings";
 import OTPRegistrationModal from "@/components/auth/OTPRegistrationModal";
-import { validateAngolanPhone, normalizeAngolanPhone } from "@/lib/validation";
+import { normalizeInternationalPhone } from "@/lib/internationalPhoneNormalization";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -26,6 +26,7 @@ const Register = () => {
     phone: "",
     acceptTerms: false
   });
+  const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [showPassword, setShowPassword] = useState({
     password: false,
     confirm: false
@@ -68,10 +69,11 @@ const Register = () => {
     }
 
     // Validar telefone obrigatório
-    if (!formData.phone || !validateAngolanPhone(formData.phone)) {
+    const phoneResult = normalizeInternationalPhone(formData.phone, selectedCountry);
+    if (!formData.phone || !phoneResult.ok) {
       toast({
         title: "Telefone obrigatório",
-        description: "Por favor, insira um número de telefone angolano válido",
+        description: phoneResult.reason || "Por favor, insira um número de telefone válido",
         variant: "destructive",
       });
       return;
@@ -232,16 +234,19 @@ const Register = () => {
                         Telefone *
                       </div>
                     </Label>
-                    <PhoneInput
+                    <InternationalPhoneInput
                       value={formData.phone}
                       onChange={(value) => updateFormData('phone', value)}
-                      placeholder="9XX XXX XXX"
+                      country={selectedCountry}
+                      onCountryChange={setSelectedCountry}
+                      showValidation={true}
+                      autoDetectCountry={true}
                       className="h-14"
-                      required
+                      placeholder="Digite seu número"
                     />
-                    {formData.phone && !validateAngolanPhone(formData.phone) && (
+                    {formData.phone && !normalizeInternationalPhone(formData.phone, selectedCountry).ok && (
                       <p className="text-sm text-destructive">
-                        Por favor, insira um número angolano válido
+                        {normalizeInternationalPhone(formData.phone, selectedCountry).reason}
                       </p>
                     )}
                     {phoneVerified && (
@@ -367,7 +372,7 @@ const Register = () => {
                 <Button 
                   type="submit" 
                   className="w-full button-futuristic text-lg py-6" 
-                  disabled={isLoading || !isValid || !formData.phone || !validateAngolanPhone(formData.phone)}
+                  disabled={isLoading || !isValid || !formData.phone || !normalizeInternationalPhone(formData.phone, selectedCountry).ok}
                 >
                   {isLoading ? "Criando conta..." : settings.otp_enabled && !phoneVerified ? "Verificar Telefone" : "Criar Conta Grátis"}
                 </Button>
@@ -411,7 +416,7 @@ const Register = () => {
       <OTPRegistrationModal 
         open={showOTPModal}
         onOpenChange={setShowOTPModal}
-        phone={normalizeAngolanPhone(formData.phone)}
+        phone={normalizeInternationalPhone(formData.phone, selectedCountry).e164 || formData.phone}
         onVerified={handlePhoneVerified}
       />
     </div>
