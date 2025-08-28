@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import MessageSendingLoader from "./MessageSendingLoader";
 
