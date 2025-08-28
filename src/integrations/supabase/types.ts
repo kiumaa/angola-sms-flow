@@ -1317,30 +1317,7 @@ export type Database = {
       }
     }
     Views: {
-      public_brand_settings: {
-        Row: {
-          dark_bg: string | null
-          dark_primary: string | null
-          dark_secondary: string | null
-          dark_text: string | null
-          favicon_url: string | null
-          font_family: string | null
-          light_bg: string | null
-          light_primary: string | null
-          light_secondary: string | null
-          light_text: string | null
-          logo_dark_url: string | null
-          logo_light_url: string | null
-          og_image_url: string | null
-          seo_canonical: string | null
-          seo_description: string | null
-          seo_title: string | null
-          seo_twitter: string | null
-          site_tagline: string | null
-          site_title: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       add_user_credits: {
@@ -1400,6 +1377,30 @@ export type Database = {
       get_default_sender_id: {
         Args: { account_user_id?: string }
         Returns: string
+      }
+      get_public_brand_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          dark_bg: string
+          dark_primary: string
+          dark_secondary: string
+          dark_text: string
+          favicon_url: string
+          font_family: string
+          light_bg: string
+          light_primary: string
+          light_secondary: string
+          light_text: string
+          logo_dark_url: string
+          logo_light_url: string
+          og_image_url: string
+          seo_canonical: string
+          seo_description: string
+          seo_title: string
+          seo_twitter: string
+          site_tagline: string
+          site_title: string
+        }[]
       }
       has_role: {
         Args: {
