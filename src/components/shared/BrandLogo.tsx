@@ -11,9 +11,9 @@ interface BrandLogoProps {
 }
 
 const sizeClasses = {
-  sm: "h-6 w-auto",
-  md: "h-8 w-auto", 
-  lg: "h-12 w-auto"
+  sm: "h-5 w-auto",
+  md: "h-7 w-auto", 
+  lg: "h-10 w-auto"
 };
 
 export const BrandLogo = ({ 
