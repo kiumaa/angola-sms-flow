@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AdminLayout from "@/components/layout/AdminLayout";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Settings, HeartHandshake } from "lucide-react";
 import SMSGatewayMonitoring from "@/components/admin/SMSGatewayMonitoring";

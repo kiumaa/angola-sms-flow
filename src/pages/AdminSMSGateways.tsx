@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Settings, TestTube, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
-import AdminLayout from '@/components/layout/AdminLayout';
+
 
 interface Gateway {
   id: string;
@@ -258,172 +258,168 @@ export default function AdminSMSGateways() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Gateways SMS</h1>
-            <p className="text-muted-foreground">
-              Configure e gerencie os gateways de envio de SMS
-            </p>
-          </div>
-          <Button onClick={refreshStatuses} variant="outline" disabled={refreshing}>
-            {refreshing ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            Atualizar Status
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Gateways SMS</h1>
+          <p className="text-muted-foreground">
+            Configure e gerencie os gateways de envio de SMS
+          </p>
         </div>
+        <Button onClick={refreshStatuses} variant="outline" disabled={refreshing}>
+          {refreshing ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
+          Atualizar Status
+        </Button>
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {gateways.map((gateway) => {
-            const status = gatewayStatuses[gateway.name];
-            
-            return (
-              <Card key={gateway.id} className="relative">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <div className="flex items-center space-x-2">
-                    {getGatewayIcon(gateway)}
-                    <CardTitle className="text-xl">{gateway.display_name}</CardTitle>
+      <div className="grid gap-6 md:grid-cols-2">
+        {gateways.map((gateway) => {
+          const status = gatewayStatuses[gateway.name];
+          
+          return (
+            <Card key={gateway.id} className="relative">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <div className="flex items-center space-x-2">
+                  {getGatewayIcon(gateway)}
+                  <CardTitle className="text-xl">{gateway.display_name}</CardTitle>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {gateway.is_primary && (
+                    <Badge className="bg-primary">Primário</Badge>
+                  )}
+                  {getGatewayStatusBadge(gateway)}
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Status:</span>
+                  <Switch
+                    checked={gateway.is_active}
+                    onCheckedChange={(checked) => 
+                      toggleGatewayActive(gateway.id, checked)
+                    }
+                  />
+                </div>
+
+                {status?.balance && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Saldo:</span>
+                    <span className="text-sm">
+                      {status.balance.credits} {status.balance.currency}
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {gateway.is_primary && (
-                      <Badge className="bg-primary">Primário</Badge>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Endpoint:</span>
+                  <span className="text-xs text-muted-foreground truncate max-w-48">
+                    {gateway.api_endpoint}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Autenticação:</span>
+                  <span className="text-xs uppercase">
+                    {gateway.auth_type}
+                  </span>
+                </div>
+
+                {status?.error && (
+                  <>
+                    <div className="text-sm text-destructive bg-destructive/10 p-3 rounded border">
+                      <strong>Erro:</strong> {status.error}
+                    </div>
+
+                  </>
+                )}
+
+                {status?.lastChecked && (
+                  <div className="text-xs text-muted-foreground">
+                    Última verificação: {new Date(status.lastChecked).toLocaleString('pt-BR')}
+                  </div>
+                )}
+
+                <div className="flex space-x-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testGateway(gateway.name)}
+                    disabled={testing[gateway.name]}
+                    className="flex-1"
+                  >
+                    {testing[gateway.name] ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <TestTube className="h-4 w-4 mr-2" />
                     )}
-                    {getGatewayStatusBadge(gateway)}
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Status:</span>
-                    <Switch
-                      checked={gateway.is_active}
-                      onCheckedChange={(checked) => 
-                        toggleGatewayActive(gateway.id, checked)
-                      }
-                    />
-                  </div>
+                    Testar
+                  </Button>
 
-                  {status?.balance && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Saldo:</span>
-                      <span className="text-sm">
-                        {status.balance.credits} {status.balance.currency}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Endpoint:</span>
-                    <span className="text-xs text-muted-foreground truncate max-w-48">
-                      {gateway.api_endpoint}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Autenticação:</span>
-                    <span className="text-xs uppercase">
-                      {gateway.auth_type}
-                    </span>
-                  </div>
-
-                  {status?.error && (
-                    <>
-                      <div className="text-sm text-destructive bg-destructive/10 p-3 rounded border">
-                        <strong>Erro:</strong> {status.error}
-                      </div>
-
-                    </>
-                  )}
-
-                  {status?.lastChecked && (
-                    <div className="text-xs text-muted-foreground">
-                      Última verificação: {new Date(status.lastChecked).toLocaleString('pt-BR')}
-                    </div>
-                  )}
-
-                  <div className="flex space-x-2 pt-2">
+                  {!gateway.is_primary && (
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
-                      onClick={() => testGateway(gateway.name)}
-                      disabled={testing[gateway.name]}
+                      onClick={() => setPrimaryGateway(gateway.id)}
                       className="flex-1"
                     >
-                      {testing[gateway.name] ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <TestTube className="h-4 w-4 mr-2" />
-                      )}
-                      Testar
+                      Definir como Primário
                     </Button>
-
-                    {!gateway.is_primary && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => setPrimaryGateway(gateway.id)}
-                        className="flex-1"
-                      >
-                        Definir como Primário
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Configurações Avançadas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">Fallback Automático</div>
-                <div className="text-sm text-muted-foreground">
-                  Utilizar gateway secundário quando o primário falhar
+                  )}
                 </div>
-              </div>
-              <Switch defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">Log Detalhado</div>
-                <div className="text-sm text-muted-foreground">
-                  Registrar tentativas detalhadas de envio
-                </div>
-              </div>
-              <Switch defaultChecked />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="bg-muted/50 p-4 rounded-lg">
-          <h3 className="font-medium mb-2">Informações Importantes:</h3>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Apenas um gateway pode ser primário por vez</li>
-            <li>• O sistema tentará automaticamente o gateway de fallback em caso de falha</li>
-            <li>• Certifique-se de configurar as credenciais nos secrets do Supabase</li>
-            <li>• BulkSMS requer as secrets BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET</li>
-          </ul>
-        </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
-    </AdminLayout>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações Avançadas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium">Fallback Automático</div>
+              <div className="text-sm text-muted-foreground">
+                Utilizar gateway secundário quando o primário falhar
+              </div>
+            </div>
+            <Switch defaultChecked />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium">Log Detalhado</div>
+              <div className="text-sm text-muted-foreground">
+                Registrar tentativas detalhadas de envio
+              </div>
+            </div>
+            <Switch defaultChecked />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <h3 className="font-medium mb-2">Informações Importantes:</h3>
+        <ul className="text-sm text-muted-foreground space-y-1">
+          <li>• Apenas um gateway pode ser primário por vez</li>
+          <li>• O sistema tentará automaticamente o gateway de fallback em caso de falha</li>
+          <li>• Certifique-se de configurar as credenciais nos secrets do Supabase</li>
+          <li>• BulkSMS requer as secrets BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET</li>
+        </ul>
+      </div>
+    </div>
   );
 }

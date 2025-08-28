@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Check, X, Clock, User, Search, Eye, CreditCard, DollarSign, FileText, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import AdminLayout from "@/components/layout/AdminLayout";
+
 import { StatsCard } from "@/components/admin/StatsCard";
 
 interface CreditRequest {
@@ -203,274 +203,272 @@ const AdminCreditRequests = () => {
   const totalCredits = requests.reduce((sum, r) => sum + r.credits_requested, 0);
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
-        {/* Enhanced Header */}
-        <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-          <div className="relative">
-            <h1 className="text-4xl font-light gradient-text mb-2 flex items-center space-x-3">
-              <div className="p-3 rounded-3xl bg-gradient-primary shadow-glow animate-glow">
-                <DollarSign className="h-8 w-8 text-white" />
-              </div>
-              <span>Solicitações de Créditos</span>
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Gerenciar e processar solicitações de compra de créditos SMS
-            </p>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="Solicitações Pendentes"
-            value={pendingRequests}
-            description="Aguardando aprovação"
-            icon={Clock}
-            gradient="from-orange-500 to-yellow-600"
-            trend={{
-              value: `${requests.length}`,
-              direction: 'neutral',
-              label: 'total'
-            }}
-            index={0}
-          />
-          
-          <StatsCard
-            title="Aprovadas"
-            value={approvedRequests}
-            description="Processadas com sucesso"
-            icon={Check}
-            gradient="from-green-500 to-emerald-600"
-            trend={{
-              value: `${((approvedRequests / requests.length) * 100).toFixed(0)}%`,
-              direction: 'up',
-              label: 'taxa aprovação'
-            }}
-            index={1}
-          />
-          
-          <StatsCard
-            title="Valor Total"
-            value={`${totalValue.toLocaleString()} Kz`}
-            description="Soma de todas as solicitações"
-            icon={DollarSign}
-            gradient="from-blue-500 to-purple-600"
-            trend={{
-              value: `${Math.round(totalValue / requests.length).toLocaleString()}`,
-              direction: 'up',
-              label: 'média por pedido'
-            }}
-            index={2}
-          />
-          
-          <StatsCard
-            title="Créditos Solicitados"
-            value={totalCredits.toLocaleString()}
-            description="Total de créditos SMS"
-            icon={FileText}
-            gradient="from-purple-500 to-pink-600"
-            trend={{
-              value: `${Math.round(totalCredits / requests.length)}`,
-              direction: 'up',
-              label: 'média por pedido'
-            }}
-            index={3}
-          />
-        </div>
-
-        <Card className="card-futuristic">
-          <CardHeader>
-            <CardTitle className="text-xl font-light gradient-text flex items-center">
-              <CreditCard className="h-5 w-5 mr-2" />
-              Solicitações de Créditos ({filteredRequests.length})
-            </CardTitle>
-            <CardDescription>
-              Lista completa de todas as solicitações de créditos
-            </CardDescription>
-            <div className="flex items-center space-x-2 mt-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 transform -translate-y-1/2" />
-                <Input
-                  placeholder="Pesquisar por cliente, email ou referência..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 rounded-xl border-border/40 focus:border-primary/40"
-                />
-              </div>
+    <div className="space-y-8">
+      {/* Enhanced Header */}
+      <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+        <div className="relative">
+          <h1 className="text-4xl font-light gradient-text mb-2 flex items-center space-x-3">
+            <div className="p-3 rounded-3xl bg-gradient-primary shadow-glow animate-glow">
+              <DollarSign className="h-8 w-8 text-white" />
             </div>
-          </CardHeader>
-          <CardContent>
-            {filteredRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="p-4 rounded-3xl bg-muted/20 w-fit mx-auto mb-4">
-                  <CreditCard className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">Nenhuma solicitação encontrada</h3>
-                <p className="text-muted-foreground">
-                  {searchTerm ? 'Tente ajustar seus filtros de pesquisa' : 'Nenhuma solicitação de créditos foi feita ainda'}
-                </p>
+            <span>Solicitações de Créditos</span>
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Gerenciar e processar solicitações de compra de créditos SMS
+          </p>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          title="Solicitações Pendentes"
+          value={pendingRequests}
+          description="Aguardando aprovação"
+          icon={Clock}
+          gradient="from-orange-500 to-yellow-600"
+          trend={{
+            value: `${requests.length}`,
+            direction: 'neutral',
+            label: 'total'
+          }}
+          index={0}
+        />
+        
+        <StatsCard
+          title="Aprovadas"
+          value={approvedRequests}
+          description="Processadas com sucesso"
+          icon={Check}
+          gradient="from-green-500 to-emerald-600"
+          trend={{
+            value: `${((approvedRequests / requests.length) * 100).toFixed(0)}%`,
+            direction: 'up',
+            label: 'taxa aprovação'
+          }}
+          index={1}
+        />
+        
+        <StatsCard
+          title="Valor Total"
+          value={`${totalValue.toLocaleString()} Kz`}
+          description="Soma de todas as solicitações"
+          icon={DollarSign}
+          gradient="from-blue-500 to-purple-600"
+          trend={{
+            value: `${Math.round(totalValue / requests.length).toLocaleString()}`,
+            direction: 'up',
+            label: 'média por pedido'
+          }}
+          index={2}
+        />
+        
+        <StatsCard
+          title="Créditos Solicitados"
+          value={totalCredits.toLocaleString()}
+          description="Total de créditos SMS"
+          icon={FileText}
+          gradient="from-purple-500 to-pink-600"
+          trend={{
+            value: `${Math.round(totalCredits / requests.length)}`,
+            direction: 'up',
+            label: 'média por pedido'
+          }}
+          index={3}
+        />
+      </div>
+
+      <Card className="card-futuristic">
+        <CardHeader>
+          <CardTitle className="text-xl font-light gradient-text flex items-center">
+            <CreditCard className="h-5 w-5 mr-2" />
+            Solicitações de Créditos ({filteredRequests.length})
+          </CardTitle>
+          <CardDescription>
+            Lista completa de todas as solicitações de créditos
+          </CardDescription>
+          <div className="flex items-center space-x-2 mt-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <Input
+                placeholder="Pesquisar por cliente, email ou referência..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 rounded-xl border-border/40 focus:border-primary/40"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredRequests.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="p-4 rounded-3xl bg-muted/20 w-fit mx-auto mb-4">
+                <CreditCard className="h-12 w-12 text-muted-foreground" />
               </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Créditos</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {request.profiles.company_name || request.profiles.full_name || "Sem nome"}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {request.profiles.email}
-                          </div>
+              <h3 className="text-lg font-medium mb-2">Nenhuma solicitação encontrada</h3>
+              <p className="text-muted-foreground">
+                {searchTerm ? 'Tente ajustar seus filtros de pesquisa' : 'Nenhuma solicitação de créditos foi feita ainda'}
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Créditos</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {request.profiles.company_name || request.profiles.full_name || "Sem nome"}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">
-                          {request.amount_kwanza.toLocaleString()} Kz
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">
-                          {request.credits_requested} SMS
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(request.status)}
-                          {getStatusBadge(request.status)}
+                        <div className="text-sm text-muted-foreground">
+                          {request.profiles.email}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(request.requested_at).toLocaleDateString('pt-BR', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setSelectedRequest(request)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Detalhes da Solicitação</DialogTitle>
-                                <DialogDescription>
-                                  Informações completas da solicitação de créditos
-                                </DialogDescription>
-                              </DialogHeader>
-                              {selectedRequest && (
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <label className="text-sm font-medium">Cliente</label>
-                                      <p>{selectedRequest.profiles.company_name || selectedRequest.profiles.full_name}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium">Email</label>
-                                      <p>{selectedRequest.profiles.email}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium">Valor</label>
-                                      <p>{selectedRequest.amount_kwanza.toLocaleString()} Kz</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium">Créditos</label>
-                                      <p>{selectedRequest.credits_requested} SMS</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium">Referência</label>
-                                      <p>{selectedRequest.payment_reference}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium">Pacote</label>
-                                      <p>{selectedRequest.credit_packages?.name || "Personalizado"}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">
+                        {request.amount_kwanza.toLocaleString()} Kz
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">
+                        {request.credits_requested} SMS
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(request.status)}
+                        {getStatusBadge(request.status)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(request.requested_at).toLocaleDateString('pt-BR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedRequest(request)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Detalhes da Solicitação</DialogTitle>
+                              <DialogDescription>
+                                Informações completas da solicitação de créditos
+                              </DialogDescription>
+                            </DialogHeader>
+                            {selectedRequest && (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-sm font-medium">Cliente</label>
+                                    <p>{selectedRequest.profiles.company_name || selectedRequest.profiles.full_name}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium">Email</label>
+                                    <p>{selectedRequest.profiles.email}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium">Valor</label>
+                                    <p>{selectedRequest.amount_kwanza.toLocaleString()} Kz</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium">Créditos</label>
+                                    <p>{selectedRequest.credits_requested} SMS</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium">Referência</label>
+                                    <p>{selectedRequest.payment_reference}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium">Pacote</label>
+                                    <p>{selectedRequest.credit_packages?.name || "Personalizado"}</p>
+                                  </div>
+                                </div>
+                                
+                                {selectedRequest.status === 'pending' && (
+                                  <div className="space-y-4 border-t pt-4">
+                                    <Textarea
+                                      placeholder="Notas administrativas (opcional)"
+                                      value={adminNotes}
+                                      onChange={(e) => setAdminNotes(e.target.value)}
+                                    />
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        onClick={() => approveRequest(selectedRequest.id)}
+                                        disabled={processing}
+                                        className="bg-green-600 hover:bg-green-700"
+                                      >
+                                        <Check className="h-4 w-4 mr-1" />
+                                        Aprovar
+                                      </Button>
+                                      <Button
+                                        variant="destructive"
+                                        onClick={() => rejectRequest(selectedRequest.id)}
+                                        disabled={processing}
+                                      >
+                                        <X className="h-4 w-4 mr-1" />
+                                        Rejeitar
+                                      </Button>
                                     </div>
                                   </div>
-                                  
-                                  {selectedRequest.status === 'pending' && (
-                                    <div className="space-y-4 border-t pt-4">
-                                      <Textarea
-                                        placeholder="Notas administrativas (opcional)"
-                                        value={adminNotes}
-                                        onChange={(e) => setAdminNotes(e.target.value)}
-                                      />
-                                      <div className="flex space-x-2">
-                                        <Button
-                                          onClick={() => approveRequest(selectedRequest.id)}
-                                          disabled={processing}
-                                          className="bg-green-600 hover:bg-green-700"
-                                        >
-                                          <Check className="h-4 w-4 mr-1" />
-                                          Aprovar
-                                        </Button>
-                                        <Button
-                                          variant="destructive"
-                                          onClick={() => rejectRequest(selectedRequest.id)}
-                                          disabled={processing}
-                                        >
-                                          <X className="h-4 w-4 mr-1" />
-                                          Rejeitar
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-                          
-                          {request.status === 'pending' && (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={() => approveRequest(request.id)}
-                                disabled={processing}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => rejectRequest(request.id)}
-                                disabled={processing}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </AdminLayout>
+                                )}
+                              </div>
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                        
+                        {request.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => approveRequest(request.id)}
+                              disabled={processing}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => rejectRequest(request.id)}
+                              disabled={processing}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

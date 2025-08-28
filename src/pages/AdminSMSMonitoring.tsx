@@ -4,7 +4,7 @@ import { Activity, TestTube, BarChart3, Webhook } from "lucide-react";
 import SMSGatewayMonitoring from "@/components/admin/SMSGatewayMonitoring";
 import SMSGatewayTester from "@/components/admin/SMSGatewayTester";
 import SMSDeliveryDiagnostics from "@/components/admin/SMSDeliveryDiagnostics";
-import AdminLayout from "@/components/layout/AdminLayout";
+
 
 export default function AdminSMSMonitoring() {
   return (
