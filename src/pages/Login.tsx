@@ -76,27 +76,6 @@ const Login = () => {
     navigate("/register");
   };
 
-  const testimonials: Testimonial[] = [
-    {
-      avatarSrc: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-      name: "Carlos Silva",
-      handle: "@carlostech",
-      text: "Plataforma incrível! A experiência do usuário é perfeita e as funcionalidades são exatamente o que precisava."
-    },
-    {
-      avatarSrc: "https://images.unsplash.com/photo-1494790108755-2616b612b882?w=100&h=100&fit=crop&crop=face",
-      name: "Ana Costa",
-      handle: "@anamarketing",
-      text: "Este serviço transformou como trabalho. Design limpo, recursos poderosos e excelente suporte."
-    },
-    {
-      avatarSrc: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-      name: "Miguel Santos",
-      handle: "@miguelsms",
-      text: "Já experimentei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil."
-    }
-  ];
-
   return (
     <div className="relative">
       <SignInPage
@@ -108,7 +87,6 @@ const Login = () => {
         }
         description="Acesse sua conta e continue sua jornada conosco"
         heroImageSrc="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=2160&q=80"
-        testimonials={testimonials}
         onSignIn={handleSignIn}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
