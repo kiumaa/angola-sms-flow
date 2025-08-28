@@ -38,6 +38,7 @@ import {
   LazyAdminSenderIDs,
   LazyAdminSMSGateways,
   LazyAdminSMSMonitoring,
+  LazyAdminSMSTest,
   LazyAdminReports,
   LazyAdminSettings,
   LazyAdminBrand,
@@ -182,6 +183,7 @@ function App() {
                 <Route path="sender-ids" element={<LazyAdminSenderIDs />} />
                 <Route path="sms-gateway-settings" element={<LazyAdminSMSGateways />} />
                 <Route path="sms-monitoring" element={<LazyAdminSMSMonitoring />} />
+                <Route path="sms-test" element={<LazyAdminSMSTest />} />
                 <Route path="reports" element={<LazyAdminReports />} />
                 <Route path="settings" element={<LazyAdminSettings />} />
                 <Route path="brand" element={<LazyAdminBrand />} />

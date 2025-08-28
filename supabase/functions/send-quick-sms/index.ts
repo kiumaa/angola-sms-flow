@@ -125,9 +125,13 @@ function checkRateLimit(userId: string): { allowed: boolean; error?: string } {
 
 interface SendQuickBody {
   sender_id?: string;
-  recipients: string[];
+  recipients?: string[];
   message: string;
   estimate?: { segments: number; credits: number };
+  // Alternative parameters for backward compatibility
+  phoneNumber?: string;
+  isTest?: boolean;
+  user_id?: string;
 }
 
 interface BulkSMSMessage {
@@ -280,10 +284,19 @@ serve(async (req) => {
 
     console.log('User profile found:', profile);
 
-    // Extract and validate input
+    // Extract and validate input - support multiple parameter formats
     const senderId = (body.sender_id || 'SMSAO').trim();
     const message = (body.message || '').trim();
-    const rawRecipients = Array.isArray(body.recipients) ? body.recipients : [];
+    
+    // Support both recipients array and single phoneNumber for compatibility
+    let rawRecipients: string[] = [];
+    if (Array.isArray(body.recipients)) {
+      rawRecipients = body.recipients;
+    } else if (body.phoneNumber && typeof body.phoneNumber === 'string') {
+      rawRecipients = [body.phoneNumber];
+    } else if (body.recipients && typeof body.recipients === 'string') {
+      rawRecipients = [body.recipients];
+    }
 
     // Validate required fields
     if (!message) {

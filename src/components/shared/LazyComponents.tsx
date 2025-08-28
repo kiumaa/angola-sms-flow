@@ -36,6 +36,7 @@ export const LazyAdminCreditRequests = lazy(() => import("@/pages/AdminCreditReq
 export const LazyAdminBrand = lazy(() => import("@/pages/AdminBrand"));
 export const LazyAdminSMSGateways = lazy(() => import("@/pages/AdminSMSGateways"));
 export const LazyAdminSMSMonitoring = lazy(() => import("@/pages/AdminSMSMonitoring"));
+export const LazyAdminSMSTest = lazy(() => import("@/pages/AdminSMSTest"));
 export const LazyAdminSMSConfiguration = lazy(() => import("@/pages/AdminSMSConfiguration"));
 export const LazyAdminProductionMonitoring = lazy(() => import("@/pages/AdminProductionMonitoring"));
 

@@ -14,7 +14,8 @@ import {
   DollarSign,
   MonitorSpeaker,
   UserCheck,
-  Archive
+  Archive,
+  TestTube
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -64,6 +65,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Sender IDs',
     href: '/admin/sender-ids',
     icon: Send,
+    category: 'sms'
+  },
+  {
+    key: 'smsTest',
+    label: 'Teste SMS',
+    href: '/admin/sms-test',
+    icon: TestTube,
     category: 'sms'
   },
   {

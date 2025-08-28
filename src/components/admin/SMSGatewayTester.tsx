@@ -76,39 +76,43 @@ const SMSGatewayTester = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Send test SMS directly without campaign
+      // Send test SMS using correct interface
       const { data, error } = await supabase.functions.invoke('send-quick-sms', {
         body: {
-          phoneNumber: normalizeInternationalPhone(fullPhoneNumber),
+          recipients: [normalizeInternationalPhone(fullPhoneNumber)],
           message: sanitizeInput(message),
-          isTest: true
+          sender_id: 'SMSAO'
         }
       });
 
       if (error) throw error;
 
-      // Update results
+      // Update results based on new API response
+      const success = data.success && data.sent > 0;
       setResults(prev => [{
         id: Date.now(),
-        gateway: data.gateway || 'unknown',
-        status: data.success ? 'success' : 'failed',
+        gateway: 'BulkSMS',
+        status: success ? 'success' : 'failed',
         timestamp: new Date().toISOString(),
         phone: normalizeInternationalPhone(fullPhoneNumber),
         message: sanitizeInput(message),
-        error: data.error || null,
-        responseTime: data.responseTime || 0
+        error: success ? null : (data.error || 'Unknown error'),
+        responseTime: 0, // API doesn't return this
+        sent: data.sent || 0,
+        failed: data.failed || 0,
+        credits: data.credits_debited || 0
       }, ...prev]);
 
       toast({
-        title: data.success ? "SMS enviado com sucesso!" : "Falha no envio",
-        description: data.success 
-          ? `Enviado via ${data.gateway} em ${data.responseTime}ms`
-          : `Erro: ${data.error}`,
-        variant: data.success ? "default" : "destructive",
+        title: success ? "SMS enviado com sucesso!" : "Falha no envio",
+        description: success 
+          ? `Enviado via BulkSMS. ${data.sent} enviado(s), ${data.credits_debited} créditos gastos`
+          : `Erro: ${data.error || 'Falha na comunicação com gateway'}`,
+        variant: success ? "default" : "destructive",
       });
 
       // Clear form on success
-      if (data.success) {
+      if (success) {
         setPhoneNumber('');
         setMessage('');
       }
@@ -201,7 +205,10 @@ const SMSGatewayTester = () => {
                       Timestamp
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Response Time (ms)
+                      Enviados
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Créditos
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Erro
@@ -212,11 +219,18 @@ const SMSGatewayTester = () => {
                   {results.map((result) => (
                     <tr key={result.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.gateway}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.status}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          result.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {result.status}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.phone}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.message}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.timestamp}</td>
-                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.responseTime}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{result.message}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(result.timestamp).toLocaleTimeString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.sent || 0}/{result.failed || 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.credits || 0}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.error || '-'}</td>
                     </tr>
                   ))}
