@@ -14,8 +14,6 @@ export const LazyOTPLoginModal = lazy(() => import("@/components/auth/OTPLoginMo
 
 // User Pages
 export const LazyDashboard = lazy(() => import("@/pages/Dashboard"));
-export const LazyCampaigns = lazy(() => import("@/pages/Campaigns"));
-export const LazyNewCampaign = lazy(() => import("@/pages/NewCampaign"));
 export const LazyQuickSend = lazy(() => import("@/pages/QuickSend"));
 export const LazyContacts = lazy(() => import("@/pages/Contacts"));
 export const LazyReports = lazy(() => import("@/pages/Reports"));

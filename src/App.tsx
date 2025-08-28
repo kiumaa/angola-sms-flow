@@ -20,8 +20,6 @@ import {
   LazyRegister,
   LazyForgotPassword,
   LazyDashboard,
-  LazyCampaigns,
-  LazyNewCampaign,
   LazyQuickSend,
   LazyContacts,
   LazyCredits,
@@ -81,22 +79,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <LazyDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/campaigns"
-                element={
-                  <ProtectedRoute>
-                    <LazyCampaigns />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/campaigns/new"
-                element={
-                  <ProtectedRoute>
-                    <LazyNewCampaign />
                   </ProtectedRoute>
                 }
               />

@@ -1,8 +1,7 @@
 import { useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, BarChart3, Settings, HeartHandshake } from "lucide-react";
-import CampaignMonitoringDashboard from "@/components/admin/CampaignMonitoringDashboard";
+import { Activity, Settings, HeartHandshake } from "lucide-react";
 import SMSGatewayMonitoring from "@/components/admin/SMSGatewayMonitoring";
 import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
 
@@ -17,20 +16,16 @@ const AdminSystemMonitoring = () => {
             <span>Monitoramento do Sistema</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-3xl">
-            Visão centralizada da saúde do sistema, performance de campanhas e status dos gateways SMS
+            Visão centralizada da saúde do sistema e status dos gateways SMS
           </p>
         </header>
 
         {/* Unified Content Layout */}
         <Tabs defaultValue="health" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-14 mb-8">
+          <TabsList className="grid w-full grid-cols-2 h-14 mb-8">
             <TabsTrigger value="health" className="flex items-center gap-2 py-4">
               <HeartHandshake className="h-5 w-5" />
               <span className="font-medium">Saúde do Sistema</span>
-            </TabsTrigger>
-            <TabsTrigger value="campaigns" className="flex items-center gap-2 py-4">
-              <BarChart3 className="h-5 w-5" />
-              <span className="font-medium">Campanhas</span>
             </TabsTrigger>
             <TabsTrigger value="gateways" className="flex items-center gap-2 py-4">
               <Settings className="h-5 w-5" />
@@ -40,10 +35,6 @@ const AdminSystemMonitoring = () => {
           
           <TabsContent value="health" className="mt-8 space-y-8">
             <SystemHealthDashboard />
-          </TabsContent>
-
-          <TabsContent value="campaigns" className="mt-8 space-y-8">
-            <CampaignMonitoringDashboard />
           </TabsContent>
           
           <TabsContent value="gateways" className="mt-8 space-y-8">

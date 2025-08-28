@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, CreditCard } from "lucide-react";
+import { Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, Zap } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -41,10 +41,10 @@ const DashboardLayout = ({
     icon: Layout,
     current: location.pathname === "/dashboard"
   }, {
-    name: "Campanhas",
-    href: "/campaigns",
-    icon: Mail,
-    current: location.pathname.startsWith("/campaigns")
+    name: "Envio Rápido",
+    href: "/quick-send",
+    icon: Zap,
+    current: location.pathname.startsWith("/quick-send")
   }, {
     name: "Contatos",
     href: "/contacts",
@@ -60,11 +60,6 @@ const DashboardLayout = ({
     href: "/credits",
     icon: Plus,
     current: location.pathname.startsWith("/credits")
-  }, {
-    name: "Transações",
-    href: "/transactions",
-    icon: CreditCard,
-    current: location.pathname.startsWith("/transactions")
   }, {
     name: "Sender IDs",
     href: "/sender-ids",

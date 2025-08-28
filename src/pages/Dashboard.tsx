@@ -41,9 +41,9 @@ const Dashboard = () => {
     gradient: "from-blue-500 to-purple-600",
     trend: "+5% vs mês anterior"
   }, {
-    title: "Campanhas Enviadas",
-    value: stats.totalCampaigns?.toString() || "0",
-    description: "Total criadas",
+    title: "SMS Enviados",
+    value: stats.totalSent?.toString() || "0",
+    description: "Total de mensagens",
     icon: MessageSquare,
     gradient: "from-green-500 to-emerald-600",
     trend: "+25% vs mês anterior"
@@ -63,40 +63,33 @@ const Dashboard = () => {
     trend: "+2% vs mês anterior"
   }];
   const quickActions = [{
-    title: "Enviar SMS",
-    description: "Criar e enviar nova campanha",
-    icon: Mail,
-    action: () => navigate("/campaigns/new"),
-    primary: true,
-    gradient: "from-blue-500 to-purple-600"
-  }, {
     title: "Envio Rápido",
-    description: "SMS direto para números específicos",
+    description: "Enviar SMS para um ou múltiplos números",
     icon: Zap,
     action: () => navigate("/quick-send"),
     primary: true,
-    gradient: "from-yellow-500 to-orange-600"
+    gradient: "from-blue-500 to-purple-600"
+  }, {
+    title: "Gerenciar Contatos",
+    description: "Adicionar e organizar contatos",
+    icon: Users,
+    action: () => navigate("/contacts"),
+    primary: true,
+    gradient: "from-green-500 to-emerald-600"
   }, {
     title: "Carregar Créditos",
     description: "Comprar mais SMS",
     icon: Plus,
     action: () => navigate("/credits"),
     primary: false,
-    gradient: "from-green-500 to-emerald-600"
-  }, {
-    title: "Importar Contatos",
-    description: "Adicionar nova lista",
-    icon: Users,
-    action: () => navigate("/contacts"),
-    primary: false,
-    gradient: "from-orange-500 to-red-600"
+    gradient: "from-yellow-500 to-orange-600"
   }, {
     title: "Ver Relatórios",
-    description: "Analisar campanhas",
+    description: "Acompanhar envios e estatísticas",
     icon: BarChart3,
     action: () => navigate("/reports"),
     primary: false,
-    gradient: "from-indigo-500 to-blue-600"
+    gradient: "from-purple-500 to-indigo-600"
   }];
   return <DashboardLayout>
       <div className="space-y-8">
@@ -155,13 +148,13 @@ const Dashboard = () => {
                 Conta criada com sucesso!
               </CardTitle>
               <CardDescription className="text-xl">
-                Você ganhou 10 SMS grátis para começar. Que tal enviar sua primeira campanha agora?
+                Você ganhou 10 SMS grátis para começar. Que tal enviar seu primeiro SMS agora?
               </CardDescription>
             </CardHeader>
             <CardContent className="relative">
               <div className="flex gap-8">
-                <Button className="button-futuristic text-xl px-12 py-8 rounded-3xl" onClick={() => navigate("/campaigns/new")}>
-                  Enviar Primeira Campanha
+                <Button className="button-futuristic text-xl px-12 py-8 rounded-3xl" onClick={() => navigate("/quick-send")}>
+                  Enviar Primeiro SMS
                 </Button>
                 <Button variant="outline" className="glass-card border-glass-border text-xl px-12 py-8 rounded-3xl hover:scale-105 transition-all duration-300" onClick={() => navigate("/contacts")}>
                   Importar Contatos
@@ -185,12 +178,12 @@ const Dashboard = () => {
               </div>
               <h3 className="text-2xl font-medium gradient-text mb-4">Nenhuma atividade ainda</h3>
               <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
-                Comece enviando sua primeira campanha para ver analytics detalhados aqui.
+                Comece enviando seu primeiro SMS para ver analytics detalhados aqui.
                 <br />
                 Você terá acesso a métricas avançadas, gráficos interativos e insights poderosos.
               </p>
-              <Button className="button-futuristic text-lg px-10 py-6 rounded-3xl" onClick={() => navigate("/campaigns/new")}>
-                Criar Primeira Campanha
+              <Button className="button-futuristic text-lg px-10 py-6 rounded-3xl" onClick={() => navigate("/quick-send")}>
+                Enviar Primeiro SMS
               </Button>
             </div>
           </CardContent>
