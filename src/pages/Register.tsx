@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { useRegistrationSettings } from "@/hooks/useRegistrationSettings";
 import { ModernSignupForm } from "@/components/auth/ModernSignupForm";
+import { ThemeAwareLogo } from "@/components/shared/ThemeAwareLogo";
 const Register = () => {
   const {
     settings
@@ -23,7 +24,7 @@ const Register = () => {
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center space-x-4 group">
               <div className="p-3 rounded-2xl bg-gradient-primary shadow-premium group-hover:shadow-glow transition-all duration-500 group-hover:scale-110">
-                <Zap className="h-6 w-6 text-white" />
+                <ThemeAwareLogo height={36} className="transition-all duration-500" />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">SMS.AO</span>
