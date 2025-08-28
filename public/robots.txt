@@ -12,3 +12,19 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://smsao.com/sitemap.xml
+
+# SEO optimizations  
+Disallow: /admin/
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*?*
+
+# Allow important pages
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /legal/terms
+Allow: /legal/privacy
