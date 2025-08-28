@@ -75,11 +75,24 @@
     --shadow-glass: 0 2px 6px 0 hsl(220 39% 11% / 0.05);
     --shadow-glow: 0 4px 12px 0 hsl(220 39% 11% / 0.08);
     --shadow-elevated: 0 8px 24px 0 hsl(220 39% 11% / 0.12);
+    --shadow-elegant: 0 10px 30px -10px hsl(220 39% 11% / 0.15);
+    --shadow-modern: 0 4px 20px -4px hsl(220 39% 11% / 0.1);
 
     /* Radii - Minimal Roundness */
     --radius: 4px;
     --radius-lg: 8px;
     --radius-xl: 12px;
+    
+    /* Enhanced Input Styles */
+    --input-bg: hsl(var(--background));
+    --input-border: hsl(var(--border));
+    --input-focus: hsl(var(--primary));
+    --input-hover: hsl(var(--muted));
+    
+    /* Form Enhancement Variables */
+    --form-spacing: 1.5rem;
+    --form-border-radius: 12px;
+    --form-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
@@ -502,17 +515,32 @@
   opacity: 1;
 }
 
-/* Input Focus Effects */
+/* Enhanced Input Focus Effects */
 .modern-input {
-  position: relative;
-  background: hsl(var(--background));
-  border: 1px solid hsl(var(--border));
-  transition: all 0.3s ease;
+  @apply relative block w-full px-4 py-4 text-sm bg-background border border-input rounded-xl
+         focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-muted-foreground/50
+         transition-all duration-300 ease-out
+         placeholder:text-muted-foreground shadow-sm hover:shadow-md;
 }
 
 .modern-input:focus {
-  border-color: hsl(var(--primary) / 0.3);
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  @apply shadow-elegant transform scale-[1.02];
+}
+
+.input-container {
+  @apply relative;
+}
+
+.input-container .modern-input:focus + .input-label {
+  @apply text-primary scale-95 -translate-y-6;
+}
+
+.input-label {
+  @apply absolute left-4 top-4 text-sm text-muted-foreground transition-all duration-300 pointer-events-none;
+}
+
+.floating-label {
+  @apply absolute left-4 top-0 -translate-y-1/2 bg-background px-2 text-xs text-primary scale-95;
 }
 
 /* Scrollbar Styling */

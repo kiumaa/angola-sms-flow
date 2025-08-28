@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { cva, type VariantProps } from "class-variance-authority";
-import { IconBrandGoogle, IconBrandGithub, IconLock, IconMail, IconUser, IconBuilding, IconPhone } from "@tabler/icons-react";
+import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -34,9 +33,8 @@ const Label = React.forwardRef<
 ));
 Label.displayName = LabelPrimitive.Root.displayName;
 
-// Input Component
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+// Enhanced Input Component
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
@@ -44,7 +42,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "modern-input flex h-12 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "modern-input",
           className
         )}
         ref={ref}
@@ -59,8 +57,8 @@ Input.displayName = "Input";
 const BottomGradient = () => {
   return (
     <>
-      <span className="bottom-gradient" />
-      <span className="bottom-gradient-blur" />
+      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
     </>
   );
 };
@@ -80,15 +78,19 @@ const LabelInputContainer = ({
   );
 };
 
-export function ModernSignupForm() {
+export const ModernSignupForm = () => {
+  const { signUp } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { settings } = useRegistrationSettings();
+  
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
+    company: "",
+    phone: "",
     email: "",
     password: "",
     confirmPassword: "",
-    company: "",
-    phone: "",
     acceptTerms: false
   });
   const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(DEFAULT_COUNTRY);
@@ -97,29 +99,49 @@ export function ModernSignupForm() {
     confirm: false
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showOTPModal, setShowOTPModal] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  
-  const navigate = useNavigate();
-  const { signUp, user, loading } = useAuth();
-  const { toast } = useToast();
-  const { settings } = useRegistrationSettings();
-  const { errors, isValid, validateField, getPasswordStrength } = useFormValidation(registerSchema, {
-    fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-    email: formData.email,
-    password: formData.password,
-    confirmPassword: formData.confirmPassword,
-    company: formData.company,
-    phone: formData.phone,
-    acceptTerms: formData.acceptTerms
-  });
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [registrationData, setRegistrationData] = useState<any>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  const { errors, isValid, validateField, getPasswordStrength } = useFormValidation(registerSchema, formData);
 
   // Redirect if already logged in
+  const { user, loading } = useAuth();
   useEffect(() => {
     if (!loading && user) {
       navigate("/dashboard");
     }
   }, [user, loading, navigate]);
+
+  const getPasswordStrengthColor = () => {
+    const strength = getPasswordStrength(formData.password);
+    switch (strength.level) {
+      case "Muito fraca":
+        return "text-red-500";
+      case "Fraca":
+        return "text-orange-500";
+      case "Média":
+        return "text-yellow-500";
+      case "Forte":
+        return "text-green-500";
+      case "Muito forte":
+        return "text-green-600";
+      default:
+        return "text-muted-foreground";
+    }
+  };
+
+  const getPasswordStrengthWidth = () => {
+    const strength = getPasswordStrength(formData.password);
+    return `${strength.percentage}%`;
+  };
+
+  const passwordStrengthTips = [
+    { text: "8+ caracteres", met: formData.password.length >= 8 },
+    { text: "Maiúscula", met: /[A-Z]/.test(formData.password) },
+    { text: "Minúscula", met: /[a-z]/.test(formData.password) },
+    { text: "Número", met: /\d/.test(formData.password) },
+  ];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -153,9 +175,13 @@ export function ModernSignupForm() {
       return;
     }
 
-    // Se OTP estiver habilitado e telefone não verificado, solicitar verificação
-    if (settings.otp_enabled && !phoneVerified) {
-      setShowOTPModal(true);
+    // Se OTP estiver habilitado, solicitar verificação
+    if (settings.otp_enabled) {
+      setRegistrationData({
+        ...formData,
+        phone: formData.phone
+      });
+      setShowOtpModal(true);
       return;
     }
 
@@ -166,8 +192,7 @@ export function ModernSignupForm() {
     setIsLoading(true);
 
     try {
-      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-      const { error } = await signUp(formData.email, formData.password, fullName);
+      const { error } = await signUp(formData.email, formData.password, formData.fullName);
       
       if (error) {
         toast({
@@ -193,291 +218,312 @@ export function ModernSignupForm() {
   };
 
   const handlePhoneVerified = () => {
-    setPhoneVerified(true);
     createAccount();
   };
 
-  const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
   return (
-    <>
-      <div className="max-w-md w-full mx-auto rounded-2xl p-6 md:p-8 bg-card border border-border shadow-elevated">
+    <div className="max-w-lg w-full mx-auto rounded-2xl md:rounded-3xl p-6 md:p-10 glass-card backdrop-blur-xl border border-white/10 shadow-elegant">
+      <div className="text-center mb-8">
+        <div className="inline-flex p-3 rounded-2xl bg-gradient-primary shadow-glow mb-4">
+          <Zap className="h-6 w-6 text-white" />
+        </div>
         <h2 className="font-bold text-2xl text-foreground mb-2">
-          Seja Bem-vindo(a) ao SMS AO
+          Bem-vindo ao SMS.AO
         </h2>
-        <p className="text-muted-foreground text-sm max-w-sm mb-8">
-          Crie sua conta e comece a enviar SMS para Angola com {settings.free_credits_new_user} créditos grátis
+        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+          Crie sua conta e comece a enviar campanhas de SMS profissionais em Angola
         </p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            <LabelInputContainer>
-              <Label htmlFor="firstName" className="flex items-center gap-2">
-                <IconUser className="h-4 w-4" />
-                Nome
-              </Label>
-              <Input 
-                id="firstName" 
-                placeholder="João" 
-                type="text" 
-                value={formData.firstName}
-                onChange={(e) => {
-                  updateFormData('firstName', e.target.value);
-                  validateField('fullName', `${e.target.value} ${formData.lastName}`.trim());
-                }}
-                required
-              />
-            </LabelInputContainer>
-            <LabelInputContainer>
-              <Label htmlFor="lastName">Sobrenome</Label>
-              <Input 
-                id="lastName" 
-                placeholder="Santos" 
-                type="text" 
-                value={formData.lastName}
-                onChange={(e) => {
-                  updateFormData('lastName', e.target.value);
-                  validateField('fullName', `${formData.firstName} ${e.target.value}`.trim());
-                }}
-                required
-              />
-            </LabelInputContainer>
-          </div>
-
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="grid md:grid-cols-2 gap-4">
           <LabelInputContainer>
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <IconMail className="h-4 w-4" />
-              Email
-            </Label>
-            <Input 
-              id="email" 
-              placeholder="joao@empresa.ao" 
+            <div className="relative">
+              <Input
+                id="fullname"
+                placeholder={focusedField === "fullname" ? "" : "João Silva"}
+                type="text"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onFocus={() => setFocusedField("fullname")}
+                onBlur={() => setFocusedField(null)}
+                className={`modern-input ${errors.fullName ? "border-red-500" : ""}`}
+              />
+              <Label 
+                htmlFor="fullname" 
+                className={`input-label ${focusedField === "fullname" || formData.fullName ? "floating-label" : ""}`}
+              >
+                Nome Completo
+              </Label>
+            </div>
+            {errors.fullName && <p className="text-red-500 text-xs mt-1 animate-slide-in">{errors.fullName}</p>}
+          </LabelInputContainer>
+          
+          <LabelInputContainer>
+            <div className="relative">
+              <Input
+                id="company"
+                placeholder={focusedField === "company" ? "" : "Minha Empresa Lda."}
+                type="text"
+                value={formData.company}
+                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                onFocus={() => setFocusedField("company")}
+                onBlur={() => setFocusedField(null)}
+                className={`modern-input ${errors.company ? "border-red-500" : ""}`}
+              />
+              <Label 
+                htmlFor="company" 
+                className={`input-label ${focusedField === "company" || formData.company ? "floating-label" : ""}`}
+              >
+                Empresa
+              </Label>
+            </div>
+            {errors.company && <p className="text-red-500 text-xs mt-1 animate-slide-in">{errors.company}</p>}
+          </LabelInputContainer>
+        </div>
+
+        <LabelInputContainer>
+          <div className="relative">
+            <Input
+              id="email"
+              placeholder={focusedField === "email" ? "" : "joao@empresa.ao"}
               type="email"
               value={formData.email}
-              onChange={(e) => {
-                updateFormData('email', e.target.value);
-                validateField('email', e.target.value);
-              }}
-              required
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onFocus={() => setFocusedField("email")}
+              onBlur={() => setFocusedField(null)}
+              className={`modern-input ${errors.email ? "border-red-500" : ""}`}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
-            )}
-          </LabelInputContainer>
-
-          <LabelInputContainer>
-            <Label htmlFor="company" className="flex items-center gap-2">
-              <IconBuilding className="h-4 w-4" />
-              Empresa (Opcional)
+            <Label 
+              htmlFor="email" 
+              className={`input-label ${focusedField === "email" || formData.email ? "floating-label" : ""}`}
+            >
+              E-mail
             </Label>
-            <Input 
-              id="company" 
-              placeholder="Nome da sua empresa" 
-              type="text"
-              value={formData.company}
-              onChange={(e) => updateFormData('company', e.target.value)}
-            />
-          </LabelInputContainer>
+          </div>
+          {errors.email && <p className="text-red-500 text-xs mt-1 animate-slide-in">{errors.email}</p>}
+        </LabelInputContainer>
 
-          <LabelInputContainer>
-            <Label htmlFor="phone" className="flex items-center gap-2">
-              <IconPhone className="h-4 w-4" />
-              Telefone *
-            </Label>
+        <LabelInputContainer>
+          <div className="relative">
             <InternationalPhoneInput
               value={formData.phone}
-              onChange={(value) => updateFormData('phone', value)}
-              country={selectedCountry}
-              onCountryChange={setSelectedCountry}
-              showValidation={true}
-              autoDetectCountry={true}
-              className="h-12 rounded-xl"
-              placeholder="Digite seu número"
+              onChange={(value) => setFormData({ ...formData, phone: value })}
+              className={`modern-input ${errors.phone ? "border-red-500" : ""}`}
             />
-            {formData.phone && !normalizeInternationalPhone(formData.phone, selectedCountry).ok && (
-              <p className="text-sm text-destructive">
-                {normalizeInternationalPhone(formData.phone, selectedCountry).reason}
-              </p>
-            )}
-            {phoneVerified && (
-              <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
-                <Check className="h-4 w-4" />
-                Telefone verificado
-              </p>
-            )}
-          </LabelInputContainer>
-
-          <LabelInputContainer>
-            <Label htmlFor="password" className="flex items-center gap-2">
-              <IconLock className="h-4 w-4" />
-              Senha
+            <Label 
+              htmlFor="phone" 
+              className={`input-label ${focusedField === "phone" || formData.phone ? "floating-label" : ""}`}
+            >
+              Telefone
             </Label>
+          </div>
+          {errors.phone && <p className="text-red-500 text-xs mt-1 animate-slide-in">{errors.phone}</p>}
+        </LabelInputContainer>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <LabelInputContainer>
             <div className="relative">
-              <Input 
-                id="password" 
-                placeholder="••••••••" 
+              <Input
+                id="password"
+                placeholder={focusedField === "password" ? "" : "••••••••"}
                 type={showPassword.password ? "text" : "password"}
                 value={formData.password}
-                onChange={(e) => {
-                  updateFormData('password', e.target.value);
-                  validateField('password', e.target.value);
-                }}
-                className="pr-12"
-                required
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onFocus={() => setFocusedField("password")}
+                onBlur={() => setFocusedField(null)}
+                className={`modern-input pr-12 ${errors.password ? "border-red-500" : ""}`}
               />
+              <Label 
+                htmlFor="password" 
+                className={`input-label ${focusedField === "password" || formData.password ? "floating-label" : ""}`}
+              >
+                Senha
+              </Label>
               <button
                 type="button"
-                onClick={() => setShowPassword({...showPassword, password: !showPassword.password})}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowPassword({ ...showPassword, password: !showPassword.password })}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword.password ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            
-            {/* Password Strength Indicator */}
-            {formData.password && (
-              <div className="space-y-2 mt-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Força da senha:</span>
-                  <span className={`font-medium ${
-                    getPasswordStrength(formData.password).color === 'destructive' ? 'text-destructive' :
-                    getPasswordStrength(formData.password).color === 'orange' ? 'text-orange-500' :
-                    getPasswordStrength(formData.password).color === 'yellow' ? 'text-yellow-500' :
-                    getPasswordStrength(formData.password).color === 'primary' ? 'text-primary' :
-                    'text-green-500'
-                  }`}>
-                    {getPasswordStrength(formData.password).level}
-                  </span>
-                </div>
-                <Progress 
-                  value={getPasswordStrength(formData.password).percentage} 
-                  className="h-2"
-                />
-                {getPasswordStrength(formData.password).feedback.length > 0 && (
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    {getPasswordStrength(formData.password).feedback.map((tip, index) => (
-                      <li key={index} className="flex items-center gap-1">
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full flex-shrink-0" />
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-            
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password}</p>
-            )}
+            {errors.password && <p className="text-red-500 text-xs mt-1 animate-slide-in">{errors.password}</p>}
           </LabelInputContainer>
-
+          
           <LabelInputContainer>
-            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
             <div className="relative">
-              <Input 
-                id="confirmPassword" 
-                placeholder="••••••••" 
+              <Input
+                id="confirmpassword"
+                placeholder={focusedField === "confirmpassword" ? "" : "••••••••"}
                 type={showPassword.confirm ? "text" : "password"}
                 value={formData.confirmPassword}
-                onChange={(e) => {
-                  updateFormData('confirmPassword', e.target.value);
-                  validateField('confirmPassword', e.target.value);
-                }}
-                className="pr-12"
-                required
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                onFocus={() => setFocusedField("confirmpassword")}
+                onBlur={() => setFocusedField(null)}
+                className={`modern-input pr-12 ${errors.confirmPassword ? "border-red-500" : ""}`}
               />
+              <Label 
+                htmlFor="confirmpassword" 
+                className={`input-label ${focusedField === "confirmpassword" || formData.confirmPassword ? "floating-label" : ""}`}
+              >
+                Confirmar Senha
+              </Label>
               <button
                 type="button"
-                onClick={() => setShowPassword({...showPassword, confirm: !showPassword.confirm})}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {errors.confirmPassword && (
-              <p className="text-sm text-destructive">{errors.confirmPassword}</p>
-            )}
+            {errors.confirmPassword && <p className="text-red-500 text-xs mt-1 animate-slide-in">{errors.confirmPassword}</p>}
           </LabelInputContainer>
+        </div>
 
-          <div className="flex items-center space-x-3 p-4 rounded-xl border border-border bg-muted/30">
-            <Checkbox
-              id="terms"
-              checked={formData.acceptTerms}
-              onCheckedChange={(checked) => updateFormData('acceptTerms', checked)}
-              className="rounded-lg"
-            />
-            <label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-              Aceito os{" "}
-              <Link to="/terms" className="text-primary hover:underline font-medium">
-                termos de uso
-              </Link>{" "}
-              e{" "}
-              <Link to="/privacy" className="text-primary hover:underline font-medium">
-                política de privacidade
-              </Link>
-            </label>
+        {/* Enhanced Password Strength Indicator */}
+        {formData.password && (
+          <div className="bg-muted/30 rounded-xl p-4 border border-muted animate-scale-in">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-foreground">Força da senha:</span>
+              <span className={`text-sm font-semibold ${getPasswordStrengthColor()}`}>
+                {getPasswordStrength(formData.password).level}
+              </span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2 mb-3">
+              <div 
+                className={`h-2 rounded-full transition-all duration-500 ease-out ${getPasswordStrengthColor().replace('text-', 'bg-')}`}
+                style={{ width: getPasswordStrengthWidth() }}
+              ></div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {passwordStrengthTips.map((tip, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${tip.met ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                  <span className={`text-xs transition-colors duration-300 ${tip.met ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                    {tip.text}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
+        )}
 
+        <div className="flex items-center space-x-3 p-4 rounded-xl border border-muted bg-muted/20">
+          <Checkbox
+            id="terms"
+            checked={formData.acceptTerms}
+            onCheckedChange={(checked) => setFormData({ ...formData, acceptTerms: Boolean(checked) })}
+            className="rounded-lg"
+          />
+          <label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+            Aceito os{" "}
+            <Link to="/legal/terms" className="text-primary hover:underline font-medium">
+              termos de uso
+            </Link>{" "}
+            e{" "}
+            <Link to="/legal/privacy" className="text-primary hover:underline font-medium">
+              política de privacidade
+            </Link>
+          </label>
+        </div>
+
+        <button
+          className="relative group w-full bg-gradient-primary text-white rounded-xl h-12 font-semibold 
+                   shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-[1.02] 
+                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                   overflow-hidden"
+          type="submit"
+          disabled={isLoading}
+        >
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Criando conta...
+              </>
+            ) : (
+              <>
+                Criar conta
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
+          </span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
+                        translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+        </button>
+
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-muted" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-3 text-muted-foreground font-medium">Ou continue com</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
           <button
-            className="signup-button group/btn relative block w-full text-white rounded-xl h-12 font-medium transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-            type="submit"
-            disabled={isLoading || !isValid || !formData.phone || !normalizeInternationalPhone(formData.phone, selectedCountry).ok}
+            className="relative group flex items-center justify-center gap-2 px-4 h-11 
+                     border border-input rounded-xl bg-background hover:bg-muted/50 
+                     transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
+            type="button"
           >
-            {isLoading ? "Criando conta..." : settings.otp_enabled && !phoneVerified ? "Verificar Telefone" : "Criar Conta Grátis →"}
-            <BottomGradient />
+            <IconBrandGoogle className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+              Google
+            </span>
           </button>
+          <button
+            className="relative group flex items-center justify-center gap-2 px-4 h-11 
+                     border border-input rounded-xl bg-background hover:bg-muted/50 
+                     transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
+            type="button"
+          >
+            <IconBrandGithub className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+              GitHub
+            </span>
+          </button>
+        </div>
+      </form>
 
-          <div className="bg-gradient-to-r from-transparent via-border to-transparent my-8 h-[1px] w-full" />
-
-          <div className="flex flex-col space-y-4">
-            <button
-              className="relative group/btn flex space-x-2 items-center justify-start px-4 w-full text-black rounded-xl h-12 font-medium bg-secondary hover:bg-secondary/80 dark:bg-card dark:text-white border border-border transition-all duration-300"
-              type="button"
-              disabled
-            >
-              <IconBrandGoogle className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground text-sm">
-                Google (Em breve)
-              </span>
-              <BottomGradient />
-            </button>
-            <button
-              className="relative group/btn flex space-x-2 items-center justify-start px-4 w-full text-black rounded-xl h-12 font-medium bg-secondary hover:bg-secondary/80 dark:bg-card dark:text-white border border-border transition-all duration-300"
-              type="button"
-              disabled
-            >
-              <IconBrandGithub className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground text-sm">
-                GitHub (Em breve)
-              </span>
-              <BottomGradient />
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-8 text-center">
-          <span className="text-muted-foreground">Já tem uma conta? </span>
+      <div className="text-center space-y-3 mt-8">
+        <p className="text-sm text-muted-foreground">
+          Já tem uma conta?{" "}
           <Link 
             to="/login" 
-            className="text-primary hover:underline font-medium transition-all duration-300"
+            className="text-primary hover:text-primary/80 font-medium transition-colors hover:underline"
           >
-            Fazer login
+            Faça login
           </Link>
-        </div>
+        </p>
+
+        <p className="text-xs text-muted-foreground/80 leading-relaxed max-w-sm mx-auto">
+          Ao criar uma conta, você aceita nossos{" "}
+          <Link 
+            to="/legal/terms" 
+            className="text-primary hover:text-primary/80 transition-colors hover:underline"
+          >
+            Termos de Uso
+          </Link>{" "}
+          e{" "}
+          <Link 
+            to="/legal/privacy" 
+            className="text-primary hover:text-primary/80 transition-colors hover:underline"
+          >
+            Política de Privacidade
+          </Link>
+        </p>
       </div>
 
       {/* OTP Modal */}
       <OTPRegistrationModal
-        open={showOTPModal}
-        onOpenChange={setShowOTPModal}
+        open={showOtpModal}
+        onOpenChange={setShowOtpModal}
         phone={formData.phone}
         onVerified={handlePhoneVerified}
       />
-    </>
+    </div>
   );
-}
+};
