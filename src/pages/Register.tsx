@@ -27,7 +27,7 @@ const Register = () => {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">SMS.AO</span>
-                <span className="text-xs text-muted-foreground font-medium tracking-wide">Marketing Premium</span>
+                
               </div>
             </Link>
             <ThemeToggle />
