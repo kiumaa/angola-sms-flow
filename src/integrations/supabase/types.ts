@@ -1317,7 +1317,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_brand_settings: {
+        Row: {
+          dark_bg: string | null
+          dark_primary: string | null
+          dark_secondary: string | null
+          dark_text: string | null
+          favicon_url: string | null
+          font_family: string | null
+          light_bg: string | null
+          light_primary: string | null
+          light_secondary: string | null
+          light_text: string | null
+          logo_dark_url: string | null
+          logo_light_url: string | null
+          og_image_url: string | null
+          seo_canonical: string | null
+          seo_description: string | null
+          seo_title: string | null
+          seo_twitter: string | null
+          site_tagline: string | null
+          site_title: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_user_credits: {
