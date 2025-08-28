@@ -253,9 +253,9 @@ export const ModernSignupForm: React.FC = () => {
 
               <div>
                 <Label className="text-sm font-medium text-foreground">Telefone/WhatsApp</Label>
-                <div className="flex gap-3 mt-2">
+                <div className="flex gap-2 mt-2">
                   <Select value={formData.countryCode} onValueChange={(value) => updateFormData('countryCode', value)}>
-                    <SelectTrigger className="w-32 modern-input">
+                    <SelectTrigger className="w-24 modern-input border-border/50 focus:border-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -274,13 +274,13 @@ export const ModernSignupForm: React.FC = () => {
                     placeholder="934 736 823"
                     value={formData.phone}
                     onChange={(e) => updateFormData('phone', e.target.value)}
-                    className="modern-input flex-1"
+                    className="modern-input flex-1 border-border/50 focus:border-primary"
                   />
                 </div>
                 {formData.phone.length >= 9 && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
+                  <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-400">
                     <Check className="w-4 h-4" />
-                    Número válido (Angola)
+                    <span>Número válido ({formData.countryCode.replace('+', '')} {formData.phone})</span>
                   </div>
                 )}
               </div>
