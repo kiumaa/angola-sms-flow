@@ -38,12 +38,24 @@ export const useContacts = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.functions.invoke('contacts-api', {
-        body: { action: 'list' }
-      });
+      // Use GET request to the contacts-api endpoint
+      const response = await fetch(
+        `https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/contacts-api`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eHhjcHJxeHF6bnNlbHd6Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDA5NDUsImV4cCI6MjA2NzExNjk0NX0.mjm1kF6gI55F9DLYfueAVOKokvTY8_nv0sFvvG_ReQs'
+          }
+        }
+      );
 
-      if (error) throw error;
-      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       setContacts(data?.contacts || []);
     } catch (error) {
       console.error('Error fetching contacts:', error);
@@ -81,15 +93,25 @@ export const useContacts = () => {
 
   const createContact = async (contactData: any) => {
     try {
-      const { data, error } = await supabase.functions.invoke('contacts-api', {
-        body: {
-          action: 'create',
-          ...contactData
+      const response = await fetch(
+        `https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/contacts-api`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eHhjcHJxeHF6bnNlbHd6Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDA5NDUsImV4cCI6MjA2NzExNjk0NX0.mjm1kF6gI55F9DLYfueAVOKokvTY8_nv0sFvvG_ReQs'
+          },
+          body: JSON.stringify(contactData)
         }
-      });
+      );
 
-      if (error) throw error;
-      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       await fetchContacts(); // Refresh list
       
       toast({
@@ -111,16 +133,25 @@ export const useContacts = () => {
 
   const updateContact = async (contactId: string, contactData: any) => {
     try {
-      const { data, error } = await supabase.functions.invoke('contacts-api', {
-        body: {
-          action: 'update',
-          id: contactId,
-          ...contactData
+      const response = await fetch(
+        `https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/contacts-api/${contactId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eHhjcHJxeHF6bnNlbHd6Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDA5NDUsImV4cCI6MjA2NzExNjk0NX0.mjm1kF6gI55F9DLYfueAVOKokvTY8_nv0sFvvG_ReQs'
+          },
+          body: JSON.stringify(contactData)
         }
-      });
+      );
 
-      if (error) throw error;
-      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       await fetchContacts(); // Refresh list
       
       toast({
@@ -142,14 +173,22 @@ export const useContacts = () => {
 
   const deleteContact = async (contactId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('contacts-api', {
-        body: {
-          action: 'delete',
-          id: contactId
+      const response = await fetch(
+        `https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/contacts-api/${contactId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eHhjcHJxeHF6bnNlbHd6Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDA5NDUsImV4cCI6MjA2NzExNjk0NX0.mjm1kF6gI55F9DLYfueAVOKokvTY8_nv0sFvvG_ReQs'
+          }
         }
-      });
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
       
       setContacts(prev => prev.filter(c => c.id !== contactId));
       
@@ -158,7 +197,7 @@ export const useContacts = () => {
         description: "Contato removido com sucesso.",
       });
       
-      return { data, error: null };
+      return { data: null, error: null };
     } catch (error) {
       console.error('Error deleting contact:', error);
       toast({
@@ -174,15 +213,26 @@ export const useContacts = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase.functions.invoke('contacts-api', {
-        body: {
-          action: 'list',
-          search: query
-        }
-      });
-
-      if (error) throw error;
+      const params = new URLSearchParams();
+      if (query) params.append('search', query);
       
+      const response = await fetch(
+        `https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/contacts-api?${params}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eHhjcHJxeHF6bnNlbHd6Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDA5NDUsImV4cCI6MjA2NzExNjk0NX0.mjm1kF6gI55F9DLYfueAVOKokvTY8_nv0sFvvG_ReQs'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       setContacts(data?.contacts || []);
     } catch (error) {
       console.error('Error searching contacts:', error);

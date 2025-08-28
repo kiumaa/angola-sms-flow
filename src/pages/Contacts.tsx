@@ -4,12 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Upload, Download, Search, Users, FileText, Trash2, Edit, Eye } from "lucide-react";
+import { Plus, Upload, Download, Search, Users, FileText, Phone, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import CSVImport from "@/components/contacts/CSVImport";
 import { useContacts } from "@/hooks/useContacts";
+import { ContactStats } from "@/components/contacts/ContactStats";
+import { ContactActions } from "@/components/contacts/ContactActions";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const Contacts = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +42,30 @@ const Contacts = () => {
 
   const handleDeleteContact = async (contactId: string) => {
     await deleteContact(contactId);
+  };
+
+  const handleViewContact = (contact: any) => {
+    // TODO: Implement view contact modal/page
+    console.log('View contact:', contact);
+  };
+
+  const handleEditContact = (contact: any) => {
+    // TODO: Implement edit contact modal
+    console.log('Edit contact:', contact);
+  };
+
+  const handleToggleBlock = async (contactId: string, isBlocked: boolean) => {
+    // TODO: Implement toggle block functionality
+    console.log('Toggle block:', contactId, isBlocked);
+  };
+
+  const handleSendSMS = (contact: any) => {
+    navigate(`/quick-send?phone=${encodeURIComponent(contact.phone_e164 || contact.phone)}`);
+  };
+
+  const handleSendEmail = (contact: any) => {
+    // TODO: Implement send email functionality
+    console.log('Send email:', contact);
   };
 
   const handleImportSuccess = (importedContacts: any[]) => {
@@ -137,72 +164,122 @@ const Contacts = () => {
               </CardHeader>
               <CardContent>
                 {contacts.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="p-6 rounded-3xl bg-gradient-primary/10 w-fit mx-auto mb-6">
-                      <Users className="h-12 w-12 text-primary mx-auto" />
-                    </div>
-                    <h3 className="text-xl font-normal mb-2">
-                      {searchTerm ? "Nenhum contato encontrado" : "Nenhum contato ainda"}
-                    </h3>
-                    <p className="text-muted-foreground mb-8">
-                      {searchTerm 
-                        ? "Tente buscar com outros termos." 
-                        : "Importe ou adicione contatos para começar suas campanhas."
-                      }
-                    </p>
-                    {!searchTerm && (
-                      <Button 
-                        className="button-futuristic" 
-                        onClick={() => setShowImport(true)}
-                      >
-                        Importar Contatos
-                      </Button>
-                    )}
-                  </div>
+                  <EmptyState
+                    icon={searchTerm ? Search : Users}
+                    title={searchTerm ? "Nenhum contato encontrado" : "Nenhum contato ainda"}
+                    description={searchTerm 
+                      ? "Tente buscar com outros termos ou verifique a ortografia." 
+                      : "Importe ou adicione contatos para começar suas campanhas de SMS."
+                    }
+                    action={!searchTerm ? (
+                      <div className="flex gap-3">
+                        <Button 
+                          className="button-futuristic" 
+                          onClick={() => setShowImport(true)}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Importar Contatos
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="glass-card border-glass-border"
+                          onClick={() => {/* TODO: Open add contact modal */}}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar Contato
+                        </Button>
+                      </div>
+                    ) : undefined}
+                  />
                 ) : (
                   <div className="rounded-2xl border border-glass-border overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/20">
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Telefone</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Tags</TableHead>
-                          <TableHead>Ações</TableHead>
+                        <TableRow className="bg-muted/20 hover:bg-muted/20">
+                          <TableHead className="font-medium">Nome</TableHead>
+                          <TableHead className="font-medium">Telefone</TableHead>
+                          <TableHead className="font-medium">Email</TableHead>
+                          <TableHead className="font-medium">Status</TableHead>
+                          <TableHead className="font-medium">Tags</TableHead>
+                          <TableHead className="font-medium text-center">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {contacts.map((contact) => (
-                          <TableRow key={contact.id} className="hover:bg-muted/10">
-                            <TableCell className="font-medium">{contact.name}</TableCell>
-                            <TableCell>{contact.phone}</TableCell>
-                            <TableCell>{contact.email || '-'}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-1 flex-wrap">
-                                {contact.tags?.map((tag, index) => (
-                                  <Badge key={index} variant="secondary" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
+                          <TableRow key={contact.id} className="hover:bg-muted/10 group">
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
+                                  <Users className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <div className="font-medium">{contact.name || 'Sem nome'}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Criado em {new Date(contact.created_at).toLocaleDateString('pt-BR')}
+                                  </div>
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="flex gap-2">
-                                <Button variant="outline" size="sm" className="glass-card border-glass-border">
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="glass-card border-glass-border">
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="glass-card border-glass-border text-red-500 hover:text-red-700"
-                                  onClick={() => handleDeleteContact(contact.id)}
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-mono text-sm">
+                                  {contact.phone_e164 || contact.phone}
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleSendSMS(contact)}
+                                  title="Enviar SMS"
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <MessageSquare className="h-3 w-3" />
                                 </Button>
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              {contact.email ? (
+                                <span className="text-sm">{contact.email}</span>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">Não informado</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={contact.is_blocked ? "destructive" : "default"}
+                                className="text-xs"
+                              >
+                                {contact.is_blocked ? 'Bloqueado' : 'Ativo'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 flex-wrap max-w-32">
+                                {contact.tags && contact.tags.length > 0 ? (
+                                  contact.tags.slice(0, 2).map((tag, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">Sem tags</span>
+                                )}
+                                {contact.tags && contact.tags.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{contact.tags.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <ContactActions
+                                contact={contact}
+                                onView={handleViewContact}
+                                onEdit={handleEditContact}
+                                onDelete={handleDeleteContact}
+                                onToggleBlock={handleToggleBlock}
+                                onSendSMS={handleSendSMS}
+                                onSendEmail={handleSendEmail}
+                              />
                             </TableCell>
                           </TableRow>
                         ))}
@@ -217,29 +294,10 @@ const Contacts = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Stats */}
-            <Card className="card-futuristic">
-              <CardHeader>
-                <CardTitle className="gradient-text">Estatísticas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total de Contatos:</span>
-                  <span className="font-bold text-primary">{contacts.length.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Listas Ativas:</span>
-                  <span className="font-bold">{contactLists.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Não bloqueados:</span>
-                  <span className="font-bold text-green-500">{contacts.filter(c => !c.is_blocked).length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Com email:</span>
-                  <span className="font-bold text-blue-500">{contacts.filter(c => c.email).length}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <ContactStats 
+              contacts={contacts} 
+              contactListsCount={contactLists.length} 
+            />
 
             {/* Contact Lists */}
             <Card className="card-futuristic">
