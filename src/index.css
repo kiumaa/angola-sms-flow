@@ -535,7 +535,7 @@
 }
 
 .input-container {
-  @apply relative group;
+  @apply relative;
 }
 
 .input-label {
