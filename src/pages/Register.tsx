@@ -1,9 +1,8 @@
-import { Gift, Check, CheckCircle, Sparkles, Zap } from "lucide-react";
+import { Zap, Gift, Check, CheckCircle, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { useRegistrationSettings } from "@/hooks/useRegistrationSettings";
 import { ModernSignupForm } from "@/components/auth/ModernSignupForm";
-import { BrandLogo } from "@/components/shared/BrandLogo";
 const Register = () => {
   const {
     settings
@@ -23,11 +22,13 @@ const Register = () => {
         <div className="container mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center space-x-4 group">
-              <BrandLogo 
-                size="lg" 
-                className="transition-all duration-500 group-hover:scale-110" 
-                textClassName="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent"
-              />
+              <div className="p-3 rounded-2xl bg-gradient-primary shadow-premium group-hover:shadow-glow transition-all duration-500 group-hover:scale-110">
+                <Zap className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">SMS.AO</span>
+                <span className="text-xs text-muted-foreground font-medium tracking-wide">Marketing Premium</span>
+              </div>
             </Link>
             <ThemeToggle />
           </div>
@@ -47,9 +48,9 @@ const Register = () => {
             </div>
             
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {registrationBenefits.map((benefit, index) => <div key={index} className="group relative overflow-hidden" style={{
+              {registrationBenefits.map((benefit, index) => <div key={index} style={{
               animationDelay: `${index * 0.2}s`
-            }}>
+            }} className="group relative overflow-hidden my-0">
                   
                 </div>)}
             </div>
