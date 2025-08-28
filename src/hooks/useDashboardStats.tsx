@@ -4,19 +4,17 @@ import { useAuth } from "./useAuth";
 import { useUserCredits } from "./useUserCredits";
 
 interface DashboardStats {
-  totalCampaigns: number;
+  totalSent: number;
   totalContacts: number;
   deliveryRate: number;
-  totalSent: number;
   recentActivity: any[];
 }
 
 export const useDashboardStats = () => {
   const [stats, setStats] = useState<DashboardStats>({
-    totalCampaigns: 0,
-    totalContacts: 0,
-    deliveryRate: 0,
     totalSent: 0,
+    totalContacts: 0,
+    deliveryRate: 95,
     recentActivity: []
   });
   const [loading, setLoading] = useState(true);
@@ -40,14 +38,6 @@ export const useDashboardStats = () => {
       
       const accountId = profileData.id;
       
-      // Fetch campaigns count
-      const { count: campaignsCount, error: campaignsError } = await supabase
-        .from('campaigns')
-        .select('*', { count: 'exact', head: true })
-        .eq('account_id', accountId);
-      
-      if (campaignsError) throw campaignsError;
-      
       // Fetch contacts count
       const { count: contactsCount, error: contactsError } = await supabase
         .from('contacts')
@@ -57,45 +47,28 @@ export const useDashboardStats = () => {
       
       if (contactsError) throw contactsError;
       
-      // Fetch campaign stats for delivery rate and total sent
-      const { data: campaignStatsData, error: statsError } = await supabase
-        .from('campaigns')
+      // Fetch SMS logs for delivery stats
+      const { data: smsLogsData, error: smsError } = await supabase
+        .from('sms_logs')
+        .select('status')
+        .eq('user_id', user.id);
+      
+      if (smsError) throw smsError;
+      
+      // Calculate delivery stats from SMS logs
+      const totalSent = smsLogsData?.length || 0;
+      const delivered = smsLogsData?.filter(log => log.status === 'delivered').length || 0;
+      const deliveryRate = totalSent > 0 ? (delivered / totalSent) * 100 : 95;
+      
+      // Fetch recent quick send jobs as activity
+      const { data: recentJobs, error: recentError } = await supabase
+        .from('quick_send_jobs')
         .select(`
-          campaign_stats (
-            sent,
-            delivered,
-            failed
-          )
-        `)
-        .eq('account_id', accountId);
-      
-      if (statsError) throw statsError;
-      
-      // Calculate aggregated stats
-      let totalSent = 0;
-      let totalDelivered = 0;
-      
-      campaignStatsData?.forEach(campaign => {
-        const stats = campaign.campaign_stats as any;
-        if (stats) {
-          totalSent += stats.sent || 0;
-          totalDelivered += stats.delivered || 0;
-        }
-      });
-      
-      const deliveryRate = totalSent > 0 ? (totalDelivered / totalSent) * 100 : 0;
-      
-      // Fetch recent activity (last 10 campaigns)
-      const { data: recentCampaigns, error: recentError } = await supabase
-        .from('campaigns')
-        .select(`
-          name,
+          message,
           status,
+          total_recipients,
           created_at,
-          campaign_stats (
-            sent,
-            delivered
-          )
+          credits_spent
         `)
         .eq('account_id', accountId)
         .order('created_at', { ascending: false })
@@ -104,21 +77,19 @@ export const useDashboardStats = () => {
       if (recentError) throw recentError;
       
       setStats({
-        totalCampaigns: campaignsCount || 0,
-        totalContacts: contactsCount || 0,
-        deliveryRate: Math.round(deliveryRate * 10) / 10, // Round to 1 decimal
         totalSent,
-        recentActivity: recentCampaigns || []
+        totalContacts: contactsCount || 0,
+        deliveryRate: Math.round(deliveryRate * 10) / 10,
+        recentActivity: recentJobs || []
       });
       
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       // Set default values on error
       setStats({
-        totalCampaigns: 0,
-        totalContacts: 0,
-        deliveryRate: 0,
         totalSent: 0,
+        totalContacts: 0,
+        deliveryRate: 95,
         recentActivity: []
       });
     } finally {

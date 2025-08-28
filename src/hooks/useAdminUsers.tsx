@@ -16,14 +16,12 @@ export interface AdminUser {
   company_name?: string;
   roles: string[];
   last_login?: string;
-  total_campaigns?: number;
-  total_sent?: number;
+  total_sms_sent?: number;
 }
 
 export interface AdminStats {
   totalUsers: number;
   totalCreditsIssued: number;
-  totalCampaigns: number;
   totalSMSSent: number;
   activeUsers: number;
   pendingCreditRequests: number;
@@ -60,18 +58,13 @@ export const useAdminUsers = () => {
       // Transform data to include aggregated stats
       const transformedUsers: AdminUser[] = await Promise.all(
         (usersData || []).map(async (profile) => {
-          // Get campaign stats for each user
-          const { data: campaignStats } = await supabase
-            .from('campaigns')
-            .select('id, account_id')
-            .eq('account_id', profile.id);
-
+          // Get SMS stats for each user from sms_logs
           const { data: smsStats } = await supabase
-            .from('campaign_stats')
-            .select('sent')
-            .in('campaign_id', campaignStats?.map(c => c.id) || []);
+            .from('sms_logs')
+            .select('id')
+            .eq('user_id', profile.user_id);
 
-          const totalSent = smsStats?.reduce((sum, stat) => sum + (stat.sent || 0), 0) || 0;
+          const totalSent = smsStats?.length || 0;
           const userRoles = (rolesData || []).filter(r => r.user_id === profile.user_id);
 
           return {
@@ -86,8 +79,7 @@ export const useAdminUsers = () => {
             phone: profile.phone,
             company_name: profile.company_name,
             roles: userRoles.map(r => r.role),
-            total_campaigns: campaignStats?.length || 0,
-            total_sent: totalSent
+            total_sms_sent: totalSent
           };
         })
       );
@@ -97,8 +89,7 @@ export const useAdminUsers = () => {
       // Calculate admin stats
       const totalUsers = transformedUsers.length;
       const totalCreditsIssued = transformedUsers.reduce((sum, u) => sum + u.credits, 0);
-      const totalCampaigns = transformedUsers.reduce((sum, u) => sum + (u.total_campaigns || 0), 0);
-      const totalSMSSent = transformedUsers.reduce((sum, u) => sum + (u.total_sent || 0), 0);
+      const totalSMSSent = transformedUsers.reduce((sum, u) => sum + (u.total_sms_sent || 0), 0);
       const activeUsers = transformedUsers.filter(u => u.user_status === 'active').length;
 
       // Get pending credit requests
@@ -120,7 +111,6 @@ export const useAdminUsers = () => {
       setStats({
         totalUsers,
         totalCreditsIssued,
-        totalCampaigns,
         totalSMSSent,
         activeUsers,
         pendingCreditRequests,

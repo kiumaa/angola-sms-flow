@@ -48,7 +48,7 @@ const SystemStatusPage = () => {
       {
         name: 'Background Jobs',
         status: 'operational',
-        description: 'Campaign processing and workers running'
+        description: 'Quick send jobs and background workers running'
       }
     ],
     incidents: [

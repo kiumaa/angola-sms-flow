@@ -76,27 +76,11 @@ const SMSGatewayTester = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Create test campaign
-      const { data: campaign, error: campaignError } = await supabase
-        .from('sms_campaigns')
-        .insert({
-          name: `Teste Gateway - ${new Date().toLocaleString('pt-BR')}`,
-          message: sanitizeInput(message),
-          status: 'sending',
-          user_id: user.data.user.id,
-          total_recipients: 1
-        })
-        .select()
-        .single();
-
-      if (campaignError) throw campaignError;
-
-      // Send SMS - Use international normalization for testing
-      const { data, error } = await supabase.functions.invoke('send-sms', {
+      // Send test SMS directly without campaign
+      const { data, error } = await supabase.functions.invoke('send-quick-sms', {
         body: {
           phoneNumber: normalizeInternationalPhone(fullPhoneNumber),
           message: sanitizeInput(message),
-          campaignId: campaign.id,
           isTest: true
         }
       });

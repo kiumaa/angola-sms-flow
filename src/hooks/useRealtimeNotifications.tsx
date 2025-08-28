@@ -5,7 +5,7 @@ import { useToast } from "./use-toast";
 
 export interface RealtimeNotification {
   id: string;
-  type: 'campaign_completed' | 'campaign_failed' | 'low_credits' | 'gateway_down' | 'delivery_report';
+  type: 'low_credits' | 'gateway_down' | 'delivery_report' | 'sms_sent' | 'system_alert';
   title: string;
   message: string;
   data?: any;
@@ -14,10 +14,10 @@ export interface RealtimeNotification {
 }
 
 interface NotificationSettings {
-  campaign_updates: boolean;
   credit_alerts: boolean;
   delivery_reports: boolean;
   gateway_status: boolean;
+  sms_updates: boolean;
   email_notifications: boolean;
 }
 
@@ -25,10 +25,10 @@ export const useRealtimeNotifications = () => {
   const [notifications, setNotifications] = useState<RealtimeNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [settings, setSettings] = useState<NotificationSettings>({
-    campaign_updates: true,
     credit_alerts: true,
     delivery_reports: false,
     gateway_status: true,
+    sms_updates: true,
     email_notifications: false
   });
   const [connected, setConnected] = useState(false);
@@ -43,29 +43,29 @@ export const useRealtimeNotifications = () => {
     let message = '';
 
     switch (type) {
-      case 'campaign_completed':
-        title = 'Campanha Concluída';
-        message = `A campanha "${data.campaign_name}" foi finalizada com sucesso.`;
-        break;
-      case 'campaign_failed':
-        title = 'Campanha Falhou';
-        message = `A campanha "${data.campaign_name}" falhou durante o envio.`;
+      case 'sms_sent':
+        title = 'SMS Enviado';
+        message = `SMS enviado com sucesso para ${data.recipient || 'destinatário'}.`;
         break;
       case 'low_credits':
         title = 'Créditos Baixos';
-        message = `Você possui apenas ${data.credits} créditos restantes.`;
+        message = `Você tem apenas ${data.credits || 0} créditos restantes. Considere recarregar sua conta.`;
         break;
       case 'gateway_down':
-        title = 'Gateway Indisponível';
-        message = `O gateway ${data.gateway_name} está fora do ar.`;
+        title = 'Gateway Offline';
+        message = `O gateway ${data.gateway_name} está temporariamente indisponível.`;
         break;
       case 'delivery_report':
         title = 'Relatório de Entrega';
-        message = `${data.delivered} mensagens entregues, ${data.failed} falharam.`;
+        message = `${data.delivered || 0} de ${data.sent || 0} SMS foram entregues com sucesso.`;
+        break;
+      case 'system_alert':
+        title = 'Alerta do Sistema';
+        message = data.message || 'Notificação do sistema.';
         break;
       default:
         title = 'Notificação';
-        message = 'Nova atividade no sistema.';
+        message = 'Nova notificação recebida.';
     }
 
     return {
@@ -79,243 +79,189 @@ export const useRealtimeNotifications = () => {
     };
   }, []);
 
+  // Show notifications based on user settings
+  const showNotification = useCallback((notification: RealtimeNotification) => {
+    // Check if user wants this type of notification
+    const shouldShow = 
+      (notification.type === 'low_credits' && settings.credit_alerts) ||
+      (notification.type === 'delivery_report' && settings.delivery_reports) ||
+      (notification.type === 'gateway_down' && settings.gateway_status) ||
+      (notification.type === 'sms_sent' && settings.sms_updates) ||
+      isAdmin; // Admins get all notifications
+
+    if (shouldShow) {
+      toast({
+        title: notification.title,
+        description: notification.message,
+        duration: 5000,
+      });
+    }
+  }, [settings.credit_alerts, settings.delivery_reports, settings.gateway_status, settings.sms_updates, isAdmin, toast]);
+
+  // Add notification to list
   const addNotification = useCallback((notification: RealtimeNotification) => {
-    setNotifications(prev => {
-      // Avoid duplicates
-      if (prev.some(n => n.id === notification.id)) {
-        return prev;
-      }
-      
-      // Keep only last 50 notifications
-      const updated = [notification, ...prev].slice(0, 50);
-      
-      // Show toast for new notifications
-      if (settings.campaign_updates || isAdmin) {
-        toast({
-          title: notification.title,
-          description: notification.message,
-          duration: 5000,
-        });
-      }
-      
-      return updated;
-    });
-
+    setNotifications(prev => [notification, ...prev.slice(0, 49)]); // Keep max 50 notifications
     setUnreadCount(prev => prev + 1);
-  }, [settings.campaign_updates, isAdmin, toast]);
+    showNotification(notification);
+  }, [showNotification]);
 
-  const markAsRead = useCallback((notificationId: string) => {
+  // Mark notification as read
+  const markAsRead = useCallback((id: string) => {
     setNotifications(prev => 
-      prev.map(n => 
-        n.id === notificationId ? { ...n, read: true } : n
+      prev.map(notif => 
+        notif.id === id ? { ...notif, read: true } : notif
       )
     );
     setUnreadCount(prev => Math.max(0, prev - 1));
   }, []);
 
+  // Mark all as read
   const markAllAsRead = useCallback(() => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, read: true }))
-    );
+    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
     setUnreadCount(0);
   }, []);
 
-  const clearNotifications = useCallback(() => {
+  // Update settings
+  const updateSettings = useCallback((newSettings: Partial<NotificationSettings>) => {
+    setSettings(prev => ({ ...prev, ...newSettings }));
+    // Could also save to user preferences in database here
+  }, []);
+
+  // Clear all notifications
+  const clearAll = useCallback(() => {
     setNotifications([]);
     setUnreadCount(0);
   }, []);
 
-  const updateSettings = useCallback(async (newSettings: Partial<NotificationSettings>) => {
-    try {
-      setSettings(prev => ({ ...prev, ...newSettings }));
-      
-      // Save to localStorage for now (could be moved to a user_preferences table later)
-      localStorage.setItem('notification_settings', JSON.stringify({ ...settings, ...newSettings }));
-      
-      toast({
-        title: "Configurações Salvas",
-        description: "Suas preferências de notificação foram atualizadas.",
-      });
-    } catch (error) {
-      console.error('Error updating notification settings:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar configurações.",
-        variant: "destructive"
-      });
-    }
-  }, [settings, toast]);
-
-  // Load notification settings from localStorage
-  useEffect(() => {
-    if (!user) return;
-
-    const loadSettings = async () => {
-      try {
-        // Load from localStorage for now
-        const savedSettings = localStorage.getItem('notification_settings');
-        if (savedSettings) {
-          setSettings(JSON.parse(savedSettings));
-        }
-      } catch (error) {
-        console.error('Error loading notification settings:', error);
-      }
-    };
-
-    loadSettings();
-  }, [user]);
-
-  // Set up real-time subscriptions
+  // Set up realtime subscriptions
   useEffect(() => {
     if (!user) return;
 
     console.log('Setting up realtime notifications...');
-    setConnected(true);
+    let channels: any[] = [];
 
-    // Campaign updates subscription
-    const campaignChannel = supabase
-      .channel('campaign-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'campaigns',
-          filter: isAdmin ? undefined : `account_id=eq.${user.id}`
-        },
-        (payload) => {
-          const { old: oldRecord, new: newRecord } = payload;
-          
-          // Campaign completed
-          if (oldRecord.status !== 'completed' && newRecord.status === 'completed') {
-            const notification = createNotification('campaign_completed', {
-              campaign_name: newRecord.name,
-              campaign_id: newRecord.id
-            });
-            addNotification(notification);
-          }
-          
-          // Campaign failed
-          if (oldRecord.status !== 'failed' && newRecord.status === 'failed') {
-            const notification = createNotification('campaign_failed', {
-              campaign_name: newRecord.name,
-              campaign_id: newRecord.id
-            });
-            addNotification(notification);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Campaign notifications status:', status);
-      });
-
-    // Credit updates subscription
-    const creditChannel = supabase
-      .channel('credit-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          const { old: oldRecord, new: newRecord } = payload;
-          
-          // Low credits warning (below 100)
-          if (newRecord.credits <= 100 && oldRecord.credits > 100) {
-            const notification = createNotification('low_credits', {
-              credits: newRecord.credits
-            });
-            addNotification(notification);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Credit notifications status:', status);
-      });
-
-    // Gateway status subscription (admin only)
-    let gatewayChannel: any = null;
-    if (isAdmin) {
-      gatewayChannel = supabase
-        .channel('gateway-notifications')
+    try {
+      // Credits subscription for low credit alerts
+      const creditsChannel = supabase
+        .channel('credit-notifications')
         .on(
           'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'sms_gateways'
+          { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'profiles',
+            filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            const { old: oldRecord, new: newRecord } = payload;
+            const newRecord = payload.new as any;
+            const oldRecord = payload.old as any;
             
-            // Gateway went offline
-            if (oldRecord.is_active && !newRecord.is_active) {
-              const notification = createNotification('gateway_down', {
-                gateway_name: newRecord.display_name
+            // Check for low credits (less than 10)
+            if (newRecord.credits <= 10 && oldRecord.credits > 10) {
+              const notification = createNotification('low_credits', {
+                credits: newRecord.credits,
+                user_id: user.id
               });
               addNotification(notification);
             }
           }
         )
         .subscribe((status) => {
-          console.log('Gateway notifications status:', status);
+          console.log('Credit notifications status:', status);
         });
+
+      channels.push(creditsChannel);
+
+      // SMS logs subscription for delivery reports
+      const smsChannel = supabase
+        .channel('sms-notifications')
+        .on(
+          'postgres_changes',
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'sms_logs',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            const newRecord = payload.new as any;
+            
+            if (newRecord.status === 'sent' && settings.sms_updates) {
+              const notification = createNotification('sms_sent', {
+                recipient: newRecord.phone_number,
+                message_id: newRecord.id
+              });
+              addNotification(notification);
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log('SMS notifications status:', status);
+        });
+
+      channels.push(smsChannel);
+
+      // Gateway status subscription (admin only)
+      if (isAdmin) {
+        const gatewayChannel = supabase
+          .channel('gateway-notifications')
+          .on(
+            'postgres_changes',
+            { 
+              event: 'UPDATE', 
+              schema: 'public', 
+              table: 'sms_gateways'
+            },
+            (payload) => {
+              const newRecord = payload.new as any;
+              const oldRecord = payload.old as any;
+              
+              // Gateway went offline
+              if (newRecord.is_active === false && oldRecord.is_active === true) {
+                const notification = createNotification('gateway_down', {
+                  gateway_name: newRecord.display_name,
+                  gateway_id: newRecord.id
+                });
+                addNotification(notification);
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('Gateway notifications status:', status);
+          });
+
+        channels.push(gatewayChannel);
+      }
+
+      setConnected(true);
+
+    } catch (error) {
+      console.error('Error setting up notifications:', error);
+      setConnected(false);
     }
 
-    // Campaign stats subscription for delivery reports
-    const statsChannel = supabase
-      .channel('stats-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'campaign_stats'
-        },
-        (payload) => {
-          if (!settings.delivery_reports) return;
-          
-          const stats = payload.new;
-          const total = stats.sent + stats.delivered + stats.failed;
-          
-          // Report when campaign reaches significant milestones
-          if (total > 0 && (total % 1000 === 0 || stats.delivered + stats.failed >= stats.sent)) {
-            const notification = createNotification('delivery_report', {
-              delivered: stats.delivered,
-              failed: stats.failed,
-              total: total
-            });
-            addNotification(notification);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Stats notifications status:', status);
-      });
-
+    // Cleanup function
     return () => {
       console.log('Cleaning up realtime subscriptions...');
+      channels.forEach(channel => {
+        if (channel) {
+          console.log(`${channel.topic} notifications status: CLOSED`);
+          supabase.removeChannel(channel);
+        }
+      });
       setConnected(false);
-      supabase.removeChannel(campaignChannel);
-      supabase.removeChannel(creditChannel);
-      supabase.removeChannel(statsChannel);
-      if (gatewayChannel) {
-        supabase.removeChannel(gatewayChannel);
-      }
     };
-  }, [user, isAdmin, settings.delivery_reports, createNotification, addNotification]);
+  }, [user, isAdmin, settings.sms_updates, createNotification, addNotification]);
 
   return {
     notifications,
     unreadCount,
     settings,
     connected,
+    addNotification,
     markAsRead,
     markAllAsRead,
-    clearNotifications,
-    updateSettings
+    updateSettings,
+    clearAll
   };
 };

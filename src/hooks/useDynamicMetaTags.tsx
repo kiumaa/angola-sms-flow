@@ -115,7 +115,7 @@ export const useDynamicMetaTags = (pageConfig?: MetaTagsConfig) => {
     const routeNames: { [key: string]: string } = {
       '/': 'Início',
       '/dashboard': 'Dashboard',
-      '/campaigns': 'Campanhas',
+      '/campaigns': 'Campanhas (Em Breve)',
       '/contacts': 'Contatos',
       '/quick-send': 'Envio Rápido',
       '/reports': 'Relatórios',

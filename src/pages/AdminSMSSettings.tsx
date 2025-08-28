@@ -90,25 +90,10 @@ const AdminSMSSettings = () => {
         throw new Error('User not authenticated');
       }
 
-      // Criar campanha de teste
-      const { data: campaign, error: campaignError } = await supabase
-        .from('sms_campaigns')
-        .insert({
-          user_id: user.id,
-          name: 'Teste de Conexão SMS',
-          message: testMessage,
-          total_recipients: 1,
-          status: 'sending'
-        })
-        .select()
-        .single();
-
-      if (campaignError) throw campaignError;
-
-      // Enviar SMS de teste
-      const { data, error } = await supabase.functions.invoke('send-sms', {
+      // Enviar SMS de teste direto
+      const { data, error } = await supabase.functions.invoke('send-quick-sms', {
         body: {
-          campaignId: campaign.id,
+          phoneNumber: testPhone.startsWith('+') ? testPhone : `+244${testPhone}`,
           recipients: [testPhone.startsWith('+') ? testPhone : `+244${testPhone}`],
           message: testMessage
         }

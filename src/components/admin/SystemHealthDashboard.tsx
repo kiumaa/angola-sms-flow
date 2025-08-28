@@ -126,10 +126,10 @@ const SystemHealthDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Campanhas Totais</p>
-                <p className="text-3xl font-bold text-foreground">{metrics.totalCampaigns.toLocaleString()}</p>
+                <p className="text-sm font-medium text-muted-foreground">Envios Totais</p>
+                <p className="text-3xl font-bold text-foreground">{metrics.totalMessagesSent.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.totalMessagesSent.toLocaleString()} mensagens enviadas
+                  {metrics.totalMessagesSent.toLocaleString()} SMS processados
                 </p>
               </div>
               <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">

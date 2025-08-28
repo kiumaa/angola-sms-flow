@@ -15,7 +15,7 @@ interface SystemHealth {
 interface SystemMetrics {
   totalUsers: number;
   activeUsers24h: number;
-  totalCampaigns: number;
+  totalSMSJobs: number;
   totalMessagesSent: number;
   averageDeliveryRate: number;
   systemUptime: number;
@@ -44,7 +44,7 @@ export const useSystemHealth = () => {
   const [metrics, setMetrics] = useState<SystemMetrics>({
     totalUsers: 0,
     activeUsers24h: 0,
-    totalCampaigns: 0,
+    totalSMSJobs: 0,
     totalMessagesSent: 0,
     averageDeliveryRate: 0,
     systemUptime: 0,
@@ -144,14 +144,14 @@ export const useSystemHealth = () => {
   const fetchSystemMetrics = async () => {
     try {
       // Fetch basic metrics
-      const [usersResult, campaignsResult, smsLogsResult] = await Promise.all([
+      const [usersResult, quickSendResult, smsLogsResult] = await Promise.all([
         supabase.from('profiles').select('id, created_at'),
-        supabase.from('campaigns').select('id, status'),
+        supabase.from('quick_send_jobs').select('id, status'),
         supabase.from('sms_logs').select('id, status, created_at')
       ]);
 
       const users = usersResult.data || [];
-      const campaigns = campaignsResult.data || [];
+      const quickSendJobs = quickSendResult.data || [];
       const smsLogs = smsLogsResult.data || [];
 
       // Calculate active users in last 24h (simplified)
@@ -168,7 +168,7 @@ export const useSystemHealth = () => {
       setMetrics({
         totalUsers: users.length,
         activeUsers24h,
-        totalCampaigns: campaigns.length,
+        totalSMSJobs: quickSendJobs.length,
         totalMessagesSent: totalMessages,
         averageDeliveryRate,
         systemUptime: 99.9, // Placeholder - would come from monitoring service
