@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, X, Clock, User, Search, Eye, CreditCard } from "lucide-react";
+import { Check, X, Clock, User, Search, Eye, CreditCard, DollarSign, FileText, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import AdminLayout from "@/components/layout/AdminLayout";
+import { StatsCard } from "@/components/admin/StatsCard";
 
 interface CreditRequest {
   id: string;
@@ -194,37 +196,120 @@ const AdminCreditRequests = () => {
     );
   }
 
+  // Calculate stats
+  const pendingRequests = requests.filter(r => r.status === 'pending').length;
+  const approvedRequests = requests.filter(r => r.status === 'approved').length;
+  const totalValue = requests.reduce((sum, r) => sum + Number(r.amount_kwanza), 0);
+  const totalCredits = requests.reduce((sum, r) => sum + r.credits_requested, 0);
+
   return (
-    <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold">Solicitações de Créditos</h1>
-          <p className="text-muted-foreground mt-2">
-            Aprovar ou rejeitar solicitações de compra de créditos SMS
-          </p>
+    <AdminLayout>
+      <div className="space-y-8">
+        {/* Enhanced Header */}
+        <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+          <div className="relative">
+            <h1 className="text-4xl font-light gradient-text mb-2 flex items-center space-x-3">
+              <div className="p-3 rounded-3xl bg-gradient-primary shadow-glow animate-glow">
+                <DollarSign className="h-8 w-8 text-white" />
+              </div>
+              <span>Solicitações de Créditos</span>
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Gerenciar e processar solicitações de compra de créditos SMS
+            </p>
+          </div>
         </div>
 
-        <Card>
+        {/* Stats Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard
+            title="Solicitações Pendentes"
+            value={pendingRequests}
+            description="Aguardando aprovação"
+            icon={Clock}
+            gradient="from-orange-500 to-yellow-600"
+            trend={{
+              value: `${requests.length}`,
+              direction: 'neutral',
+              label: 'total'
+            }}
+            index={0}
+          />
+          
+          <StatsCard
+            title="Aprovadas"
+            value={approvedRequests}
+            description="Processadas com sucesso"
+            icon={Check}
+            gradient="from-green-500 to-emerald-600"
+            trend={{
+              value: `${((approvedRequests / requests.length) * 100).toFixed(0)}%`,
+              direction: 'up',
+              label: 'taxa aprovação'
+            }}
+            index={1}
+          />
+          
+          <StatsCard
+            title="Valor Total"
+            value={`${totalValue.toLocaleString()} Kz`}
+            description="Soma de todas as solicitações"
+            icon={DollarSign}
+            gradient="from-blue-500 to-purple-600"
+            trend={{
+              value: `${Math.round(totalValue / requests.length).toLocaleString()}`,
+              direction: 'up',
+              label: 'média por pedido'
+            }}
+            index={2}
+          />
+          
+          <StatsCard
+            title="Créditos Solicitados"
+            value={totalCredits.toLocaleString()}
+            description="Total de créditos SMS"
+            icon={FileText}
+            gradient="from-purple-500 to-pink-600"
+            trend={{
+              value: `${Math.round(totalCredits / requests.length)}`,
+              direction: 'up',
+              label: 'média por pedido'
+            }}
+            index={3}
+          />
+        </div>
+
+        <Card className="card-futuristic">
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="text-xl font-light gradient-text flex items-center">
               <CreditCard className="h-5 w-5 mr-2" />
               Solicitações de Créditos ({filteredRequests.length})
             </CardTitle>
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Pesquisar por cliente, email ou referência..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
+            <CardDescription>
+              Lista completa de todas as solicitações de créditos
+            </CardDescription>
+            <div className="flex items-center space-x-2 mt-4">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <Input
+                  placeholder="Pesquisar por cliente, email ou referência..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 rounded-xl border-border/40 focus:border-primary/40"
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             {filteredRequests.length === 0 ? (
-              <div className="text-center py-8">
-                <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <div className="text-center py-12">
+                <div className="p-4 rounded-3xl bg-muted/20 w-fit mx-auto mb-4">
+                  <CreditCard className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">Nenhuma solicitação encontrada</h3>
                 <p className="text-muted-foreground">
-                  Nenhuma solicitação de créditos encontrada
+                  {searchTerm ? 'Tente ajustar seus filtros de pesquisa' : 'Nenhuma solicitação de créditos foi feita ainda'}
                 </p>
               </div>
             ) : (
@@ -385,7 +470,8 @@ const AdminCreditRequests = () => {
           </CardContent>
         </Card>
       </div>
-    );
+    </AdminLayout>
+  );
 };
 
 export default AdminCreditRequests;

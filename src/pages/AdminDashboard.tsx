@@ -14,11 +14,13 @@ import {
   Globe,
   Server,
   UserPlus,
-  DollarSign
+  DollarSign,
+  BarChart3
 } from "lucide-react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useGatewayMonitoring } from "@/hooks/useGatewayMonitoring";
+import { StatsCard } from "@/components/admin/StatsCard";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
 const AdminDashboard = () => {
@@ -69,70 +71,61 @@ const AdminDashboard = () => {
         {/* Enhanced Stats Grid */}
         {userStats && (
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: "Total de Usuários",
-                value: userStats.totalUsers,
-                description: `${userStats.activeUsers} ativos`,
-                icon: Users,
-                gradient: "from-blue-500 to-purple-600",
-                trend: `+${userStats.recentSignups} este mês`,
-                trendUp: true
-              },
-              {
-                title: "SMS Enviados",
-                value: userStats.totalSMSSent.toLocaleString(),
-                description: `${metrics?.totalDelivered.toLocaleString() || 0} entregues`,
-                icon: MessageSquare,
-                gradient: "from-green-500 to-emerald-600",
-                trend: `${metrics?.deliveryRate.toFixed(1) || 0}% entrega`,
-                trendUp: (metrics?.deliveryRate || 0) >= 95
-              },
-              {
-                title: "Créditos Emitidos",
-                value: userStats.totalCreditsIssued.toLocaleString(),
-                description: `${userStats.pendingCreditRequests} pendentes`,
-                icon: Zap,
-                gradient: "from-orange-500 to-yellow-600",
-                trend: `${Math.round(userStats.totalCreditsIssued / userStats.totalUsers)} por usuário`,
-                trendUp: true
-              },
-              {
-                title: "Gateways SMS",
-                value: `${onlineGateways}/${totalGateways}`,
-                description: "Online/Total",
-                icon: Server,
-                gradient: onlineGateways === totalGateways ? "from-green-500 to-emerald-600" : "from-red-500 to-pink-600",
-                trend: `${Math.round((onlineGateways / totalGateways) * 100)}% online`,
-                trendUp: onlineGateways === totalGateways
-              }
-            ].map((stat, index) => (
-              <Card 
-                key={index} 
-                className="card-futuristic animate-slide-up-stagger cursor-default relative overflow-hidden"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`}></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`p-3 rounded-3xl bg-gradient-to-br ${stat.gradient} shadow-glow hover-lift`}>
-                    <stat.icon className="h-5 w-5 text-white" />
-                  </div>
-                </CardHeader>
-                <CardContent className="relative">
-                  <div className="text-3xl font-light gradient-text mb-2">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {stat.description}
-                  </p>
-                  <div className={`flex items-center text-xs ${stat.trendUp ? 'text-green-600' : 'text-orange-600'}`}>
-                    {stat.trendUp ? <TrendingUp className="h-3 w-3 mr-1" /> : <AlertTriangle className="h-3 w-3 mr-1" />}
-                    {stat.trend}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <StatsCard
+              title="Total de Usuários"
+              value={userStats.totalUsers}
+              description={`${userStats.activeUsers} ativos`}
+              icon={Users}
+              gradient="from-blue-500 to-purple-600"
+              trend={{
+                value: `+${userStats.recentSignups}`,
+                direction: 'up',
+                label: 'este mês'
+              }}
+              index={0}
+            />
+            
+            <StatsCard
+              title="SMS Enviados"
+              value={userStats.totalSMSSent.toLocaleString()}
+              description={`${metrics?.totalDelivered.toLocaleString() || 0} entregues`}
+              icon={MessageSquare}
+              gradient="from-green-500 to-emerald-600"
+              trend={{
+                value: `${metrics?.deliveryRate.toFixed(1) || 0}%`,
+                direction: (metrics?.deliveryRate || 0) >= 95 ? 'up' : 'down',
+                label: 'entrega'
+              }}
+              index={1}
+            />
+            
+            <StatsCard
+              title="Créditos Emitidos"
+              value={userStats.totalCreditsIssued.toLocaleString()}
+              description={`${userStats.pendingCreditRequests} pendentes`}
+              icon={Zap}
+              gradient="from-orange-500 to-yellow-600"
+              trend={{
+                value: `${Math.round(userStats.totalCreditsIssued / userStats.totalUsers)}`,
+                direction: 'up',
+                label: 'por usuário'
+              }}
+              index={2}
+            />
+            
+            <StatsCard
+              title="Gateways SMS"
+              value={`${onlineGateways}/${totalGateways}`}
+              description="Online/Total"
+              icon={Server}
+              gradient={onlineGateways === totalGateways ? "from-green-500 to-emerald-600" : "from-red-500 to-pink-600"}
+              trend={{
+                value: `${Math.round((onlineGateways / totalGateways) * 100)}%`,
+                direction: onlineGateways === totalGateways ? 'up' : 'down',
+                label: 'online'
+              }}
+              index={3}
+            />
           </div>
         )}
 
@@ -190,7 +183,7 @@ const AdminDashboard = () => {
           <Card className="card-futuristic">
             <CardHeader>
               <CardTitle className="text-xl font-light gradient-text flex items-center">
-                <BarChart className="h-5 w-5 mr-2" />
+                <BarChart3 className="h-5 w-5 mr-2" />
                 Performance Últimos 7 Dias
               </CardTitle>
               <CardDescription>
