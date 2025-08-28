@@ -61,6 +61,8 @@ const DEFAULT_SETTINGS: AdvancedBrandSettings = {
     xl: 20,
     '2xl': 24
   },
+  logo_light_url: '/src/assets/logo-light.png',
+  logo_dark_url: '/src/assets/logo-dark.png',
   seo_twitter: '@smsao'
 };
 
