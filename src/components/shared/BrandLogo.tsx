@@ -2,6 +2,8 @@ import { useAdvancedBrandSettings } from "@/hooks/useAdvancedBrandSettings";
 import { useTheme } from "next-themes";
 import { Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logoDark from "@/assets/logo-dark.png";
+import logoLight from "@/assets/logo-light.png";
 
 interface BrandLogoProps {
   className?: string;
@@ -29,12 +31,12 @@ export const BrandLogo = ({
   const currentTheme = theme === 'system' ? systemTheme : theme;
   const isDark = currentTheme === 'dark';
 
-  // Select appropriate logo based on theme
-  const logoUrl = isDark ? settings.logo_dark_url : settings.logo_light_url;
-  const fallbackLogo = !isDark ? settings.logo_dark_url : settings.logo_light_url;
-
-  // Use logo if available, otherwise fallback to icon + text
-  const finalLogo = logoUrl || fallbackLogo;
+  // Select appropriate logo based on theme with local assets as fallback
+  const customLogo = isDark ? settings.logo_dark_url : settings.logo_light_url;
+  const defaultLogo = isDark ? logoDark : logoLight;
+  
+  // Use custom logo if available, otherwise use default local assets
+  const finalLogo = customLogo || defaultLogo;
 
   return (
     <div className="flex items-center">

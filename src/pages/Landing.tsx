@@ -4,6 +4,7 @@ import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap } from 
 import { Testimonials } from "@/components/ui/testimonials-columns-1";
 import { Pricing1 } from "@/components/ui/pricing-1";
 import { HeroSection } from "@/components/ui/hero-section-1";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { Link } from "react-router-dom";
 import { useDynamicBranding } from "@/hooks/useDynamicBranding";
 
@@ -128,8 +129,7 @@ const Landing = () => {
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <MessageSquare className="h-6 w-6 text-primary" />
-                <span className="font-bold text-xl text-foreground">SMS.AO</span>
+                <BrandLogo size="md" />
               </div>
               <p className="text-muted-foreground text-sm">
                 Plataforma profissional de SMS para Angola.

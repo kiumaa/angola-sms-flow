@@ -4,6 +4,7 @@ import { ArrowRight, ChevronRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { ShinyButton } from '@/components/ui/shiny-button';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 import { cn } from '@/lib/utils';
 const transitionVariants = {
   item: {
@@ -205,7 +206,7 @@ const HeroHeader = () => {
                     <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
                         <div className="flex w-full justify-between lg:w-auto">
                             <Link to="/" aria-label="home" className="flex items-center space-x-2">
-                                <Logo />
+                                <BrandLogo size="md" showText={false} />
                             </Link>
 
                             <button onClick={() => setMenuState(!menuState)} aria-label={menuState == true ? 'Close Menu' : 'Open Menu'} className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
