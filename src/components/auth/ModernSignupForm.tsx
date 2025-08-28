@@ -14,7 +14,7 @@ import { InternationalPhoneInput } from "@/components/shared/InternationalPhoneI
 import { useFormValidation, registerSchema } from "@/hooks/useFormValidation";
 import { useRegistrationSettings } from "@/hooks/useRegistrationSettings";
 import OTPRegistrationModal from "@/components/auth/OTPRegistrationModal";
-import { normalizeInternationalPhone } from "@/lib/internationalPhoneNormalization";
+import { normalizeInternationalPhone, DEFAULT_COUNTRY, type PhoneCountry } from "@/lib/internationalPhoneNormalization";
 
 // Label Component
 const labelVariants = cva(
@@ -91,7 +91,7 @@ export function ModernSignupForm() {
     phone: "",
     acceptTerms: false
   });
-  const [selectedCountry, setSelectedCountry] = useState<any>(null);
+  const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(DEFAULT_COUNTRY);
   const [showPassword, setShowPassword] = useState({
     password: false,
     confirm: false

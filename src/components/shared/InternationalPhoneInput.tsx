@@ -127,7 +127,7 @@ export const InternationalPhoneInput = forwardRef<HTMLInputElement, Internationa
             type="tel"
             value={displayValue}
             onChange={handleInputChange}
-            placeholder={selectedCountry.example}
+            placeholder={selectedCountry?.example || "Digite seu número"}
             className={cn(
               "font-mono",
               hasError && "border-destructive",
