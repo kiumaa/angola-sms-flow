@@ -469,12 +469,6 @@ export const ModernSignupForm: React.FC = () => {
     <>
       <Card className="w-full max-w-md mx-auto glass-card border-0 shadow-modern">
         <CardHeader className="text-center pb-6">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
-              <Zap className="w-5 h-5" />
-            </div>
-            <span className="text-lg font-medium">Marketing Premium</span>
-          </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
