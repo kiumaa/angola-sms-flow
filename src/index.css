@@ -66,17 +66,21 @@
     --glass-border: 220 13% 86% / 0.2;
     --backdrop-blur: 8px;
     
-    /* SMS.AO Brand Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(220 39% 11%) 0%, hsl(215 20% 17%) 100%);
+    /* SMS.AO Brand Gradients - Premium Edition */
+    --gradient-primary: linear-gradient(135deg, hsl(220 39% 11%) 0%, hsl(215 20% 17%) 50%, hsl(220 26% 14%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(220 14% 98%) 0%, hsl(220 13% 91%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(220 14% 98%) 0%, hsl(220 14% 96%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 50%, hsl(220 14% 96%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 25%, hsl(220 14% 96%) 75%, hsl(220 13% 91%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
+    --gradient-border: linear-gradient(135deg, hsl(220 13% 86% / 0.3) 0%, hsl(220 13% 86% / 0.1) 100%);
     
-    /* Shadows - Clean & Minimal */
-    --shadow-glass: 0 2px 6px 0 hsl(220 39% 11% / 0.05);
-    --shadow-glow: 0 4px 12px 0 hsl(220 39% 11% / 0.08);
-    --shadow-elevated: 0 8px 24px 0 hsl(220 39% 11% / 0.12);
-    --shadow-elegant: 0 10px 30px -10px hsl(220 39% 11% / 0.15);
-    --shadow-modern: 0 4px 20px -4px hsl(220 39% 11% / 0.1);
+    /* Shadows - Premium Glass Design */
+    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-glow: 0 20px 40px -12px hsl(220 39% 11% / 0.25), 0 8px 16px -8px hsl(220 39% 11% / 0.3);
+    --shadow-elevated: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+    --shadow-elegant: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --shadow-modern: 0 4px 20px -4px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    --shadow-premium: 0 32px 64px -12px rgba(0, 0, 0, 0.4), 0 20px 40px -12px rgba(0, 0, 0, 0.3);
 
     /* Radii - Minimal Roundness */
     --radius: 4px;
@@ -515,32 +519,38 @@
   opacity: 1;
 }
 
-/* Enhanced Input Focus Effects */
+/* Premium Form Styling */
 .modern-input {
-  @apply relative block w-full px-4 py-4 text-sm bg-background border border-input rounded-xl
-         focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-muted-foreground/50
-         transition-all duration-300 ease-out
-         placeholder:text-muted-foreground shadow-sm hover:shadow-md;
+  @apply relative block w-full px-5 py-4 text-sm bg-background/80 backdrop-blur-xl 
+         border border-border/50 rounded-2xl font-medium
+         focus:ring-2 focus:ring-primary/30 focus:border-primary/70 
+         hover:border-border/80 hover:bg-background/90
+         transition-all duration-400 ease-out
+         placeholder:text-muted-foreground/60 placeholder:font-normal
+         shadow-modern hover:shadow-elegant;
 }
 
 .modern-input:focus {
-  @apply shadow-elegant transform scale-[1.02];
+  @apply shadow-premium transform scale-[1.01] bg-background;
 }
 
 .input-container {
-  @apply relative;
-}
-
-.input-container .modern-input:focus + .input-label {
-  @apply text-primary scale-95 -translate-y-6;
+  @apply relative group;
 }
 
 .input-label {
-  @apply absolute left-4 top-4 text-sm text-muted-foreground transition-all duration-300 pointer-events-none;
+  @apply absolute left-5 top-4 text-sm text-muted-foreground/70 
+         transition-all duration-400 ease-out pointer-events-none
+         group-focus-within:text-primary group-focus-within:scale-90 
+         group-focus-within:-translate-y-7 group-focus-within:left-4
+         font-medium tracking-wide;
 }
 
 .floating-label {
-  @apply absolute left-4 top-0 -translate-y-1/2 bg-background px-2 text-xs text-primary scale-95;
+  @apply absolute left-4 top-0 -translate-y-1/2 bg-background/95 
+         backdrop-blur-sm px-3 py-1 text-xs text-primary scale-90 
+         font-semibold tracking-wider rounded-full
+         border border-primary/20 shadow-modern;
 }
 
 /* Scrollbar Styling */

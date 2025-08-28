@@ -19,9 +19,10 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'sans': ['Inter', 'Sora', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+				'sans': ['Outfit', 'Inter', 'Sora', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
 				'inter': ['Inter', 'sans-serif'],
 				'sora': ['Sora', 'sans-serif'],
+				'outfit': ['Outfit', 'sans-serif'],
 			},
 			fontSize: {
 				'h1': ['1.75rem', { lineHeight: '2rem', fontWeight: '300' }],
@@ -97,8 +98,11 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-secondary': 'var(--gradient-secondary)',
 				'gradient-subtle': 'var(--gradient-subtle)',
 				'gradient-hero': 'var(--gradient-hero)',
+				'gradient-glass': 'var(--gradient-glass)',
+				'gradient-border': 'var(--gradient-border)',
 				'gradient-radial': 'radial-gradient(circle, var(--tw-gradient-stops))'
 			},
 			boxShadow: {
@@ -107,6 +111,7 @@ export default {
 				'elevated': 'var(--shadow-elevated)',
 				'elegant': 'var(--shadow-elegant)',
 				'modern': 'var(--shadow-modern)',
+				'premium': 'var(--shadow-premium)',
 				'futuristic': '0 4px 12px 0 hsl(0 0% 0% / 0.05)',
 				'hover': '0 10px 24px 0 hsl(0 0% 0% / 0.08)',
 				'minimal': '0 1px 2px 0 hsl(0 0% 0% / 0.05)'
