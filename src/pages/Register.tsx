@@ -22,7 +22,7 @@ const Register = () => {
         <div className="container mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center space-x-4 group">
-              <div className="p-3 rounded-2xl bg-gradient-primary shadow-premium group-hover:shadow-glow transition-all duration-500 group-hover:scale-110">
+              <div className="p-3 rounded-2xl bg-gradient-primary shadow-premium group-hover:shadow-glow transition-all duration-500 group-hover:scale-110 px-[15px] py-[15px]">
                 <Zap className="h-6 w-6 text-white" />
               </div>
               <div className="flex flex-col">
