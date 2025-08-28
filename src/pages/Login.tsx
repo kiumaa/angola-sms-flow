@@ -1,31 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Mail, Check, Eye, EyeOff, Zap, Smartphone } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
-import { useFormValidation, loginSchema } from "@/hooks/useFormValidation";
+import { SignInPage, Testimonial } from "@/components/ui/sign-in";
 import OTPLoginModal from "@/components/auth/OTPLoginModal";
-import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showOTPModal, setShowOTPModal] = useState(false);
   const navigate = useNavigate();
   const { signIn, user, isAdmin, loading } = useAuth();
   const { toast } = useToast();
-  const { errors, validateField } = useFormValidation(loginSchema, formData);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -34,11 +19,13 @@ const Login = () => {
     }
   }, [user, isAdmin, loading, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
     
-    // Validate form before submitting
-    if (!formData.email || !formData.password) {
+    if (!email || !password) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha email e senha.",
@@ -50,7 +37,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await signIn(formData.email, formData.password);
+      const { error } = await signIn(email, password);
       
       if (error) {
         let errorMessage = "Credenciais inválidas";
@@ -81,192 +68,73 @@ const Login = () => {
     }
   };
 
-  const updateFormData = useCallback((field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const handleResetPassword = () => {
+    navigate("/forgot-password");
+  };
 
-  // Debounced validation
-  const [validationTimeout, setValidationTimeout] = useState<NodeJS.Timeout | null>(null);
-  
-  const debouncedValidation = useCallback((field: string, value: string) => {
-    if (validationTimeout) {
-      clearTimeout(validationTimeout);
+  const handleCreateAccount = () => {
+    navigate("/register");
+  };
+
+  const testimonials: Testimonial[] = [
+    {
+      avatarSrc: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+      name: "Carlos Silva",
+      handle: "@carlostech",
+      text: "Plataforma incrível! A experiência do usuário é perfeita e as funcionalidades são exatamente o que precisava."
+    },
+    {
+      avatarSrc: "https://images.unsplash.com/photo-1494790108755-2616b612b882?w=100&h=100&fit=crop&crop=face",
+      name: "Ana Costa",
+      handle: "@anamarketing",
+      text: "Este serviço transformou como trabalho. Design limpo, recursos poderosos e excelente suporte."
+    },
+    {
+      avatarSrc: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+      name: "Miguel Santos",
+      handle: "@miguelsms",
+      text: "Já experimentei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil."
     }
-    
-    setValidationTimeout(setTimeout(() => {
-      validateField(field, value);
-    }, 300));
-  }, [validateField, validationTimeout]);
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent animate-float"></div>
-      
-      {/* Header with Theme Toggle */}
-      <header className="absolute top-0 w-full glass backdrop-blur-glass border-b border-glass-border z-50">
-        <div className="container-futuristic py-4">
-          <div className="flex justify-between items-center">
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
-                <Zap className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-semibold gradient-text">SMS Marketing Angola</span>
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      <div className="flex items-center justify-center min-h-screen pt-20 px-6">
-        <div className="w-full max-w-md">
-          {/* Advanced Login Card */}
-          <Card className="card-futuristic relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-primary opacity-5 my-0 py-0"></div>
-            
-            {/* Login Logo */}
-            <div className="flex justify-center pt-8 pb-4">
-              <BrandAwareLogo 
-                className="h-16 w-auto" 
-                showText={false}
-              />
-            </div>
-            
-            <CardContent className="relative">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-base">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="seu@email.com" 
-                      value={formData.email} 
-                      onChange={(e) => {
-                        updateFormData('email', e.target.value);
-                        debouncedValidation('email', e.target.value);
-                      }}
-                      className="rounded-2xl h-14 text-base glass-card border-glass-border focus:ring-2 focus:ring-primary/20" 
-                      required 
-                      autoComplete="email"
-                    />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-base">Senha</Label>
-                  <div className="relative">
-                    <Input 
-                      id="password" 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="••••••••" 
-                      value={formData.password} 
-                      onChange={(e) => {
-                        updateFormData('password', e.target.value);
-                        debouncedValidation('password', e.target.value);
-                      }}
-                      className="rounded-2xl h-14 text-base glass-card border-glass-border pr-12 focus:ring-2 focus:ring-primary/20" 
-                      required 
-                      autoComplete="current-password"
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => setShowPassword(!showPassword)} 
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password}</p>
-                  )}
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full button-futuristic text-lg py-6" 
-                  disabled={isLoading || !formData.email.trim() || !formData.password.trim()}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
-                      <span>Entrando...</span>
-                    </div>
-                  ) : (
-                    "Entrar"
-                  )}
-                </Button>
-              </form>
-
-              {/* Divider */}
-              <div className="relative my-8">
-                <Separator />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="bg-card px-4 text-muted-foreground text-sm">ou</span>
-                </div>
-              </div>
-
-              {/* OTP Login Option */}
-              <Button
-                variant="outline"
-                onClick={() => setShowOTPModal(true)}
-                className="w-full h-14 rounded-2xl glass-card border-glass-border"
-              >
-                <Smartphone className="h-5 w-5 mr-2" />
-                Entrar com Telefone
-              </Button>
-
-              <div className="mt-8 text-center">
-                <Link to="/forgot-password" className="text-primary hover:underline transition-all duration-300 hover:scale-105">
-                  Esqueceu sua senha?
-                </Link>
-              </div>
-
-              <div className="mt-8 text-center">
-                <span className="text-muted-foreground">Não tem uma conta? </span>
-                <Link to="/register" className="text-primary hover:underline font-medium gradient-text transition-all duration-300 hover:scale-105">
-                  Criar conta grátis
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Enhanced Features */}
-          <div className="mt-12 text-center">
-            <p className="text-muted-foreground mb-6 text-lg">Por que escolher nossa plataforma?</p>
-            <div className="space-y-4">
-              {loginFeatures.map((feature, index) => (
-                <div 
-                  key={index} 
-                  style={{ animationDelay: `${index * 0.1}s` }} 
-                  className="flex items-center justify-center text-base glass-card p-4 rounded-2xl hover-lift animate-slide-up-stagger my-[5px] py-[10px]"
-                >
-                  <div className="p-2 rounded-full bg-gradient-primary shadow-glow mr-4">
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm font-normal">{feature}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="relative">
+      <SignInPage
+        title={
+          <span className="font-light text-foreground tracking-tighter">
+            Bem-vindo ao<br />
+            <span className="font-semibold gradient-text">SMS Marketing Angola</span>
+          </span>
+        }
+        description="Acesse sua conta e continue sua jornada conosco"
+        heroImageSrc="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=2160&q=80"
+        testimonials={testimonials}
+        onSignIn={handleSignIn}
+        onResetPassword={handleResetPassword}
+        onCreateAccount={handleCreateAccount}
+      />
       
       {/* OTP Login Modal */}
       <OTPLoginModal 
         open={showOTPModal} 
         onOpenChange={setShowOTPModal} 
       />
+      
+      {/* Floating OTP Button */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <button
+          onClick={() => setShowOTPModal(true)}
+          className="p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          title="Entrar com Telefone"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 };
 
-const loginFeatures = [
-  "99,9% de uptime garantido", 
-  "Suporte especializado em português", 
-  "Preços transparentes em Kwanzas", 
-  "API completa com documentação"
-];
 
 export default Login;
