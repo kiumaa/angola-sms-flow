@@ -1,597 +1,449 @@
-import { useState, useEffect, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Send, Users, Plus, Trash2, AlertTriangle, CreditCard } from "lucide-react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Send, 
+  Users, 
+  MessageSquare, 
+  CreditCard, 
+  Clock,
+  Globe,
+  Sparkles,
+  TrendingUp,
+  History,
+  ArrowLeft
+} from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { useContacts } from "@/hooks/useContacts";
 import { useSenderIds } from "@/hooks/useSenderIds";
 import { supabase } from "@/integrations/supabase/client";
-import { validateAndNormalizePhones, parseBulkPhoneInput } from "@/lib/phoneNormalization";
+import { useToast } from "@/hooks/use-toast";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { InternationalPhoneInput } from "@/components/shared/InternationalPhoneInput";
+import { BulkPhoneInput } from "@/components/shared/BulkPhoneInput";
+import { ContactSelector } from "@/components/shared/ContactSelector";
+import { MessagePreview } from "@/components/shared/MessagePreview";
+import { CreditEstimator } from "@/components/shared/CreditEstimator";
+import { 
+  normalizeInternationalPhone,
+  validateAndNormalizeInternationalPhones, 
+  parseBulkInternationalPhoneInput,
+  DEFAULT_COUNTRY,
+  type PhoneCountry 
+} from "@/lib/internationalPhoneNormalization";
 import { calculateSMSSegments } from "@/lib/smsUtils";
-import { resolveSenderId } from "@/lib/senderIdUtils";
 
-const QuickSend = () => {
+interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  phone_e164: string | null;
+  email: string | null;
+  tags: string[] | null;
+  is_blocked: boolean;
+}
+
+const QuickSendNew = () => {
+  // State management
   const [senderId, setSenderId] = useState("SMSAO");
+  const [recipientMode, setRecipientMode] = useState<"single" | "bulk" | "contacts">("single");
   const [singleNumber, setSingleNumber] = useState("");
   const [bulkNumbers, setBulkNumbers] = useState("");
+  const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(DEFAULT_COUNTRY);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [contactsModalOpen, setContactsModalOpen] = useState(false);
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-  const [searchContacts, setSearchContacts] = useState("");
+  const [bulkValidation, setBulkValidation] = useState<any>(null);
 
+  // Hooks
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { credits, loading: creditsLoading } = useUserCredits();
-  const { contacts, loading: contactsLoading } = useContacts();
-  const { senderIds, loading: senderIdsLoading } = useSenderIds();
+  const { credits = 0, loading: creditsLoading, refetch: refetchCredits } = useUserCredits();
+  const { contacts = [], loading: contactsLoading } = useContacts();
+  const { senderIds = [], loading: senderIdsLoading } = useSenderIds();
 
-  // Normalize all phone numbers
-  const normalizedNumbers = useMemo(() => {
+  // Compute all normalized numbers
+  const allNormalizedNumbers = useMemo(() => {
     const numbers: string[] = [];
     
-    // Add single number if provided
-    if (singleNumber.trim()) {
-      numbers.push(singleNumber.trim());
-    }
-    
-    // Add bulk numbers
-    const bulkLines = parseBulkPhoneInput(bulkNumbers);
-    numbers.push(...bulkLines);
-    
-    // Add selected contacts
-    const contactNumbers = selectedContacts
-      .map(contactId => contacts.find(c => c.id === contactId)?.phone_e164)
-      .filter(Boolean) as string[];
-    
-    numbers.push(...contactNumbers);
-    
-    // Validate and normalize all numbers
-    const validation = validateAndNormalizePhones(numbers);
-    
-    return {
-      valid: validation.valid,
-      invalid: validation.invalid.map(item => item.phone),
-      total: numbers.length,
-      duplicates: validation.duplicates
-    };
-  }, [singleNumber, bulkNumbers, selectedContacts, contacts]);
-
-  // Calculate SMS segments and costs
-  const segmentInfo = useMemo(() => {
-    return calculateSMSSegments(message);
-  }, [message]);
-
-  const totalSms = segmentInfo.segments * normalizedNumbers.valid.length;
-  const canSend = message.trim().length > 0 && normalizedNumbers.valid.length > 0 && totalSms <= credits;
-
-  // Filter contacts for modal
-  const filteredContacts = useMemo(() => {
-    if (!searchContacts) return contacts;
-    return contacts.filter(contact =>
-      contact.name?.toLowerCase().includes(searchContacts.toLowerCase()) ||
-      contact.phone_e164?.includes(searchContacts)
-    );
-  }, [contacts, searchContacts]);
-
-  const handleRemoveInvalidNumber = (number: string) => {
-    const newBulk = bulkNumbers
-      .split(/[\n,;]+/)
-      .filter(n => n.trim() !== number)
-      .join('\n');
-    setBulkNumbers(newBulk);
-    
-    if (singleNumber === number) {
-      setSingleNumber('');
-    }
-  };
-
-  const handleContactSelection = (contactId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedContacts(prev => [...prev, contactId]);
-    } else {
-      setSelectedContacts(prev => prev.filter(id => id !== contactId));
-    }
-  };
-
-  const handleSend = async () => {
-    if (!canSend) return;
-    
-    setIsLoading(true);
-    
-    try {
-      console.log('Sending SMS with data:', {
-        sender_id: resolveSenderId(senderId),
-        recipients: normalizedNumbers.valid,
-        message: message.trim(),
-        estimate: {
-          segments: segmentInfo.segments,
-          credits: totalSms
-        }
-      });
-
-      const { data, error } = await supabase.functions.invoke('send-quick-sms', {
-        body: {
-          sender_id: resolveSenderId(senderId),
-          recipients: normalizedNumbers.valid,
-          message: message.trim(),
-          estimate: {
-            segments: segmentInfo.segments,
-            credits: totalSms
+    switch (recipientMode) {
+      case "single":
+        if (singleNumber) {
+          const result = normalizeInternationalPhone(singleNumber, selectedCountry);
+          if (result.ok && result.e164) {
+            numbers.push(result.e164);
           }
         }
+        break;
+        
+      case "bulk":
+        if (bulkValidation?.valid) {
+          numbers.push(...bulkValidation.valid);
+        }
+        break;
+        
+      case "contacts":
+        selectedContacts.forEach(contact => {
+          if (contact.phone_e164) {
+            numbers.push(contact.phone_e164);
+          } else if (contact.phone) {
+            const result = normalizeInternationalPhone(contact.phone, selectedCountry);
+            if (result.ok && result.e164) {
+              numbers.push(result.e164);
+            }
+          }
+        });
+        break;
+    }
+    
+    // Deduplicate
+    return Array.from(new Set(numbers));
+  }, [recipientMode, singleNumber, selectedCountry, bulkValidation, selectedContacts]);
+
+  // Calculate SMS segments and costs
+  const segmentInfo = useMemo(() => calculateSMSSegments(message), [message]);
+  const totalCreditsNeeded = segmentInfo.segments * allNormalizedNumbers.length;
+  const canSend = allNormalizedNumbers.length > 0 && message.trim() && totalCreditsNeeded <= credits && !isLoading;
+
+  // Get available sender IDs
+  const availableSenderIds = useMemo(() => {
+    return senderIds
+      .filter(s => s.status === 'approved')
+      .map(s => ({
+        value: s.sender_id,
+        label: s.display_name || s.sender_id,
+        isDefault: s.is_default
+      }));
+  }, [senderIds]);
+
+  // Handle sending
+  const handleSend = async () => {
+    if (!canSend) return;
+
+    try {
+      setIsLoading(true);
+
+      const response = await supabase.functions.invoke('send-quick-sms', {
+        body: {
+          sender_id: senderId,
+          recipients: allNormalizedNumbers,
+          message: message.trim(),
+          user_id: user?.id
+        }
       });
 
-      console.log('SMS function response:', { data, error });
-
-      if (error) throw error;
-
-      if (data?.success) {
-        const actualSent = data.sent || 0;
-        const actualCredits = data.credits_debited || 0;
-        
-        toast({
-          title: "SMS enviado com sucesso!",
-          description: `${actualSent} de ${normalizedNumbers.valid.length} mensagem(s) enviada(s) • ${actualCredits} crédito(s) debitado(s)`
-        });
-
-        // Reset form
-        setSingleNumber('');
-        setBulkNumbers('');
-        setMessage('');
-        setSelectedContacts([]);
-        
-        // Refetch credits and navigate to reports or show success feedback
-        setTimeout(() => {
-          navigate('/reports');
-        }, 1500);
-      } else {
-        // Handle standardized error responses
-        const errorCode = data?.error || error?.message || 'UNKNOWN_ERROR';
-        let friendlyMessage = data?.message || 'Erro desconhecido ao enviar SMS';
-        
-        switch (errorCode) {
-          case 'INSUFFICIENT_CREDITS':
-            friendlyMessage = `Créditos insuficientes. Necessários: ${data?.required || totalSms}, Disponíveis: ${data?.available || credits}`;
-            break;
-          case 'INVALID_NUMBERS':
-            friendlyMessage = 'Nenhum número válido encontrado';
-            break;
-          case 'RATE_LIMIT_EXCEEDED':
-            friendlyMessage = 'Muitas tentativas. Aguarde alguns segundos e tente novamente';
-            break;
-          case 'BULKSMS_FAILURE':
-            friendlyMessage = 'Falha na operadora SMS. Tente novamente em instantes';
-            break;
-          case 'UNAUTHORIZED':
-            friendlyMessage = 'Erro de autenticação. Faça login novamente';
-            break;
-          case 'INTERNAL_ERROR':
-            friendlyMessage = 'Erro interno do sistema. Tente novamente';
-            break;
-          default:
-            friendlyMessage = data?.message || data?.details || 'Erro ao processar solicitação';
-        }
-        
-        throw new Error(friendlyMessage);
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao enviar SMS');
       }
+
+      toast({
+        title: "SMS enviado com sucesso!",
+        description: `${allNormalizedNumbers.length} mensagens foram enviadas.`,
+      });
+
+      // Reset form
+      setSingleNumber("");
+      setBulkNumbers("");
+      setSelectedContacts([]);
+      setMessage("");
+      
+      // Refresh credits
+      await refetchCredits();
+
+      // Navigate to reports
+      navigate("/reports");
+
     } catch (error: any) {
-      console.error('SMS send error:', error);
-      
-      let errorMessage = error.message || error.details || "Erro interno. Tente novamente mais tarde.";
-      
-      // Handle network errors
-      if (error.name === 'FunctionsError' || error.message?.includes('fetch') || error.message?.includes('non-2xx')) {
-        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
-      }
-
-      // Handle specific function errors
-      if (error.message?.includes('Edge Function returned a non-2xx status code')) {
-        errorMessage = "Erro no servidor SMS. Nossa equipe foi notificada. Tente novamente em alguns minutos.";
-      }
-      
+      console.error('Erro ao enviar SMS:', error);
       toast({
         title: "Erro ao enviar SMS",
-        description: errorMessage,
-        variant: "destructive"
+        description: error.message || "Tente novamente em alguns instantes.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Available sender IDs with SMSAO as default
-  const availableSenderIds = useMemo(() => {
-    const ids = [{ id: 'smsao', sender_id: 'SMSAO', is_global: true }];
-    if (senderIds) {
-      ids.push(...senderIds.filter(s => s.sender_id !== 'SMSAO').map(s => ({ 
-        ...s, 
-        is_global: false 
-      })));
-    }
-    return ids;
-  }, [senderIds]);
+  if (creditsLoading || contactsLoading || senderIdsLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 w-full">
+      <div className="container mx-auto p-6 max-w-6xl">
         {/* Header */}
-        <div className="glass-card p-6 bg-gradient-hero relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-          <div className="flex items-center gap-4 relative">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/dashboard")} 
-              className="glass-card border-glass-border hover:scale-105 transition-all duration-300"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-light gradient-text">Envio Rápido</h1>
-              <p className="text-muted-foreground">
-                Envie SMS para um ou vários destinatários
-              </p>
-            </div>
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/dashboard")}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Envio Rápido</h1>
+            <p className="text-muted-foreground">
+              Envie SMS para um ou múltiplos destinatários
+            </p>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <Badge variant="outline" className="gap-1">
+              <Globe className="h-3 w-3" />
+              Suporte Internacional
+            </Badge>
+            <Badge variant="secondary" className="gap-1">
+              <Sparkles className="h-3 w-3" />
+              Melhorado
+            </Badge>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Form - Left Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main form - Left side */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Sender ID */}
-            <Card className="card-futuristic">
+            {/* Sender ID Selection */}
+            <Card>
               <CardHeader>
-                <CardTitle>Sender ID</CardTitle>
-                <CardDescription>Remetente que aparecerá no SMS</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Remetente
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <Select value={senderId} onValueChange={setSenderId}>
-                  <SelectTrigger className="h-12 rounded-2xl glass-card border-glass-border">
-                    <SelectValue />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar remetente" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableSenderIds.map((sender: any) => (
-                      <SelectItem key={sender.id} value={sender.sender_id}>
+                    {availableSenderIds.map((sender) => (
+                      <SelectItem key={sender.value} value={sender.value}>
                         <div className="flex items-center gap-2">
-                          {sender.sender_id}
-                          {(sender.sender_id === 'SMSAO' || sender.is_global) && 
+                          <span>{sender.label}</span>
+                          {sender.isDefault && (
                             <Badge variant="secondary" className="text-xs">Padrão</Badge>
-                          }
+                          )}
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-muted-foreground mt-2">
-                  SMSAO é o remetente padrão do sistema. Para usar um remetente personalizado, solicite aprovação em{' '}
-                  <button 
-                    onClick={() => navigate('/sender-ids')} 
-                    className="text-primary hover:underline"
-                  >
-                    Sender IDs
-                  </button>.
-                </p>
               </CardContent>
             </Card>
 
-            {/* Recipients */}
-            <Card className="card-futuristic">
+            {/* Recipients Selection */}
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
                   Destinatários
-                  <Dialog open={contactsModalOpen} onOpenChange={setContactsModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Users className="h-4 w-4 mr-2" />
-                        Adicionar dos Contatos
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-                      <DialogHeader>
-                        <DialogTitle>Selecionar Contatos</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-                        <Input
-                          placeholder="Buscar contatos..."
-                          value={searchContacts}
-                          onChange={(e) => setSearchContacts(e.target.value)}
-                          className="rounded-xl"
-                        />
-                        <div className="flex-1 overflow-y-auto space-y-2">
-                          {contactsLoading ? (
-                            <p className="text-muted-foreground">Carregando contatos...</p>
-                          ) : filteredContacts.length === 0 ? (
-                            <p className="text-muted-foreground">Nenhum contato encontrado.</p>
-                          ) : (
-                            filteredContacts.map((contact) => (
-                              <div key={contact.id} className="flex items-center space-x-3 p-2 hover:bg-muted rounded-lg">
-                                <Checkbox
-                                  checked={selectedContacts.includes(contact.id)}
-                                  onCheckedChange={(checked) => 
-                                    handleContactSelection(contact.id, checked as boolean)
-                                  }
-                                />
-                                <div className="flex-1">
-                                  <p className="font-medium">{contact.name}</p>
-                                  <p className="text-sm text-muted-foreground">{contact.phone_e164}</p>
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                        <div className="flex justify-between items-center pt-4 border-t">
-                          <p className="text-sm text-muted-foreground">
-                            {selectedContacts.length} contato(s) selecionado(s)
-                          </p>
-                          <Button onClick={() => setContactsModalOpen(false)}>
-                            Adicionar Selecionados
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
                 </CardTitle>
-                <CardDescription>Adicione números individualmente ou em lote</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Single Number */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Número único</Label>
-                  <div className="flex gap-2">
-                    <span className="flex items-center px-3 py-2 bg-muted rounded-lg text-sm font-medium">
-                      +244
-                    </span>
-                    <Input
-                      placeholder="912 345 678"
+              <CardContent>
+                <Tabs value={recipientMode} onValueChange={(value) => setRecipientMode(value as any)}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="single">Número único</TabsTrigger>
+                    <TabsTrigger value="bulk">Lista de números</TabsTrigger>
+                    <TabsTrigger value="contacts">Contatos</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="single" className="space-y-4 mt-4">
+                    <InternationalPhoneInput
                       value={singleNumber}
-                      onChange={(e) => setSingleNumber(e.target.value)}
-                      className="rounded-xl glass-card border-glass-border bg-slate-50"
+                      onChange={setSingleNumber}
+                      country={selectedCountry}
+                      onCountryChange={setSelectedCountry}
+                      placeholder="Digite o número de telefone"
                     />
-                  </div>
-                </div>
-
-                {/* Bulk Numbers */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Colar lista</Label>
-                  <Textarea
-                    placeholder={`9XXXXXXXX\n9XXXXXXXX,9XXXXXXXX\n9XXXXXXXX;9XXXXXXXX`}
-                    value={bulkNumbers}
-                    onChange={(e) => setBulkNumbers(e.target.value)}
-                    className="min-h-24 rounded-xl glass-card border-glass-border resize-none bg-slate-50"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Separe números por linha, vírgula ou ponto-e-vírgula
-                  </p>
-                </div>
-
-                {/* Selected Contacts Display */}
-                {selectedContacts.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Contatos selecionados</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedContacts.map(contactId => {
-                        const contact = contacts.find(c => c.id === contactId);
-                        return contact ? (
-                          <Badge key={contactId} variant="secondary" className="flex items-center gap-1">
-                            {contact.name}
-                            <button
-                              onClick={() => setSelectedContacts(prev => prev.filter(id => id !== contactId))}
-                              className="text-xs hover:text-destructive"
-                            >
-                              ×
-                            </button>
-                          </Badge>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Numbers Summary */}
-                <div className="flex items-center gap-4 text-sm bg-muted/50 rounded-lg p-3">
-                  <span className="text-green-600 font-medium">
-                    Válidos: {normalizedNumbers.valid.length}
-                  </span>
-                  {normalizedNumbers.invalid.length > 0 && (
-                    <span className="text-red-600 font-medium">
-                      Inválidos: {normalizedNumbers.invalid.length}
-                    </span>
-                  )}
-                  <span className="text-muted-foreground">
-                    Total: {normalizedNumbers.total}
-                  </span>
-                </div>
-
-                {/* Invalid Numbers */}
-                {normalizedNumbers.invalid.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-red-600 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Números inválidos
-                    </Label>
-                    <div className="space-y-1">
-                      {normalizedNumbers.invalid.map((number, index) => (
-                        <div key={index} className="flex items-center justify-between bg-red-50 dark:bg-red-950/20 px-3 py-2 rounded-lg">
-                          <span className="text-sm font-mono">{number}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveInvalidNumber(number)}
-                            className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
+                  </TabsContent>
+                  
+                  <TabsContent value="bulk" className="space-y-4 mt-4">
+                    <BulkPhoneInput
+                      value={bulkNumbers}
+                      onChange={setBulkNumbers}
+                      onValidationChange={setBulkValidation}
+                      defaultCountry={selectedCountry}
+                      onCountryChange={setSelectedCountry}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="contacts" className="space-y-4 mt-4">
+                    <ContactSelector
+                      contacts={contacts}
+                      selectedContacts={selectedContacts}
+                      onSelectionChange={setSelectedContacts}
+                    />
+                    {selectedContacts.length > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        {selectedContacts.length} contatos selecionados
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+                
+                {/* Recipients summary */}
+                {allNormalizedNumbers.length > 0 && (
+                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Total de destinatários válidos:</span>
+                      <Badge variant="default">{allNormalizedNumbers.length}</Badge>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Message */}
-            <Card className="card-futuristic">
+            {/* Message Composition */}
+            <Card>
               <CardHeader>
-                <CardTitle>Mensagem</CardTitle>
-                <CardDescription>Digite o conteúdo do SMS</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Mensagem
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
-                  placeholder="Digite sua mensagem aqui..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="min-h-32 rounded-xl glass-card border-glass-border resize-none bg-slate-50"
+                  placeholder="Digite sua mensagem..."
+                  className="min-h-32 resize-y"
+                  maxLength={1000}
                 />
-                <div className="flex justify-between items-center text-sm">
+                
+                {/* Message stats */}
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{message.length}/1000 caracteres</span>
                   <div className="flex items-center gap-4">
-                    <span className="text-muted-foreground">
-                      {segmentInfo.encoding} • {message.length} caracteres
-                    </span>
-                    {segmentInfo.encoding === 'UCS2' && (
-                      <Badge variant="outline" className="text-orange-600 border-orange-200">
-                        Unicode detectado
-                      </Badge>
-                    )}
+                    <span>Codificação: {segmentInfo.encoding}</span>
+                    <span>Segmentos: {segmentInfo.segments}</span>
                   </div>
-                  <span className="font-medium">
-                    {segmentInfo.segments} segmento(s) • {totalSms} SMS total
-                  </span>
                 </div>
+                
+                {segmentInfo.segments > 1 && (
+                  <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950 p-3 rounded border border-amber-200 dark:border-amber-800">
+                    ⚠ Mensagem será enviada em {segmentInfo.segments} partes
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Send Button */}
-            <div className="sticky bottom-4 bg-background/95 backdrop-blur-sm border rounded-2xl p-4">
-              <Button
-                onClick={handleSend}
-                disabled={!canSend || isLoading}
-                className="w-full button-futuristic py-6 text-base font-medium"
-                size="lg"
-              >
-                {isLoading ? (
-                  "Enviando..."
-                ) : (
-                  <>
-                    <Send className="h-5 w-5 mr-2" />
-                    Enviar {normalizedNumbers.valid.length} SMS • {totalSms} crédito(s)
-                  </>
-                )}
-              </Button>
-              {totalSms > credits && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertTriangle className="h-4 w-4" />
-                  Créditos insuficientes. 
-                  <button 
-                    onClick={() => navigate('/credits')}
-                    className="underline hover:no-underline font-medium"
-                  >
-                    Carregar mais créditos
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Preview & Summary - Right Side (Sticky) */}
-          <div className="space-y-6">
-            {/* Message Preview */}
-            <Card className="card-futuristic sticky top-4">
-              <CardHeader>
-                <CardTitle className="gradient-text">Preview da Mensagem</CardTitle>
-                <CardDescription>Como aparecerá no celular</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-2xl p-4 border-l-4 border-primary bg-muted/30">
-                  <div className="text-xs text-muted-foreground mb-1">
-                    De: {senderId}
-                  </div>
-                  <div className="text-xs text-muted-foreground mb-2">
-                    Para: {normalizedNumbers.valid.length === 0 
-                      ? "+244 XXX XXX XXX" 
-                      : normalizedNumbers.valid.length === 1 
-                        ? String(normalizedNumbers.valid[0])
-                        : `${normalizedNumbers.valid.length} destinatários`
+            <Card>
+              <CardContent className="pt-6">
+                <Button
+                  onClick={handleSend}
+                  disabled={!canSend}
+                  className="w-full h-12 text-lg gap-2"
+                  size="lg"
+                >
+                  {isLoading ? (
+                    <LoadingSpinner className="w-5 h-5" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                  {isLoading ? "Enviando..." : `Enviar SMS (${totalCreditsNeeded} créditos)`}
+                </Button>
+                
+                {!canSend && allNormalizedNumbers.length > 0 && message.trim() && (
+                  <div className="mt-3 text-sm text-destructive text-center">
+                    {totalCreditsNeeded > credits 
+                      ? `Créditos insuficientes. Necessário: ${totalCreditsNeeded}, disponível: ${credits}`
+                      : "Verifique os dados antes de enviar"
                     }
                   </div>
-                  <div className="font-mono text-sm whitespace-pre-wrap">
-                    {message || "Digite sua mensagem para ver o preview..."}
-                  </div>
-                  {message.length > 0 && (
-                    <div className="mt-3 flex justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        {message.length} chars • {segmentInfo.segments} segmento(s)
-                      </span>
-                      <Badge variant={segmentInfo.segments > 1 ? "destructive" : "default"}>
-                        {segmentInfo.segments > 1 ? `${segmentInfo.segments} créditos` : "1 crédito"}
-                      </Badge>
-                    </div>
-                  )}
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar - Right side */}
+          <div className="space-y-6">
+            {/* Message Preview */}
+            <MessagePreview
+              message={message}
+              senderName={senderId}
+            />
+
+            {/* Credit Estimator */}
+            <CreditEstimator
+              message={message}
+              recipientCount={allNormalizedNumbers.length}
+              userCredits={credits}
+            />
+
+            {/* Quick Tips */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Dicas rápidas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <Globe className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Suporte para múltiplos países: Angola, Brasil, Portugal, Moçambique e mais</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Mensagens com caracteres especiais são enviadas em Unicode (maior custo)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>1 crédito = 1 segmento SMS (máx. 160 caracteres GSM)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Envios são processados imediatamente</span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Summary */}
-            <Card className="card-futuristic">
+            {/* Recent Usage */}
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Resumo
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <History className="h-4 w-4" />
+                  Uso recente
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Destinatários válidos</p>
-                    <p className="text-xl font-semibold">{normalizedNumbers.valid.length}</p>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Créditos disponíveis:</span>
+                    <Badge variant="outline" className="font-mono">
+                      {credits.toLocaleString()}
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Total de SMS</p>
-                    <p className="text-xl font-semibold">{totalSms}</p>
+                  <div className="flex items-center justify-between">
+                    <span>Contatos ativos:</span>
+                    <Badge variant="outline">
+                      {contacts.filter(c => !c.is_blocked).length}
+                    </Badge>
                   </div>
-                </div>
-                
-                <div className="border-t pt-3">
-                  <div className="flex justify-between items-center text-sm mb-2">
-                    <span className="text-muted-foreground">Créditos disponíveis:</span>
-                    <span className="font-medium">{creditsLoading ? '...' : credits}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Custo estimado:</span>
-                    <span className="font-medium">{totalSms} crédito(s)</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm font-semibold mt-2 pt-2 border-t">
-                    <span>Após envio:</span>
-                    <span className={totalSms > credits ? "text-red-600" : "text-green-600"}>
-                      {Math.max(0, credits - totalSms)} crédito(s)
-                    </span>
+                  <div className="flex items-center justify-between">
+                    <span>Sender IDs aprovados:</span>
+                    <Badge variant="outline">
+                      {availableSenderIds.length}
+                    </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Tips */}
-            <Card className="card-futuristic border-blue-500/30 bg-blue-500/5">
-              <CardHeader>
-                <CardTitle className="text-lg">Dicas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p>• Use números no formato angolano (+244)</p>
-                <p>• Evite caracteres especiais para reduzir custos</p>
-                <p>• Mensagens até 160 caracteres = 1 segmento</p>
-                <p>• Verifique os números antes de enviar</p>
-                <p>• Unicode (emoji) aumenta o custo dos SMS</p>
               </CardContent>
             </Card>
           </div>
@@ -601,4 +453,4 @@ const QuickSend = () => {
   );
 };
 
-export default QuickSend;
+export default QuickSendNew;
