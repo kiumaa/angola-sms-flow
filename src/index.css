@@ -525,7 +525,7 @@
          border border-border/50 rounded-2xl font-medium
          focus:ring-2 focus:ring-primary/30 focus:border-primary/70 
          hover:border-border/80 hover:bg-background/90
-         transition-all duration-400 ease-out
+         transition-all duration-300 ease-out
          placeholder:text-muted-foreground/60 placeholder:font-normal
          shadow-modern hover:shadow-elegant;
 }
@@ -540,7 +540,7 @@
 
 .input-label {
   @apply absolute left-5 top-4 text-sm text-muted-foreground/70 
-         transition-all duration-400 ease-out pointer-events-none
+         transition-all duration-300 ease-out pointer-events-none
          group-focus-within:text-primary group-focus-within:scale-90 
          group-focus-within:-translate-y-7 group-focus-within:left-4
          font-medium tracking-wide;
