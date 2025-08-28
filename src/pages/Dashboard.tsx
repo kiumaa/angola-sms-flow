@@ -10,74 +10,69 @@ import { useDynamicBranding } from "@/hooks/useDynamicBranding";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { credits } = useUserCredits();
-  const { stats, loading } = useDashboardStats();
-  const { brandSettings, siteSettings } = useDynamicBranding();
-
+  const {
+    user
+  } = useAuth();
+  const {
+    credits
+  } = useUserCredits();
+  const {
+    stats,
+    loading
+  } = useDashboardStats();
+  const {
+    brandSettings,
+    siteSettings
+  } = useDynamicBranding();
   useEffect(() => {
     // Apply dynamic branding
     if (brandSettings) {
       document.title = siteSettings?.site_title || 'SMS AO - Dashboard';
     }
   }, [brandSettings, siteSettings]);
-
-  const quickActions = [
-    {
-      title: "Envio Rápido",
-      description: "Envie SMS rapidamente para um ou vários destinatários",
-      icon: Zap,
-      href: "/quick-send",
-      color: "bg-blue-500",
-      badge: "Principal"
-    },
-    {
-      title: "Gerir Contatos", 
-      description: "Adicione, edite e organize seus contatos",
-      icon: Users,
-      href: "/contacts",
-      color: "bg-green-500"
-    },
-    {
-      title: "Ver Relatórios",
-      description: "Acompanhe suas estatísticas de envio",
-      icon: BarChart3,
-      href: "/reports", 
-      color: "bg-purple-500"
-    },
-    {
-      title: "Comprar Créditos",
-      description: "Recarregue seus créditos para continuar enviando",
-      icon: CreditCard,
-      href: "/credits",
-      color: "bg-orange-500"
-    }
-  ];
-
+  const quickActions = [{
+    title: "Envio Rápido",
+    description: "Envie SMS rapidamente para um ou vários destinatários",
+    icon: Zap,
+    href: "/quick-send",
+    color: "bg-blue-500",
+    badge: "Principal"
+  }, {
+    title: "Gerir Contatos",
+    description: "Adicione, edite e organize seus contatos",
+    icon: Users,
+    href: "/contacts",
+    color: "bg-green-500"
+  }, {
+    title: "Ver Relatórios",
+    description: "Acompanhe suas estatísticas de envio",
+    icon: BarChart3,
+    href: "/reports",
+    color: "bg-purple-500"
+  }, {
+    title: "Comprar Créditos",
+    description: "Recarregue seus créditos para continuar enviando",
+    icon: CreditCard,
+    href: "/credits",
+    color: "bg-orange-500"
+  }];
   if (loading) {
-    return (
-      <DashboardLayout>
+    return <DashboardLayout>
         <div className="space-y-6 animate-pulse">
           <div className="h-8 bg-muted rounded-lg w-64"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-muted rounded-2xl"></div>
-            ))}
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-muted rounded-2xl"></div>)}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="h-96 bg-muted rounded-2xl"></div>
             <div className="h-96 bg-muted rounded-2xl"></div>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="space-y-6">
         {/* Welcome Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
@@ -87,19 +82,14 @@ const Dashboard = () => {
               Bem-vindo de volta, {user?.email?.split('@')[0]}! Gerencie suas campanhas SMS.
             </p>
           </div>
-          <Button 
-            onClick={() => navigate("/quick-send")}
-            className="mt-4 lg:mt-0 bg-primary hover:bg-primary/90"
-            size="lg"
-          >
+          <Button onClick={() => navigate("/quick-send")} className="mt-4 lg:mt-0 bg-primary hover:bg-primary/90" size="lg">
             <Send className="h-4 w-4 mr-2" />
             Enviar SMS
           </Button>
         </div>
 
         {/* Low Credits Warning */}
-        {credits < 10 && (
-          <Alert className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
+        {credits < 10 && <Alert className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Seus créditos estão baixos ({credits} restantes). 
@@ -107,8 +97,7 @@ const Dashboard = () => {
                 Recarregue sua conta
               </Link> para continuar enviando SMS.
             </AlertDescription>
-          </Alert>
-        )}
+          </Alert>}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -181,12 +170,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {quickActions.map((action, index) => (
-                    <Card 
-                      key={index}
-                      className="hover:shadow-md transition-shadow cursor-pointer group"
-                      onClick={() => navigate(action.href)}
-                    >
+                  {quickActions.map((action, index) => <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => navigate(action.href)}>
                       <CardContent className="p-4">
                         <div className="flex items-start space-x-3">
                           <div className={`p-2 rounded-lg ${action.color} text-white`}>
@@ -203,8 +187,7 @@ const Dashboard = () => {
                           <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                         </div>
                       </CardContent>
-                    </Card>
-                  ))}
+                    </Card>)}
                 </div>
               </CardContent>
             </Card>
@@ -218,10 +201,8 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {stats?.recentActivity && stats.recentActivity.length > 0 ? (
-                  <div className="space-y-3">
-                    {stats.recentActivity.slice(0, 5).map((activity, index) => (
-                      <div key={index} className="flex items-center justify-between border-b pb-2 last:border-b-0">
+                {stats?.recentActivity && stats.recentActivity.length > 0 ? <div className="space-y-3">
+                    {stats.recentActivity.slice(0, 5).map((activity, index) => <div key={index} className="flex items-center justify-between border-b pb-2 last:border-b-0">
                         <div className="flex items-center space-x-3">
                           <div className="p-2 rounded-lg bg-primary/10">
                             <FileText className="h-4 w-4 text-primary" />
@@ -239,11 +220,8 @@ const Dashboard = () => {
                             {new Date(activity.created_at).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
+                      </div>)}
+                  </div> : <div className="text-center py-8">
                     <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">
                       Nenhuma atividade recente
@@ -251,20 +229,15 @@ const Dashboard = () => {
                     <p className="text-xs text-muted-foreground mt-1">
                       Envie seu primeiro SMS para começar
                     </p>
-                    <Button 
-                      className="mt-4" 
-                      onClick={() => navigate("/quick-send")}
-                    >
+                    <Button className="mt-4" onClick={() => navigate("/quick-send")}>
                       Enviar Primeiro SMS
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Getting Started Section (if no activity) */}
-            {(!stats?.totalSent || stats.totalSent === 0) && (
-              <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+            {(!stats?.totalSent || stats.totalSent === 0) && <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Zap className="h-5 w-5 text-primary" />
@@ -293,8 +266,7 @@ const Dashboard = () => {
                     💡 Dica: Comece adicionando alguns contatos e depois use o Envio Rápido para testar.
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </div>
 
           {/* Right Column - Summary & Tips */}
@@ -320,11 +292,7 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="pt-3 border-t">
-                  <Button 
-                    onClick={() => navigate("/credits")}
-                    className="w-full"
-                    variant="outline"
-                  >
+                  <Button onClick={() => navigate("/credits")} className="w-full" variant="outline">
                     <CreditCard className="h-4 w-4 mr-2" />
                     Comprar Créditos
                   </Button>
@@ -333,17 +301,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Tips Card */}
-            <Card className="border-blue-200 bg-blue-50/50">
-              <CardHeader>
-                <CardTitle className="text-blue-900">💡 Dicas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-blue-800">
-                <p>• Use números no formato angolano (+244)</p>
-                <p>• Evite caracteres especiais para reduzir custos</p>
-                <p>• Teste com um número antes de envios em massa</p>
-                <p>• Organize contatos com tags para facilitar segmentação</p>
-              </CardContent>
-            </Card>
+            
 
             {/* Quick Stats */}
             <Card>
@@ -371,10 +329,7 @@ const Dashboard = () => {
 
             {/* Feature Highlights */}
             <div className="space-y-4">
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate("/reports")}
-            >
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/reports")}>
               <CardContent className="p-4 text-center">
                 <div className="p-2 bg-blue-500/10 rounded-lg w-fit mx-auto mb-2">
                   <BarChart3 className="h-5 w-5 text-blue-500" />
@@ -386,10 +341,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate("/quick-send")}
-            >
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/quick-send")}>
               <CardContent className="p-4 text-center">
                 <div className="p-2 bg-green-500/10 rounded-lg w-fit mx-auto mb-2">
                   <Zap className="h-5 w-5 text-green-500" />
@@ -404,8 +356,6 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Dashboard;
