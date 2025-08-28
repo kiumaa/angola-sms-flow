@@ -79,7 +79,12 @@ const Login = () => {
   return (
     <div className="relative">
       <SignInPage
-        title="Seja Bem-vindo(a) ao SMS AO"
+        title={
+          <span className="font-light text-foreground tracking-tighter">
+            Bem-vindo ao<br />
+            <span className="font-semibold gradient-text">SMS Marketing Angola</span>
+          </span>
+        }
         description="Acesse sua conta e continue sua jornada conosco"
         heroImageSrc="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=2160&q=80"
         onSignIn={handleSignIn}
