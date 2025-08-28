@@ -153,11 +153,10 @@ const QuickSend = () => {
         setMessage('');
         setSelectedContacts([]);
         
-        // Refetch credits to show updated balance
+        // Refetch credits and navigate to reports or show success feedback
         setTimeout(() => {
-          // Allow a moment for the database to update
-          window.location.reload();
-        }, 1000);
+          navigate('/reports');
+        }, 1500);
       } else {
         // Handle standardized error responses
         const errorCode = data?.error || error?.message || 'UNKNOWN_ERROR';
