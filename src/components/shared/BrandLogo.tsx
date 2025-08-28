@@ -1,3 +1,4 @@
+
 import { useAdvancedBrandSettings } from "@/hooks/useAdvancedBrandSettings";
 import { useTheme } from "next-themes";
 import { Mail } from "lucide-react";
@@ -20,7 +21,7 @@ const sizeClasses = {
 
 export const BrandLogo = ({ 
   className,
-  showText = true,
+  showText = false, // Changed default to false
   textClassName = "text-2xl font-bold",
   size = 'md'
 }: BrandLogoProps) => {
@@ -31,12 +32,8 @@ export const BrandLogo = ({
   const currentTheme = theme === 'system' ? systemTheme : theme;
   const isDark = currentTheme === 'dark';
 
-  // Select appropriate logo based on theme with local assets as fallback
-  const customLogo = isDark ? settings.logo_dark_url : settings.logo_light_url;
-  const defaultLogo = isDark ? logoDark : logoLight;
-  
-  // Use custom logo if available, otherwise use default local assets
-  const finalLogo = customLogo || defaultLogo;
+  // Always use local assets, ignore custom URLs for now
+  const finalLogo = isDark ? logoDark : logoLight;
 
   return (
     <div className="flex items-center">
