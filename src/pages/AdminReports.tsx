@@ -82,14 +82,14 @@ const AdminReports = () => {
         smsLogsResult
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact' }),
-        supabase.from('sms_campaigns').select('*', { count: 'exact' }),
+        supabase.from('quick_send_jobs').select('*', { count: 'exact' }),
         supabase.from('transactions').select('id, amount_kwanza, credits_purchased, status, created_at, profiles!inner(email, full_name)', { count: 'exact' }),
         supabase.from('sms_logs').select('status', { count: 'exact' })
       ]);
 
       // Calculate stats
       const totalUsers = usersResult.count || 0;
-      const totalCampaigns = campaignsResult.count || 0;
+      const totalJobs = campaignsResult.count || 0;
       const totalSMS = smsLogsResult.count || 0;
       
       const transactions = transactionsResult.data || [];
@@ -104,7 +104,7 @@ const AdminReports = () => {
 
       setStats({
         totalUsers,
-        totalCampaigns,
+        totalCampaigns: totalJobs,
         totalSMS,
         totalRevenue,
         activeUsers: Math.floor(totalUsers * 0.7), // Approximation
@@ -117,7 +117,7 @@ const AdminReports = () => {
         .from('profiles')
         .select(`
           *,
-          sms_campaigns(count),
+          quick_send_jobs(count),
           sms_logs(count)
         `)
         .order('updated_at', { ascending: false })
@@ -129,7 +129,7 @@ const AdminReports = () => {
         email: user.email || '',
         company_name: user.company_name || '',
         credits: user.credits || 0,
-        total_campaigns: user.sms_campaigns?.length || 0,
+        total_campaigns: user.quick_send_jobs?.length || 0,
         total_sms_sent: user.sms_logs?.length || 0,
         last_activity: user.updated_at
       }));
@@ -275,7 +275,7 @@ const AdminReports = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
               <BarChart3 className="h-4 w-4 mr-2" />
-              Campanhas
+              Envios SMS
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -283,7 +283,7 @@ const AdminReports = () => {
               {stats.totalCampaigns}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total criadas
+              Total realizados
             </p>
           </CardContent>
         </Card>
@@ -392,7 +392,7 @@ const AdminReports = () => {
                         </div>
                         <div>
                           <p className="font-medium">{user.total_campaigns}</p>
-                          <p className="text-muted-foreground">Campanhas</p>
+                          <p className="text-muted-foreground">Envios</p>
                         </div>
                         <div>
                           <p className="font-medium">{user.total_sms_sent}</p>

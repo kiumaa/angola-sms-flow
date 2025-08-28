@@ -23,7 +23,7 @@ export interface AdminNavItem {
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   {
     key: 'home',
-    label: 'Home',
+    label: 'Dashboard',
     href: '/admin',
     icon: Home,
   },
@@ -34,8 +34,14 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Users,
   },
   {
+    key: 'senderIds',
+    label: 'Sender IDs',
+    href: '/admin/sender-ids',
+    icon: Send,
+  },
+  {
     key: 'packages',
-    label: 'Pacotes',
+    label: 'Pacotes de Créditos',
     href: '/admin/packages',
     icon: Package,
   },
@@ -46,28 +52,22 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: CreditCard,
   },
   {
-    key: 'senderIds',
-    label: 'Sender IDs',
-    href: '/admin/sender-ids',
-    icon: Send,
-  },
-  {
     key: 'reports',
     label: 'Relatórios',
     href: '/admin/reports',
     icon: BarChart3,
   },
   {
+    key: 'smsMonitoring',
+    label: 'Diagnósticos SMS',
+    href: '/admin/sms-monitoring',
+    icon: Wifi,
+  },
+  {
     key: 'smsConfiguration',
     label: 'Configurações SMS',
     href: '/admin/sms-configuration',
     icon: Settings,
-  },
-  {
-    key: 'smsMonitoring',
-    label: 'Monitoramento SMS',
-    href: '/admin/sms-monitoring',
-    icon: Wifi,
   },
   {
     key: 'branding',

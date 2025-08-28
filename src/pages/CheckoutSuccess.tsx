@@ -242,10 +242,10 @@ const CheckoutSuccess = () => {
             Voltar ao Dashboard
           </Button>
           <Button
-            onClick={() => navigate("/campaigns/new")}
+            onClick={() => navigate("/quick-send")}
             className="button-futuristic"
           >
-            Criar Primeira Campanha
+            Fazer Primeiro Envio
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>

@@ -23,6 +23,7 @@ export const LazyCheckout = lazy(() => import("@/pages/Checkout"));
 export const LazyCheckoutSuccess = lazy(() => import("@/pages/CheckoutSuccess"));
 export const LazyTransactions = lazy(() => import("@/pages/Transactions"));
 export const LazySenderIDs = lazy(() => import("@/pages/SenderIDs"));
+export const LazyComingSoon = lazy(() => import("@/pages/ComingSoon"));
 
 // Admin Components
 export const LazyAdminDashboard = lazy(() => import("@/pages/AdminDashboard"));

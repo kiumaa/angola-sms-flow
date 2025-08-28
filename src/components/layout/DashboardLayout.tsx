@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, Zap } from "lucide-react";
+import { Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, Zap, BarChart3 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -51,9 +51,14 @@ const DashboardLayout = ({
     icon: Users,
     current: location.pathname.startsWith("/contacts")
   }, {
+    name: "Campanhas",
+    href: "/campaigns",
+    icon: Calendar,
+    current: location.pathname.startsWith("/campaigns")
+  }, {
     name: "Relatórios",
     href: "/reports",
-    icon: Calendar,
+    icon: BarChart3,
     current: location.pathname.startsWith("/reports")
   }, {
     name: "Créditos",

@@ -29,6 +29,7 @@ import {
   LazyTransactions,
   LazySenderIDs,
   LazyUserSettings,
+  LazyComingSoon,
   LazyAdminDashboard,
   LazyAdminUsers,
   LazyAdminPackages,
@@ -119,6 +120,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <LazyCheckoutSuccess />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/campaigns"
+                element={
+                  <ProtectedRoute>
+                    <LazyComingSoon />
                   </ProtectedRoute>
                 }
               />
