@@ -449,6 +449,72 @@
   color: hsl(var(--foreground));
 }
 
+/* Modern Button Gradient Effects */
+.signup-button {
+  position: relative;
+  background: var(--gradient-primary);
+  overflow: hidden;
+}
+
+.signup-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.signup-button:hover::before {
+  left: 100%;
+}
+
+.bottom-gradient {
+  pointer-events: none;
+  position: absolute;
+  inset-x: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary)) 50%, transparent);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.group\/btn:hover .bottom-gradient {
+  opacity: 1;
+}
+
+.bottom-gradient-blur {
+  pointer-events: none;
+  position: absolute;
+  inset-x: 2.5rem;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary-glow)) 50%, transparent);
+  opacity: 0;
+  filter: blur(2px);
+  transition: opacity 0.5s ease;
+}
+
+.group\/btn:hover .bottom-gradient-blur {
+  opacity: 1;
+}
+
+/* Input Focus Effects */
+.modern-input {
+  position: relative;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+  border-color: hsl(var(--primary) / 0.3);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
