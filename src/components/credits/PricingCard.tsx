@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CheckCircle } from "lucide-react";
 
 interface CreditPackage {
@@ -16,28 +15,14 @@ interface PricingCardProps {
   pkg: CreditPackage;
   index: number;
   onPurchase: (packageId: string) => void;
-  isPopular?: boolean;
 }
 
-export const PricingCard = ({ pkg, index, onPurchase, isPopular = false }: PricingCardProps) => {
+export const PricingCard = ({ pkg, index, onPurchase }: PricingCardProps) => {
   return (
     <Card 
-      className={`relative group transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden animate-slide-up-stagger glass-card ${
-        isPopular ? 'border-2 border-primary shadow-glow scale-105' : 'border-glass-border'
-      }`}
+      className="relative group transition-all duration-500 hover:scale-105 rounded-3xl overflow-hidden animate-slide-up-stagger glass-card border-glass-border"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
-      {isPopular && (
-        <>
-          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-            <Badge className="bg-gradient-primary text-white rounded-full px-4 py-2 shadow-glow text-sm font-medium">
-              ⭐ Mais Popular
-            </Badge>
-          </div>
-        </>
-      )}
-      
       <CardHeader className="text-center pb-6 pt-8 relative">
         <CardTitle className="gradient-text font-medium text-xl mb-4">{pkg.name}</CardTitle>
         <div className="space-y-2">
@@ -77,11 +62,7 @@ export const PricingCard = ({ pkg, index, onPurchase, isPopular = false }: Prici
           
           <Button 
             onClick={() => onPurchase(pkg.id)}
-            className={`w-full rounded-full transition-all duration-300 hover:scale-105 text-base py-6 font-medium ${
-              isPopular 
-                ? 'bg-gradient-primary hover:opacity-90 shadow-glow' 
-                : 'button-futuristic'
-            }`}
+            className="w-full rounded-full transition-all duration-300 hover:scale-105 text-base py-6 font-medium button-futuristic"
             size="lg"
           >
             Escolher Pacote

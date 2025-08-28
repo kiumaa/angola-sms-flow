@@ -113,14 +113,13 @@ const Credits = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-4 gap-8">
+          <div className="grid lg:grid-cols-4 gap-6">
             {packages.map((pkg, index) => (
               <PricingCard
                 key={pkg.id}
                 pkg={pkg}
                 index={index}
                 onPurchase={handlePurchase}
-                isPopular={index === 1}
               />
             ))}
           </div>
