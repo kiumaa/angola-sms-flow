@@ -195,11 +195,6 @@ const Dashboard = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <h3 className="font-medium text-sm">{action.title}</h3>
-                              {action.badge && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {action.badge}
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
                               {action.description}
