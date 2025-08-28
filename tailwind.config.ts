@@ -105,6 +105,8 @@ export default {
 				'glass': 'var(--shadow-glass)',
 				'glow': 'var(--shadow-glow)',
 				'elevated': 'var(--shadow-elevated)',
+				'elegant': 'var(--shadow-elegant)',
+				'modern': 'var(--shadow-modern)',
 				'futuristic': '0 4px 12px 0 hsl(0 0% 0% / 0.05)',
 				'hover': '0 10px 24px 0 hsl(0 0% 0% / 0.08)',
 				'minimal': '0 1px 2px 0 hsl(0 0% 0% / 0.05)'
