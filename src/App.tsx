@@ -12,6 +12,7 @@ import { BrandProvider } from "@/providers/BrandProvider";
 import { ConsentProvider } from "./components/shared/ConsentProvider";
 import AdminLayout from "./components/layout/AdminLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { useThemeAwareFavicon } from "./hooks/useThemeAwareFavicon";
 
 // Import lazy components from the centralized file
 import {
@@ -52,6 +53,9 @@ import {
 const queryClient = new QueryClient();
 
 function App() {
+  // Initialize theme-aware favicon
+  useThemeAwareFavicon();
+  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
