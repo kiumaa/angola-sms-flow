@@ -44,8 +44,6 @@ interface AdvancedBrandSettings {
 const DEFAULT_SETTINGS: AdvancedBrandSettings = {
   site_title: 'SMS AO',
   site_tagline: 'Conectando empresas aos seus clientes através de SMS marketing eficiente e profissional',
-  logo_light_url: '/src/assets/logo-light.png',
-  logo_dark_url: '/src/assets/logo-dark.png',
   light_primary: '#1A1A1A',
   light_secondary: '#666666',
   light_bg: '#F5F6F8',

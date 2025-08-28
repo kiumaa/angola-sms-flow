@@ -4,7 +4,7 @@ import { LogOut, Menu, Bell, Search } from "lucide-react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
@@ -49,8 +49,9 @@ const AdminLayout = ({
               </button>
               
               <Link to="/admin" className="flex items-center">
-                <BrandAwareLogo 
-                  className="h-8 w-auto mr-3" 
+                <BrandLogo 
+                  size="md"
+                  className="mr-3" 
                   textClassName="font-light text-lg gradient-text" 
                   showText={true} 
                 />

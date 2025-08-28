@@ -5,7 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useUserCredits } from "@/hooks/useUserCredits";
-import { BrandAwareLogo } from "@/components/shared/BrandAwareLogo";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import NotificationCenter from "@/components/shared/NotificationCenter";
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -86,7 +86,7 @@ const DashboardLayout = ({
                 <Layout className="h-5 w-5" />
               </button>
               <Link to="/dashboard" className="flex items-center ml-4">
-                <BrandAwareLogo className="h-8 w-auto mr-2" textClassName="font-bold text-lg" />
+                <BrandLogo size="md" className="mr-2" textClassName="font-bold text-lg" />
               </Link>
             </div>
 
