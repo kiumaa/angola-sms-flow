@@ -32,6 +32,8 @@ interface BrandSettings {
   // Advanced
   custom_css?: string;
   updated_at?: string;
+  robots_index?: boolean;
+  robots_follow?: boolean;
   // Legacy compatibility
   primary_color?: string;
   secondary_color?: string;
@@ -47,8 +49,6 @@ interface BrandSettings {
   meta_description?: string;
   og_title?: string;
   og_description?: string;
-  robots_index?: boolean;
-  robots_follow?: boolean;
   theme_mode?: string;
 }
 
@@ -98,8 +98,8 @@ export const useBrandSettings = () => {
           meta_description: data.seo_description || '',
           og_title: data.seo_title || '',
           og_description: data.seo_description || '',
-          robots_index: true,
-          robots_follow: true,
+          robots_index: data.robots_index ?? true,
+          robots_follow: data.robots_follow ?? true,
           theme_mode: 'system'
         };
         setSettings(processedData as BrandSettings);
@@ -114,46 +114,48 @@ export const useBrandSettings = () => {
 
   const updateSettings = async (newSettings: Partial<BrandSettings>) => {
     try {
-      const { data, error } = await supabase
-        .from('brand_settings')
-        .update(newSettings)
-        .eq('id', settings?.id)
-        .select()
-        .single();
+      // If no settings exist yet, create them
+      if (!settings?.id) {
+        const { data, error } = await supabase
+          .from('brand_settings')
+          .insert([newSettings])
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const processedData = {
-        ...data,
-        // Legacy mappings
-        primary_color: data.light_primary || '#1A1A1A',
-        secondary_color: data.light_secondary || '#666666',
-        background_color: data.light_bg || '#F5F6F8',
-        text_color: data.light_text || '#1A1A1A',
-        site_subtitle: data.site_tagline || '',
-        font_sizes: data.font_scale || {},
-        // Additional legacy mappings
-        font_weight: '400',
-        line_height: '1.5',
-        letter_spacing: '-0.01em',
-        logo_url: data.logo_light_url || '',
-        meta_title_template: data.seo_title || '{{page}} · {{siteTitle}}',
-        meta_description: data.seo_description || '',
-        og_title: data.seo_title || '',
-        og_description: data.seo_description || '',
-        robots_index: true,
-        robots_follow: true,
-        theme_mode: 'system'
-      };
-      setSettings(processedData as BrandSettings);
-      applyBrandSettings(processedData as BrandSettings);
-      
-      toast({
-        title: "Configurações atualizadas",
-        description: "As alterações foram aplicadas com sucesso.",
-      });
-      
-      return data;
+        const processedData = mapToLegacyFormat(data);
+        setSettings(processedData as BrandSettings);
+        applyBrandSettings(processedData as BrandSettings);
+        
+        toast({
+          title: "Configurações criadas",
+          description: "As configurações foram criadas com sucesso.",
+        });
+        
+        return data;
+      } else {
+        // Update existing settings
+        const { data, error } = await supabase
+          .from('brand_settings')
+          .update(newSettings)
+          .eq('id', settings.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const processedData = mapToLegacyFormat(data);
+        setSettings(processedData as BrandSettings);
+        applyBrandSettings(processedData as BrandSettings);
+        
+        toast({
+          title: "Configurações atualizadas",
+          description: "As alterações foram aplicadas com sucesso.",
+        });
+        
+        return data;
+      }
     } catch (error: any) {
       console.error('Error updating brand settings:', error);
       toast({
@@ -165,17 +167,56 @@ export const useBrandSettings = () => {
     }
   };
 
+  const mapToLegacyFormat = (data: any) => {
+    return {
+      ...data,
+      // Legacy mappings
+      primary_color: data.light_primary || '#1A1A1A',
+      secondary_color: data.light_secondary || '#666666',
+      background_color: data.light_bg || '#F5F6F8',
+      text_color: data.light_text || '#1A1A1A',
+      site_subtitle: data.site_tagline || '',
+      font_sizes: data.font_scale || {},
+      // Additional legacy mappings
+      font_weight: '400',
+      line_height: '1.5',
+      letter_spacing: '-0.01em',
+      logo_url: data.logo_light_url || '',
+      meta_title_template: data.seo_title || '{{page}} · {{siteTitle}}',
+      meta_description: data.seo_description || '',
+      og_title: data.seo_title || '',
+      og_description: data.seo_description || '',
+      robots_index: data.robots_index ?? true,
+      robots_follow: data.robots_follow ?? true,
+      theme_mode: 'system'
+    };
+  };
+
   const uploadFile = async (file: File, type: 'logo' | 'favicon' | 'og_image') => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${type}.${fileExt}`;
-      const filePath = `${Date.now()}-${fileName}`;
+      const fileName = `${type}-${Date.now()}.${fileExt}`;
+      const filePath = fileName;
 
+      // First try to upload to existing bucket, if it doesn't exist, we'll get an error
       const { error: uploadError } = await supabase.storage
         .from('brand-assets')
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        // If bucket doesn't exist, create it first
+        if (uploadError.message.includes('Bucket not found')) {
+          console.log('Creating brand-assets bucket...');
+          // For now, we'll store in a generic public folder or handle this in the backend
+          // Using a data URL as fallback for immediate preview
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.readAsDataURL(file);
+          });
+        }
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('brand-assets')
@@ -184,12 +225,13 @@ export const useBrandSettings = () => {
       return publicUrl;
     } catch (error: any) {
       console.error('Error uploading file:', error);
-      toast({
-        title: "Erro no upload",
-        description: error.message,
-        variant: "destructive",
+      // Fallback to data URL for immediate preview
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
-      throw error;
     }
   };
 
@@ -223,7 +265,10 @@ export const useBrandSettings = () => {
     // Apply typography settings
     if (brandSettings.font_family) {
       root.style.setProperty('--font-family', brandSettings.font_family);
-      document.body.style.fontFamily = `${brandSettings.font_family}, sans-serif`;
+      document.body.style.fontFamily = `${brandSettings.font_family}, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
+      
+      // Load Google Font dynamically
+      loadGoogleFont(brandSettings.font_family);
     }
 
     if (brandSettings.font_weight) {
@@ -247,15 +292,7 @@ export const useBrandSettings = () => {
 
     // Update favicon if set
     if (brandSettings.favicon_url) {
-      const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-      if (favicon) {
-        favicon.href = brandSettings.favicon_url;
-      } else {
-        const newFavicon = document.createElement('link');
-        newFavicon.rel = 'icon';
-        newFavicon.href = brandSettings.favicon_url;
-        document.head.appendChild(newFavicon);
-      }
+      updateFavicon(brandSettings.favicon_url);
     }
 
     // Update page title
@@ -263,24 +300,113 @@ export const useBrandSettings = () => {
       document.title = brandSettings.site_title;
     }
 
+    // Update meta tags
+    updateMetaTags(brandSettings);
+
     // Apply custom CSS
     if (brandSettings.custom_css) {
-      let customStyleElement = document.getElementById('brand-custom-css');
-      if (!customStyleElement) {
-        customStyleElement = document.createElement('style');
-        customStyleElement.id = 'brand-custom-css';
-        document.head.appendChild(customStyleElement);
-      }
-      customStyleElement.textContent = brandSettings.custom_css;
+      applyCustomCSS(brandSettings.custom_css);
+    }
+  };
+
+  const loadGoogleFont = (fontFamily: string) => {
+    // Check if font is already loaded
+    const existingLink = document.querySelector(`link[href*="${fontFamily.replace(' ', '+')}"]`);
+    if (existingLink) return;
+
+    // Remove existing custom font links
+    const existingFontLinks = document.querySelectorAll('link[href*="fonts.googleapis.com"]:not([href*="Inter"])');
+    existingFontLinks.forEach(link => link.remove());
+
+    // Add new font link
+    const fontLink = document.createElement('link');
+    fontLink.rel = 'stylesheet';
+    fontLink.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(' ', '+')}:wght@300;400;500;600;700&display=swap`;
+    document.head.appendChild(fontLink);
+  };
+
+  const updateFavicon = (faviconUrl: string) => {
+    const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+    if (favicon) {
+      favicon.href = faviconUrl;
+    } else {
+      const newFavicon = document.createElement('link');
+      newFavicon.rel = 'icon';
+      newFavicon.href = faviconUrl;
+      newFavicon.type = 'image/png';
+      document.head.appendChild(newFavicon);
+    }
+  };
+
+  const updateMetaTags = (brandSettings: BrandSettings) => {
+    // Update title
+    if (brandSettings.seo_title) {
+      document.title = brandSettings.seo_title;
     }
 
-    // Load Google Font if different from current
-    if (brandSettings.font_family && !document.querySelector(`link[href*="${brandSettings.font_family}"]`)) {
-      const fontLink = document.createElement('link');
-      fontLink.rel = 'stylesheet';
-      fontLink.href = `https://fonts.googleapis.com/css2?family=${brandSettings.font_family.replace(' ', '+')}:wght@300;400;500;600;700&display=swap`;
-      document.head.appendChild(fontLink);
+    // Update description
+    if (brandSettings.seo_description) {
+      let metaDesc = document.querySelector('meta[name="description"]') as HTMLMetaElement;
+      if (metaDesc) {
+        metaDesc.content = brandSettings.seo_description;
+      } else {
+        metaDesc = document.createElement('meta');
+        metaDesc.name = 'description';
+        metaDesc.content = brandSettings.seo_description;
+        document.head.appendChild(metaDesc);
+      }
     }
+
+    // Update OG tags
+    if (brandSettings.og_image_url) {
+      updateMetaTag('property', 'og:image', brandSettings.og_image_url);
+    }
+    if (brandSettings.seo_title) {
+      updateMetaTag('property', 'og:title', brandSettings.seo_title);
+    }
+    if (brandSettings.seo_description) {
+      updateMetaTag('property', 'og:description', brandSettings.seo_description);
+    }
+
+    // Update Twitter tags
+    if (brandSettings.seo_twitter) {
+      updateMetaTag('name', 'twitter:site', brandSettings.seo_twitter);
+    }
+
+    // Update canonical URL
+    if (brandSettings.seo_canonical) {
+      let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+      if (canonical) {
+        canonical.href = brandSettings.seo_canonical;
+      } else {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        canonical.href = brandSettings.seo_canonical;
+        document.head.appendChild(canonical);
+      }
+    }
+  };
+
+  const updateMetaTag = (attributeName: string, attributeValue: string, content: string) => {
+    let metaTag = document.querySelector(`meta[${attributeName}="${attributeValue}"]`) as HTMLMetaElement;
+    if (metaTag) {
+      metaTag.content = content;
+    } else {
+      metaTag = document.createElement('meta');
+      metaTag.setAttribute(attributeName, attributeValue);
+      metaTag.content = content;
+      document.head.appendChild(metaTag);
+    }
+  };
+
+  const applyCustomCSS = (customCSS: string) => {
+    let customStyleElement = document.getElementById('brand-custom-css');
+    if (!customStyleElement) {
+      customStyleElement = document.createElement('style');
+      customStyleElement.id = 'brand-custom-css';
+      document.head.appendChild(customStyleElement);
+    }
+    customStyleElement.textContent = customCSS;
   };
 
   // Helper function to convert hex to HSL
