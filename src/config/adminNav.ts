@@ -9,7 +9,8 @@ import {
   Palette,
   MessageSquare,
   Wifi,
-  FileText 
+  FileText,
+  Shield
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -74,6 +75,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Personalização',
     href: '/admin/brand',
     icon: Palette,
+  },
+  {
+    key: 'production',
+    label: 'Produção',
+    href: '/admin/production',
+    icon: Shield,
   },
 ];
 

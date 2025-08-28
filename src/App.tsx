@@ -42,6 +42,7 @@ import {
   LazyAdminSettings,
   LazyAdminBrand,
   LazyAdminSMSConfiguration,
+  LazyAdminProductionMonitoring,
   LazyNotFound,
   LazyTerms,
   LazyPrivacy
@@ -185,6 +186,7 @@ function App() {
                 <Route path="settings" element={<LazyAdminSettings />} />
                 <Route path="brand" element={<LazyAdminBrand />} />
                 <Route path="sms-configuration" element={<LazyAdminSMSConfiguration />} />
+                <Route path="production" element={<LazyAdminProductionMonitoring />} />
               </Route>
 
               {/* Legal Pages */}

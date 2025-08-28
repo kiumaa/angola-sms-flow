@@ -1328,11 +1328,24 @@ export type Database = {
         Args: { admin_user_id: string; request_id: string }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          action_type: string
+          max_requests?: number
+          time_window_minutes?: number
+          user_identifier: string
+        }
+        Returns: boolean
+      }
       clean_expired_otps: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
       cleanup_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      cleanup_old_data: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
@@ -1375,6 +1388,14 @@ export type Database = {
       reject_credit_request: {
         Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean
+      }
+      sanitize_html_input: {
+        Args: { input_text: string }
+        Returns: string
+      }
+      system_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       update_campaign_stats: {
         Args: { _campaign_id: string }
