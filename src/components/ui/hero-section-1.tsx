@@ -154,16 +154,17 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
 
 const menuItems = [{
   name: 'Funcionalidades',
-  href: '/dashboard'
+  href: '#features'
 }, {
   name: 'Preços',
-  href: '/dashboard'
+  href: '#pricing'
 }, {
   name: 'SMS Rápido',
-  href: '/quick-send'
+  href: '/register'
 }, {
   name: 'Sobre',
-  href: '/dashboard'
+  href: 'https://www.instagram.com/_kbagency',
+  external: true
 }];
 
 const HeroHeader = () => {
@@ -194,9 +195,15 @@ const HeroHeader = () => {
                         <div className="absolute inset-0 m-auto hidden size-fit lg:block">
                             <ul className="flex gap-8 text-sm">
                                 {menuItems.map((item, index) => <li key={index}>
-                                        <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                                            <span>{item.name}</span>
-                                        </Link>
+                                        {item.external ? (
+                                            <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                                                <span>{item.name}</span>
+                                            </a>
+                                        ) : (
+                                            <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                                                <span>{item.name}</span>
+                                            </Link>
+                                        )}
                                     </li>)}
                             </ul>
                         </div>
@@ -205,9 +212,15 @@ const HeroHeader = () => {
                             <div className="lg:hidden">
                                 <ul className="space-y-6 text-base">
                                     {menuItems.map((item, index) => <li key={index}>
-                                            <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                                                <span>{item.name}</span>
-                                            </Link>
+                                            {item.external ? (
+                                                <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                                                    <span>{item.name}</span>
+                                                </a>
+                                            ) : (
+                                                <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                                                    <span>{item.name}</span>
+                                                </Link>
+                                            )}
                                         </li>)}
                                 </ul>
                             </div>

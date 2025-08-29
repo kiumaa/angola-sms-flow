@@ -71,7 +71,9 @@ const Landing = () => {
       <Testimonials />
 
       {/* Simple Pricing Section */}
-      <Pricing1 />
+      <section id="pricing">
+        <Pricing1 />
+      </section>
 
       {/* Stats Section */}
       <section className="py-20 bg-background">
