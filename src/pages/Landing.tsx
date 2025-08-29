@@ -14,7 +14,8 @@ const Landing = () => {
   // Apply dynamic branding
   useDynamicBranding();
 
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <HeroSection />
 
@@ -100,27 +101,45 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground relative">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            Comece a Enviar SMS Hoje
-          </h2>
-          <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Junte-se às empresas angolanas que confiam na nossa plataforma 
-            para comunicação via SMS.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="secondary" className="text-lg px-8">
-              <Link to="/register">
-                Criar Conta Grátis
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              <Link to="/quick-send">
-                Testar Envio
-              </Link>
-            </Button>
+      {/* Enhanced CTA Section */}
+      <section className="py-24 bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="w-full h-full bg-repeat" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
+        </div>
+        
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
+              Transforme a Comunicação da Sua Empresa
+            </h2>
+            <p className="text-xl md:text-2xl mb-4 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed animate-fade-in">
+              Junte-se a <span className="font-semibold text-primary-foreground">centenas de empresas angolanas</span> que já confiam na nossa plataforma para alcançar seus clientes de forma eficaz.
+            </p>
+            <p className="text-lg mb-12 text-primary-foreground/80 max-w-2xl mx-auto animate-fade-in">
+              ✓ Entrega garantida em todo Angola &nbsp;&nbsp; ✓ Suporte especializado 24/7 &nbsp;&nbsp; ✓ Sem compromisso inicial
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-scale-in">
+              <Button asChild size="lg" variant="secondary" className="text-lg px-10 py-4 font-semibold hover-scale shadow-lg hover:shadow-xl transition-all duration-300">
+                <Link to="/register" className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Começar Agora - Grátis
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="text-lg px-10 py-4 font-semibold border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary hover-scale shadow-lg hover:shadow-xl transition-all duration-300">
+                <Link to="/quick-send" className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Testar Envio Rápido
+                </Link>
+              </Button>
+            </div>
+            
+            <div className="mt-8 text-sm text-primary-foreground/70 animate-fade-in">
+              <p>🔒 Seus dados estão seguros conosco • 🚀 Configuração em menos de 2 minutos</p>
+            </div>
           </div>
         </div>
       </section>
@@ -173,7 +192,8 @@ const Landing = () => {
           { name: "Política de Privacidade", href: "/legal/privacy" }
         ]}
       />
-    </div>;
+    </div>
+  );
 };
 
 export default Landing;
