@@ -263,7 +263,7 @@ export const ModernSignupForm: React.FC = () => {
                     <SelectTrigger className="w-24 modern-input border-border/50 focus:border-primary">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
                       {COUNTRY_CODES.map((item) => (
                         <SelectItem key={item.code} value={item.code}>
                           <div className="flex items-center gap-2">
