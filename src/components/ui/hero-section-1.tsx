@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
+import { Particles } from '@/components/ui/particles';
 import { cn } from '@/lib/utils';
+import { useTheme } from 'next-themes';
 
 const useScrollZoom = () => {
   const [scrollY, setScrollY] = React.useState(0);
@@ -48,6 +50,12 @@ const transitionVariants = {
 };
 export function HeroSection() {
   const { scale } = useScrollZoom();
+  const { theme } = useTheme();
+  const [particleColor, setParticleColor] = React.useState('#ffffff');
+
+  React.useEffect(() => {
+    setParticleColor(theme === 'dark' ? '#ffffff' : '#000000');
+  }, [theme]);
   
   return <>
             <HeroHeader />
@@ -59,9 +67,16 @@ export function HeroSection() {
                 </div>
                 <section>
                     <div className="relative pt-24 md:pt-36">
-                        {/* PC Dashboard Image - positioned higher in z-index */}
+                        {/* Particles Background */}
                         <div className="absolute inset-0 z-0 flex items-center justify-center">
-                          
+                          <Particles
+                            className="absolute inset-0"
+                            quantity={80}
+                            ease={70}
+                            size={0.6}
+                            staticity={40}
+                            color={particleColor}
+                          />
                         </div>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
                         <div className="mx-auto max-w-7xl px-6">
