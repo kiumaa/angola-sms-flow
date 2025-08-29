@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, MessageSquare, Users, BarChart3, Shield, Clock, Zap } from "lucide-react";
@@ -11,13 +10,10 @@ import { useDynamicBranding } from "@/hooks/useDynamicBranding";
 import { Footer7 } from "@/components/ui/footer-7";
 import { FaWhatsapp, FaEnvelope } from "react-icons/fa";
 import { AnimatedPalopText } from "@/components/ui/animated-palop-text";
-
 const Landing = () => {
   // Apply dynamic branding
   useDynamicBranding();
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <HeroSection />
 
@@ -108,8 +104,8 @@ const Landing = () => {
         {/* Background Pattern - Responsivo */}
         <div className="absolute inset-0 opacity-10 md:opacity-20">
           <div className="w-full h-full bg-repeat bg-[length:30px_30px] md:bg-[length:60px_60px]" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}></div>
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }}></div>
         </div>
         
         <div className="container mx-auto px-6 text-center relative z-10">
@@ -118,7 +114,7 @@ const Landing = () => {
               Transforme a Comunicação da Sua Empresa
             </h2>
             <p className="text-xl md:text-2xl mb-4 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed animate-fade-in">
-              Junte-se a <span className="font-semibold text-primary-foreground">centenas de empresas angolanas</span> que já confiam na nossa plataforma para alcançar seus clientes de forma eficaz.
+              Junte-se a <span className="font-semibold text-primary-foreground">centenas de empresas</span> que já confiam na nossa plataforma para alcançar seus clientes de forma eficaz.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-scale-in">
@@ -138,55 +134,72 @@ const Landing = () => {
       </section>
 
       {/* Footer Section */}
-      <Footer7 
-        logo={{
-          url: "/",
-          src: "", // BrandLogo will be used instead
-          alt: "SMS.AO Logo",
-          title: "SMS.AO"
-        }}
-        sections={[
-          {
-            title: "Produto",
-            links: [
-              { name: "Funcionalidades", href: "/#features" },
-              { name: "Preços", href: "/#pricing" },
-              { name: "Envio Rápido", href: "/quick-send" },
-              { name: "Status do Sistema", href: "/system-status" }
-            ]
-          },
-          {
-            title: "Suporte",
-            links: [
-              { name: "WhatsApp: +244 933 493 788", href: "https://wa.me/244933493788" },
-              { name: "Email: suporte@sms.ao", href: "mailto:suporte@sms.ao" },
-              { name: "Central de Ajuda", href: "#" },
-              { name: "Documentação", href: "#" }
-            ]
-          },
-          {
-            title: "Legal",
-            links: [
-              { name: "Termos de Uso", href: "/legal/terms" },
-              { name: "Política de Privacidade", href: "/legal/privacy" },
-              { name: "Política de Cookies", href: "#" },
-              { name: "Conformidade", href: "#" }
-            ]
-          }
-        ]}
-        description="Plataforma profissional de SMS para Angola. Envie mensagens de forma rápida, segura e confiável para todo o território angolano."
-        socialLinks={[
-          { icon: <FaWhatsapp className="size-5" />, href: "https://wa.me/244933493788", label: "WhatsApp" },
-          { icon: <FaEnvelope className="size-5" />, href: "mailto:suporte@sms.ao", label: "Email" }
-        ]}
-        copyright="© 2025 SMS.AO - Todos os direitos reservados."
-        legalLinks={[
-          { name: "Termos de Uso", href: "/legal/terms" },
-          { name: "Política de Privacidade", href: "/legal/privacy" }
-        ]}
-      />
-    </div>
-  );
+      <Footer7 logo={{
+      url: "/",
+      src: "",
+      // BrandLogo will be used instead
+      alt: "SMS.AO Logo",
+      title: "SMS.AO"
+    }} sections={[{
+      title: "Produto",
+      links: [{
+        name: "Funcionalidades",
+        href: "/#features"
+      }, {
+        name: "Preços",
+        href: "/#pricing"
+      }, {
+        name: "Envio Rápido",
+        href: "/quick-send"
+      }, {
+        name: "Status do Sistema",
+        href: "/system-status"
+      }]
+    }, {
+      title: "Suporte",
+      links: [{
+        name: "WhatsApp: +244 933 493 788",
+        href: "https://wa.me/244933493788"
+      }, {
+        name: "Email: suporte@sms.ao",
+        href: "mailto:suporte@sms.ao"
+      }, {
+        name: "Central de Ajuda",
+        href: "#"
+      }, {
+        name: "Documentação",
+        href: "#"
+      }]
+    }, {
+      title: "Legal",
+      links: [{
+        name: "Termos de Uso",
+        href: "/legal/terms"
+      }, {
+        name: "Política de Privacidade",
+        href: "/legal/privacy"
+      }, {
+        name: "Política de Cookies",
+        href: "#"
+      }, {
+        name: "Conformidade",
+        href: "#"
+      }]
+    }]} description="Plataforma profissional de SMS para Angola. Envie mensagens de forma rápida, segura e confiável para todo o território angolano." socialLinks={[{
+      icon: <FaWhatsapp className="size-5" />,
+      href: "https://wa.me/244933493788",
+      label: "WhatsApp"
+    }, {
+      icon: <FaEnvelope className="size-5" />,
+      href: "mailto:suporte@sms.ao",
+      label: "Email"
+    }]} copyright="© 2025 SMS.AO - Todos os direitos reservados." legalLinks={[{
+      name: "Termos de Uso",
+      href: "/legal/terms"
+    }, {
+      name: "Política de Privacidade",
+      href: "/legal/privacy"
+    }]} />
+    </div>;
 };
-
 export default Landing;
