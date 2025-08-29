@@ -113,7 +113,7 @@ const Landing = () => {
             <h2 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
               Transforme a Comunicação da Sua Empresa
             </h2>
-            <p className="text-xl md:text-2xl mb-4 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed animate-fade-in">
+            <p className="text-xl md:text-2xl mb-4 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed animate-fade-in py-0 my-[20px]">
               Junte-se a <span className="font-semibold text-primary-foreground">centenas de empresas</span> que já confiam na nossa plataforma para alcançar seus clientes de forma eficaz.
             </p>
             
