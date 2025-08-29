@@ -1,0 +1,167 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+
+interface SecurityAlert {
+  id: string;
+  type: 'suspicious_login' | 'role_change' | 'multiple_failures' | 'rate_limit';
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
+export const useSecurityMonitoring = () => {
+  const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, isAdmin } = useAuth();
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchSecurityAlerts();
+      
+      // Set up real-time monitoring
+      const channel = supabase
+        .channel('security_monitoring')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'admin_audit_logs' }, 
+          handleNewAuditLog
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, isAdmin]);
+
+  const fetchSecurityAlerts = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch recent audit logs for security analysis
+      const { data: auditLogs, error } = await supabase
+        .from('admin_audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      // Analyze logs for security patterns
+      const generatedAlerts = analyzeAuditLogs(auditLogs || []);
+      setAlerts(generatedAlerts);
+    } catch (error) {
+      console.error('Error fetching security alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNewAuditLog = (payload: any) => {
+    const newLog = payload.new;
+    const alert = analyzeLogForAlert(newLog);
+    
+    if (alert) {
+      setAlerts(prev => [alert, ...prev.slice(0, 49)]); // Keep last 50 alerts
+    }
+  };
+
+  const analyzeAuditLogs = (logs: any[]): SecurityAlert[] => {
+    const alerts: SecurityAlert[] = [];
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+    // Check for multiple role changes by same admin
+    const recentRoleChanges = logs.filter(log => 
+      log.action.includes('role_') && 
+      new Date(log.created_at) > oneHourAgo
+    );
+
+    const roleChangesByAdmin = recentRoleChanges.reduce((acc, log) => {
+      acc[log.admin_id] = (acc[log.admin_id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    Object.entries(roleChangesByAdmin).forEach(([adminId, count]) => {
+      if ((count as number) > 5) {
+        alerts.push({
+          id: `role_spam_${adminId}_${Date.now()}`,
+          type: 'role_change',
+          message: `Admin ${adminId} made ${count} role changes in the last hour`,
+          severity: (count as number) > 10 ? 'critical' : 'high',
+          timestamp: now.toISOString(),
+          metadata: { adminId, count }
+        });
+      }
+    });
+
+    // Check for failed authentication attempts
+    const failedAttempts = logs.filter(log => 
+      log.action === 'role_change_attempt' && 
+      log.details?.error &&
+      new Date(log.created_at) > oneHourAgo
+    );
+
+    if (failedAttempts.length > 10) {
+      alerts.push({
+        id: `auth_failures_${Date.now()}`,
+        type: 'multiple_failures',
+        message: `${failedAttempts.length} failed authorization attempts in the last hour`,
+        severity: 'high',
+        timestamp: now.toISOString(),
+        metadata: { count: failedAttempts.length }
+      });
+    }
+
+    return alerts.slice(0, 50); // Limit to 50 alerts
+  };
+
+  const analyzeLogForAlert = (log: any): SecurityAlert | null => {
+    // Check for privilege escalation attempts
+    if (log.action === 'role_change_attempt' && log.details?.error?.includes('cannot grant themselves')) {
+      return {
+        id: `privilege_escalation_${log.id}`,
+        type: 'role_change',
+        message: `User attempted to escalate their own privileges`,
+        severity: 'critical',
+        timestamp: log.created_at,
+        metadata: { adminId: log.admin_id, targetUserId: log.target_user_id }
+      };
+    }
+
+    // Check for rate limit violations
+    if (log.details?.error?.includes('Rate limit exceeded')) {
+      return {
+        id: `rate_limit_${log.id}`,
+        type: 'rate_limit',
+        message: `Rate limit exceeded by admin`,
+        severity: 'medium',
+        timestamp: log.created_at,
+        metadata: { adminId: log.admin_id }
+      };
+    }
+
+    return null;
+  };
+
+  const dismissAlert = (alertId: string) => {
+    setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+  };
+
+  const markAsRead = (alertId: string) => {
+    setAlerts(prev => prev.map(alert => 
+      alert.id === alertId 
+        ? { ...alert, read: true }
+        : alert
+    ));
+  };
+
+  return {
+    alerts,
+    loading,
+    dismissAlert,
+    markAsRead,
+    refetch: fetchSecurityAlerts
+  };
+};

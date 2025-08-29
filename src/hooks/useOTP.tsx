@@ -9,17 +9,23 @@ export const useOTP = () => {
   const { user } = useAuth();
 
   /**
-   * Create and send OTP request
+   * Create and send OTP request with rate limiting
    */
   const requestOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
     setLoading(true);
     setError(null);
 
     try {
+      // Client-side phone validation
+      const phoneRegex = /^\+244[9][0-9]{8}$/;
+      if (!phoneRegex.test(phone)) {
+        throw new Error('Formato de telefone inválido. Use +244XXXXXXXXX');
+      }
+
       // Send OTP request to secure endpoint (no code generation on frontend)
       const { data: smsData, error: smsError } = await supabase.functions.invoke('send-otp', {
         body: {
-          phone
+          phone: phone.trim()
         }
       });
 

@@ -49,21 +49,22 @@ export function EditUserModal({ isOpen, onClose, user, onUserUpdated }: EditUser
 
     setLoading(true);
     try {
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          company_name: formData.company_name || null,
-          phone: formData.phone || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.user_id);
+      // Get current admin user
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
 
-      if (profileError) throw profileError;
-
-      // Update role if changed
+      // Validate admin role change using secure function
       if (formData.role !== user.role) {
+        const { error: validationError } = await supabase.rpc('validate_admin_role_change', {
+          target_user_id: user.user_id,
+          admin_id: currentUser.id,
+          new_role: formData.role as 'admin' | 'client'
+        });
+
+        if (validationError) throw validationError;
+
         // Remove existing role
         await supabase
           .from('user_roles')
@@ -81,8 +82,20 @@ export function EditUserModal({ isOpen, onClose, user, onUserUpdated }: EditUser
         if (roleError) throw roleError;
       }
 
-      // Log audit
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      // Update profile with sanitized data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.full_name.trim(),
+          company_name: formData.company_name?.trim() || null,
+          phone: formData.phone?.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.user_id);
+
+      if (profileError) throw profileError;
+
+      // Log audit (currentUser already defined above)
       if (currentUser) {
         await supabase
           .from('admin_audit_logs')
