@@ -129,12 +129,6 @@ const Landing = () => {
                   Começar Agora - Grátis
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="text-lg px-10 py-4 font-semibold border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary hover-scale shadow-lg hover:shadow-xl transition-all duration-300">
-                <Link to="/quick-send" className="flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  Testar Envio Rápido
-                </Link>
-              </Button>
             </div>
             
             <div className="mt-8 text-sm text-primary-foreground/70 animate-fade-in">
