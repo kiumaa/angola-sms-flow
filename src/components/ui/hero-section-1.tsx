@@ -8,6 +8,7 @@ import { BrandLogo } from '@/components/shared/BrandLogo';
 import { Particles } from '@/components/ui/particles';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
+
 const useScrollZoom = () => {
   const [scrollY, setScrollY] = React.useState(0);
   React.useEffect(() => {
@@ -27,6 +28,7 @@ const useScrollZoom = () => {
     scale: getZoomScale()
   };
 };
+
 const transitionVariants = {
   item: {
     hidden: {
@@ -46,6 +48,7 @@ const transitionVariants = {
     }
   }
 };
+
 export function HeroSection() {
   const {
     scale
@@ -72,7 +75,7 @@ export function HeroSection() {
                           <Particles className="absolute inset-0" quantity={80} ease={70} size={0.6} staticity={40} color={particleColor} />
                         </div>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
-                        <div className="mx-auto max-w-7xl px-6">
+                        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                             <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
                                 <AnimatedGroup variants={transitionVariants}>
                                     <Link to="/register" className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-black/5 transition-all duration-300 dark:border-t-white/5 dark:shadow-zinc-950">
@@ -91,10 +94,10 @@ export function HeroSection() {
                                         </div>
                                     </Link>
                         
-                                    <h2 className="mt-8 max-w-4xl mx-auto text-balance text-6xl md:text-7xl lg:mt-16 xl:text-[5.25rem] font-bold my-[18px]">
+                                    <h2 className="mt-6 sm:mt-8 lg:mt-12 xl:mt-16 max-w-5xl mx-auto text-balance text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-[5.25rem] font-bold leading-tight sm:leading-tight md:leading-[1.1] lg:leading-[1.05] xl:leading-[1.02] px-2 sm:px-4">
                                         Conecte-se com os seus Clientes e Venda de forma simples, rápida e eficaz
                                     </h2>
-                                    <p className="mt-8 max-w-4xl text-balance text-muted-foreground mx-auto px-0 text-center text-lg font-light">Está pronto para aumentar as suas vendas, melhorar a comunicação e fidelizar clientes?
+                                    <p className="mt-6 sm:mt-8 max-w-3xl lg:max-w-4xl text-balance text-muted-foreground mx-auto px-4 sm:px-6 text-center text-base sm:text-lg lg:text-xl font-light leading-relaxed">Está pronto para aumentar as suas vendas, melhorar a comunicação e fidelizar clientes?
 A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em segundos.</p>
                                 </AnimatedGroup>
 
@@ -108,11 +111,11 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
                   }
                 },
                 ...transitionVariants
-              }} className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
+              }} className="mt-8 sm:mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
                                     <Link key={1} to="/register" className="group">
-                                        <button className="relative inline-flex h-12 animate-pulse overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
+                                        <button className="relative inline-flex h-12 sm:h-14 animate-pulse overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
                                             <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#393BB2_50%,#E2E8F0_100%)]" />
-                                            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-black px-8 py-1 text-sm font-medium text-white backdrop-blur-3xl gap-2 hover:bg-gray-900 transition-all duration-300 transform hover:scale-105">
+                                            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-black px-6 sm:px-8 py-1 text-sm sm:text-base font-medium text-white backdrop-blur-3xl gap-2 hover:bg-gray-900 transition-all duration-300 transform hover:scale-105">
                                                 <Play className="w-4 h-4" />
                                                 Experimentar Agora
                                             </span>
@@ -133,7 +136,7 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
             },
             ...transitionVariants
           }}>
-                            <div className="relative mt-8 px-2 sm:mt-12 md:mt-20">
+                            <div className="relative mt-8 px-2 sm:mt-12 md:mt-16 lg:mt-20">
                                 
                                  <div className="bg-background relative mx-auto max-w-7xl rounded-2xl p-2 pb-8 md:pb-16">
                                      <img className="bg-background w-full h-auto relative hidden rounded-2xl dark:block shadow-2xl" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
@@ -148,6 +151,7 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
             </main>
         </>;
 }
+
 const menuItems = [{
   name: 'Funcionalidades',
   href: '/dashboard'
@@ -161,6 +165,7 @@ const menuItems = [{
   name: 'Sobre',
   href: '/dashboard'
 }];
+
 const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -229,6 +234,7 @@ const HeroHeader = () => {
             </nav>
         </header>;
 };
+
 const Logo = ({
   className
 }: {
