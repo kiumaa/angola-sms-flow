@@ -91,9 +91,9 @@ export function HeroSection() {
                                         </div>
                                     </Link>
                         
-                                    <h2 className="mt-8 max-w-4xl mx-auto text-balance text-6xl md:text-7xl lg:mt-16 xl:text-[5.25rem] font-bold my-[18px]">
+                                    <h3 className="mt-8 max-w-4xl mx-auto text-balance text-6xl md:text-7xl lg:mt-16 xl:text-[5.25rem] font-bold my-[18px]">
                                         Conecte-se com os seus Clientes e Venda de forma simples, rápida e eficaz
-                                    </h2>
+                                    </h3>
                                     <p className="mt-8 max-w-4xl text-balance text-muted-foreground mx-auto px-0 text-center text-lg font-light">Está pronto para aumentar as suas vendas, melhorar a comunicação e fidelizar clientes?
 A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em segundos.</p>
                                 </AnimatedGroup>
