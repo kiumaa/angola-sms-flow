@@ -300,7 +300,7 @@ async function sendViaBulkSMS(
         messages: [{
           to: phone,
           from: resolveSenderId('SMSAO'), // Usar helper para garantir normalização
-          content: `Seu código de acesso é: ${code}`
+          body: `Seu código de acesso é: ${code}`
         }]
       })
     });
