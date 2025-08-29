@@ -24,9 +24,7 @@ const Landing = () => {
             <h2 className="text-4xl font-bold mb-6 text-foreground">
               Funcionalidades Essenciais
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Envio de SMS simples, rápido e profissional para Angola
-            </p>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Envio de SMS simples, rápido e profissional</p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -71,9 +69,7 @@ const Landing = () => {
       <Testimonials />
 
       {/* Simple Pricing Section */}
-      <section id="pricing">
-        <Pricing1 />
-      </section>
+      <Pricing1 />
 
       {/* Stats Section */}
       <section className="py-20 bg-background">
