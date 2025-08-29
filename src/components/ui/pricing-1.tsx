@@ -30,9 +30,26 @@ const Pricing1 = () => {
     );
   }
 
-  // Sort packages by credits and mark middle one as popular
-  const sortedPackages = [...packages].sort((a, b) => a.credits - b.credits);
+  // Filter valid packages and sort by credits, mark middle one as popular
+  const validPackages = packages.filter(pkg => pkg.credits > 0 && pkg.price_kwanza > 0);
+  const sortedPackages = [...validPackages].sort((a, b) => a.credits - b.credits);
   const middleIndex = Math.floor(sortedPackages.length / 2);
+  
+  // Show empty state if no valid packages
+  if (!loading && sortedPackages.length === 0) {
+    return (
+      <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
+        <div className="flex flex-col items-center gap-7 w-full">
+          <h2 className="font-medium text-2xl leading-6 text-center">
+            Pacotes de Créditos SMS
+          </h2>
+          <p className="text-muted-foreground text-center max-w-2xl">
+            Nenhum pacote disponível no momento. Entre em contato conosco.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
@@ -48,7 +65,9 @@ const Pricing1 = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
         {sortedPackages.map((pkg, index) => {
           const isPopular = index === middleIndex;
-          const pricePerSMS = (pkg.price_kwanza / pkg.credits).toFixed(2);
+          const pricePerSMS = pkg.credits > 0 && pkg.price_kwanza > 0 
+            ? (pkg.price_kwanza / pkg.credits).toFixed(2)
+            : "0.00";
           
           return (
             <Card

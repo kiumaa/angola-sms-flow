@@ -30,7 +30,12 @@ export const usePackages = () => {
 
       if (error) throw error;
       
-      setPackages(data || []);
+      // Filter out packages with invalid data (0 credits or 0 price)
+      const validPackages = (data || []).filter(pkg => 
+        pkg.credits > 0 && pkg.price_kwanza > 0
+      );
+      
+      setPackages(validPackages);
     } catch (error) {
       console.error('Error fetching packages:', error);
       toast({
