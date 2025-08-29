@@ -6,6 +6,7 @@ import { AnimatedGroup } from '@/components/ui/animated-group';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import { cn } from '@/lib/utils';
+
 const transitionVariants = {
   item: {
     hidden: {
@@ -25,6 +26,7 @@ const transitionVariants = {
     }
   }
 };
+
 export function HeroSection() {
   return <>
             <HeroHeader />
@@ -60,7 +62,7 @@ export function HeroSection() {
               }
             }
           }} className="absolute inset-0 -z-20">
-                            <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=3276&h=4095&fit=crop&auto=format" alt="background" className="absolute inset-x-0 top-56 -z-20 hidden lg:top-32 dark:block opacity-30" width="3276" height="4095" />
+                            <img src="https://raw.githubusercontent.com/kiumaa/angola-sms-flow/main/src/img/PC.png" alt="background" className="absolute inset-x-0 top-56 -z-20 hidden lg:top-32 dark:block opacity-30" width="3276" height="4095" />
                         </AnimatedGroup>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
                         <div className="mx-auto max-w-7xl px-6">
@@ -177,6 +179,7 @@ export function HeroSection() {
             </main>
         </>;
 }
+
 const menuItems = [{
   name: 'Funcionalidades',
   href: '/dashboard'
@@ -190,6 +193,7 @@ const menuItems = [{
   name: 'Sobre',
   href: '/dashboard'
 }];
+
 const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -258,6 +262,7 @@ const HeroHeader = () => {
             </nav>
         </header>;
 };
+
 const Logo = ({
   className
 }: {
