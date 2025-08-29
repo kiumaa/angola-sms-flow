@@ -1,13 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Smartphone, ArrowLeft, Shield, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { PhoneInput } from "@/components/shared/PhoneInput";
+import { InternationalPhoneInput } from "@/components/shared/InternationalPhoneInput";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { useOTPFlow } from "@/hooks/useOTPFlow";
+import { DEFAULT_COUNTRY, type PhoneCountry } from "@/lib/internationalPhoneNormalization";
 
 interface OTPLoginModalProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface OTPLoginModalProps {
 
 const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
   const { toast } = useToast();
+  const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(DEFAULT_COUNTRY);
   
   const otpFlow = useOTPFlow({
     onSuccess: (result) => {
@@ -108,10 +110,13 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
               <>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Número de Telefone</Label>
-                  <PhoneInput
+                  <InternationalPhoneInput
                     value={otpFlow.phone}
                     onChange={otpFlow.setPhone}
-                    placeholder="9XX XXX XXX"
+                    country={selectedCountry}
+                    onCountryChange={setSelectedCountry}
+                    showValidation={true}
+                    autoDetectCountry={true}
                     className="h-12"
                     disabled={otpFlow.isSending}
                   />
@@ -123,7 +128,7 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Seguro e Rápido</p>
                       <p className="text-xs text-muted-foreground">
-                        Código válido por 5 minutos • Apenas números angolanos
+                        Código válido por 5 minutos • Suporte internacional
                       </p>
                     </div>
                   </div>
