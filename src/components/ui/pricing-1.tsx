@@ -30,13 +30,14 @@ const Pricing1 = () => {
     );
   }
 
-  // Filter valid packages and sort by credits, mark middle one as popular
-  const validPackages = packages.filter(pkg => pkg.credits > 0 && pkg.price_kwanza > 0);
-  const sortedPackages = [...validPackages].sort((a, b) => a.credits - b.credits);
+  // Sort packages by credits and mark middle one as popular (hook already filters valid packages)
+  const sortedPackages = [...packages].sort((a, b) => a.credits - b.credits);
   const middleIndex = Math.floor(sortedPackages.length / 2);
   
-  // Show empty state if no valid packages
-  if (!loading && sortedPackages.length === 0) {
+  console.log('Packages received from hook:', packages.length, packages);
+  
+  // Show empty state if no packages after hook filtering
+  if (!loading && packages.length === 0) {
     return (
       <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
         <div className="flex flex-col items-center gap-7 w-full">
