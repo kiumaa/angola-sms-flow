@@ -110,7 +110,7 @@ export function HeroSection() {
                                 
                                 <div className="bg-background relative mx-auto max-w-7xl overflow-hidden rounded-2xl p-2">
                                     <img className="bg-background aspect-[16/9] relative hidden rounded-2xl dark:block" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
-                                    <img className="z-2 border-border/25 aspect-[16/9] relative rounded-2xl border dark:hidden" src="/PC.png" alt="SMS Dashboard" width="2700" height="1440" />
+                                    <img className="z-2 aspect-[16/9] relative rounded-2xl dark:hidden" src="/PC.png" alt="SMS Dashboard" width="2700" height="1440" />
                                 </div>
                             </div>
                         </AnimatedGroup>
