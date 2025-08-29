@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronRight, Menu, X } from 'lucide-react';
+import { ArrowRight, ChevronRight, Menu, X, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { RainbowButton } from '@/components/ui/rainbow-button';
@@ -8,6 +8,7 @@ import { BrandLogo } from '@/components/shared/BrandLogo';
 import { Particles } from '@/components/ui/particles';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
+
 const useScrollZoom = () => {
   const [scrollY, setScrollY] = React.useState(0);
   React.useEffect(() => {
@@ -27,6 +28,7 @@ const useScrollZoom = () => {
     scale: getZoomScale()
   };
 };
+
 const transitionVariants = {
   item: {
     hidden: {
@@ -46,6 +48,7 @@ const transitionVariants = {
     }
   }
 };
+
 export function HeroSection() {
   const {
     scale
@@ -109,10 +112,14 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
                 },
                 ...transitionVariants
               }} className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
-                                    <Link key={1} to="/register">
-                                        <RainbowButton className="text-nowrap">
-                                            Começar Agora
-                                        </RainbowButton>
+                                    <Link key={1} to="/register" className="group">
+                                        <button className="relative inline-flex h-12 animate-pulse overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
+                                            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#393BB2_50%,#E2E8F0_100%)]" />
+                                            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-black px-8 py-1 text-sm font-medium text-white backdrop-blur-3xl gap-2 hover:bg-gray-900 transition-all duration-300 transform hover:scale-105">
+                                                <Play className="w-4 h-4" />
+                                                Experimentar Agora
+                                            </span>
+                                        </button>
                                     </Link>
                                 </AnimatedGroup>
                             </div>
@@ -180,6 +187,7 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
             </main>
         </>;
 }
+
 const menuItems = [{
   name: 'Funcionalidades',
   href: '/dashboard'
@@ -193,6 +201,7 @@ const menuItems = [{
   name: 'Sobre',
   href: '/dashboard'
 }];
+
 const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -261,6 +270,7 @@ const HeroHeader = () => {
             </nav>
         </header>;
 };
+
 const Logo = ({
   className
 }: {
