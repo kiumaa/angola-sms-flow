@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { useDynamicBranding } from "@/hooks/useDynamicBranding";
 import { Footer7 } from "@/components/ui/footer-7";
 import { FaWhatsapp, FaEnvelope } from "react-icons/fa";
+import { AnimatedPalopText } from "@/components/ui/animated-palop-text";
 
 const Landing = () => {
   // Apply dynamic branding
@@ -87,13 +88,13 @@ const Landing = () => {
             number: "95%+",
             label: "Taxa de Entrega"
           }, {
-            number: "Angola",
-            label: "Cobertura Nacional"
+            number: <AnimatedPalopText />,
+            label: "Cobertura PALOP"
           }, {
             number: "24/7",
             label: "Suporte Ativo"
           }].map((stat, index) => <div key={index} className="group">
-                <div className="text-4xl font-bold text-primary mb-2 transition-all duration-300 group-hover:scale-105">
+                <div className="text-4xl font-bold text-primary mb-2 transition-all duration-300 group-hover:scale-105 min-h-[48px] flex items-center justify-center">
                   {stat.number}
                 </div>
                 <div className="text-muted-foreground">{stat.label}</div>
