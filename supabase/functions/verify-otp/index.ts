@@ -90,7 +90,20 @@ serve(async (req) => {
     // Hash the provided code to compare with stored hash
     const hashedCode = await hashOTPCode(code, otpPepper);
 
-    // Find valid OTP request - get the most recent one that matches
+    // Enhanced OTP lookup - find the most recent valid OTP for this phone
+    console.log(`Attempting to verify OTP for ${phone} with hash ${hashedCode.substring(0, 8)}...`);
+    
+    // First, get ALL recent OTPs for this phone for debugging
+    const { data: allRecentOtps } = await supabase
+      .from('otp_requests')
+      .select('id, code, used, expires_at, created_at')
+      .eq('phone', phone)
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+      .order('created_at', { ascending: false });
+    
+    console.log(`Found ${allRecentOtps?.length || 0} recent OTPs for phone ${phone}:`, allRecentOtps);
+
+    // Find the most recent valid OTP that matches the hash
     const { data: otpRequest, error: findError } = await supabase
       .from('otp_requests')
       .select('*')
@@ -102,12 +115,15 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    console.log(`OTP verification attempt for ${phone}: found OTP = ${!!otpRequest}, hash = ${hashedCode.substring(0, 8)}...`);
+    console.log(`OTP verification for ${phone}: found valid OTP = ${!!otpRequest}`);
 
     if (findError) {
       console.error('Error finding OTP request:', findError);
       return new Response(
-        JSON.stringify({ error: 'Internal server error' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erro interno do servidor' 
+        }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -116,19 +132,12 @@ serve(async (req) => {
     }
 
     if (!otpRequest) {
-      // Log all OTPs for this phone to help debug
-      const { data: allOtps } = await supabase
-        .from('otp_requests')
-        .select('id, code, used, expires_at, created_at')
-        .eq('phone', phone)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      console.log(`Invalid or expired OTP attempt for phone ${phone}. Recent OTPs:`, allOtps);
-      console.log(`Looking for hash: ${hashedCode}`);
-      
+      console.log(`No valid OTP found for phone ${phone} with provided code`);
       return new Response(
-        JSON.stringify({ error: 'Código inválido ou expirado' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Código inválido ou expirado. Solicite um novo código.' 
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -136,18 +145,39 @@ serve(async (req) => {
       );
     }
 
-    // Mark OTP as used
-    const { error: markUsedError } = await supabase
+    // Mark OTP as used and clean up other OTPs for this phone
+    const { error: updateError } = await supabase
       .from('otp_requests')
       .update({ used: true })
       .eq('id', otpRequest.id);
 
-    if (markUsedError) {
-      console.error('Error marking OTP as used:', markUsedError);
+    if (updateError) {
+      console.error('Error marking OTP as used:', updateError);
       return new Response(
-        JSON.stringify({ error: 'Internal server error' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erro ao processar verificação' 
+        }),
         { 
           status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Clean up other unused OTPs for this phone to prevent future conflicts
+    const { error: cleanupError } = await supabase
+      .from('otp_requests')
+      .update({ used: true })
+      .eq('phone', phone)
+      .eq('used', false)
+      .neq('id', otpRequest.id);
+    
+    if (cleanupError) {
+      console.log('Note: Could not clean up other OTPs:', cleanupError);
+    } else {
+      console.log('Cleaned up other unused OTPs for phone:', phone);
+    }
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );

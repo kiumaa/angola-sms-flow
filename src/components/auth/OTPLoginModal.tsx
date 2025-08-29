@@ -1,14 +1,13 @@
-import { useState, useCallback } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Smartphone, ArrowLeft, Shield } from "lucide-react";
+import { Smartphone, ArrowLeft, Shield, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useOTP } from "@/hooks/useOTP";
 import { PhoneInput } from "@/components/shared/PhoneInput";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useOTPFlow } from "@/hooks/useOTPFlow";
 
 interface OTPLoginModalProps {
   open: boolean;
@@ -16,104 +15,68 @@ interface OTPLoginModalProps {
 }
 
 const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
-  const [step, setStep] = useState<'phone' | 'code'>('phone');
-  const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
-  const [isRequestingOTP, setIsRequestingOTP] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
-  const { requestOTP, verifyOTP } = useOTP();
-
-  const handleRequestOTP = async () => {
-    if (!phone) {
+  
+  const otpFlow = useOTPFlow({
+    onSuccess: (result) => {
       toast({
-        title: "Número obrigatório",
-        description: "Digite um número de telefone válido",
+        title: "Login realizado!",
+        description: "Acesso autorizado via SMS",
+      });
+      onOpenChange(false);
+      // TODO: Integrate with auth system to create session using result.magicLink
+    },
+    onError: (error) => {
+      console.error('OTP Login error:', error);
+    },
+    rateLimitMs: 30000 // 30 seconds between sends
+  });
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      otpFlow.cleanup();
+    };
+  }, []);
+
+  const handleRequestOTP = () => {
+    if (!otpFlow.canSendOTP) {
+      toast({
+        title: "Aguarde um pouco",
+        description: `Aguarde ${otpFlow.remainingCooldown} segundos`,
         variant: "destructive",
       });
       return;
     }
-
-    setIsRequestingOTP(true);
-    try {
-      const result = await requestOTP(phone);
-      
-      if (result.success) {
-        setStep('code');
-        toast({
-          title: "Código enviado!",
-          description: `Enviamos um código para ${phone}`,
-        });
-      } else {
-        toast({
-          title: "Erro ao enviar código",
-          description: result.error || "Tente novamente em alguns minutos",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Erro inesperado",
-        description: "Não foi possível enviar o código",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRequestingOTP(false);
-    }
+    otpFlow.sendOTP();
   };
 
-  const handleVerifyOTP = async () => {
-    if (code.length !== 6) {
-      toast({
-        title: "Código incompleto",
-        description: "Digite o código de 6 dígitos",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsVerifying(true);
-    try {
-      const result = await verifyOTP(phone, code);
-      
-      if (result.success) {
-        toast({
-          title: "Login realizado!",
-          description: "Acesso autorizado via SMS",
-        });
-        onOpenChange(false);
-        // Aqui você integraria com o sistema de auth para criar a sessão
-      } else {
-        toast({
-          title: "Código inválido",
-          description: result.error || "Verifique o código e tente novamente",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Erro na verificação",
-        description: "Não foi possível verificar o código",
-        variant: "destructive",
-      });
-    } finally {
-      setIsVerifying(false);
-    }
+  const handleVerifyOTP = () => {
+    otpFlow.verifyCode();
   };
 
   const handleBack = () => {
-    if (step === 'code') {
-      setStep('phone');
-      setCode("");
+    if (otpFlow.step === 'verify' || otpFlow.step === 'sending') {
+      otpFlow.goBack();
     } else {
       onOpenChange(false);
     }
   };
 
+  const handleResendCode = () => {
+    if (!otpFlow.canSendOTP) {
+      toast({
+        title: "Aguarde um pouco",
+        description: `Aguarde ${otpFlow.remainingCooldown} segundos`,
+        variant: "destructive",
+      });
+      return;
+    }
+    otpFlow.resendOTP();
+  };
+
   const resetModal = () => {
-    setStep('phone');
-    setPhone("");
-    setCode("");
+    otpFlow.reset();
   };
 
   return (
@@ -127,66 +90,91 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
             <div className="p-2 rounded-lg bg-gradient-primary shadow-glow">
               <Smartphone className="h-5 w-5 text-white" />
             </div>
-            {step === 'phone' ? 'Login com Telefone' : 'Verificar Código'}
+            {otpFlow.step === 'phone' ? 'Login com Telefone' : 
+             otpFlow.step === 'sending' ? 'Enviando Código' : 'Verificar Código'}
           </DialogTitle>
           <DialogDescription>
-            {step === 'phone' 
+            {otpFlow.step === 'phone' 
               ? 'Receba um código de acesso por SMS' 
-              : `Código enviado para ${phone}`
+              : otpFlow.step === 'sending'
+              ? 'Enviando código de verificação...'
+              : `Código enviado para ${otpFlow.phone}`
             }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {step === 'phone' ? (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Número de Telefone</Label>
-                <PhoneInput
-                  value={phone}
-                  onChange={setPhone}
-                  placeholder="9XX XXX XXX"
-                  className="h-12"
-                />
-              </div>
+          {otpFlow.step === 'phone' ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Número de Telefone</Label>
+                  <PhoneInput
+                    value={otpFlow.phone}
+                    onChange={otpFlow.setPhone}
+                    placeholder="9XX XXX XXX"
+                    className="h-12"
+                    disabled={otpFlow.isSending}
+                  />
+                </div>
 
-              <div className="glass-card p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Seguro e Rápido</p>
-                    <p className="text-xs text-muted-foreground">
-                      Código válido por 5 minutos • Apenas números angolanos
-                    </p>
+                <div className="glass-card p-4 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Seguro e Rápido</p>
+                      <p className="text-xs text-muted-foreground">
+                        Código válido por 5 minutos • Apenas números angolanos
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
-                <Button
-                  onClick={handleRequestOTP}
-                  disabled={isRequestingOTP || !phone}
-                  className="flex-1"
-                >
-                  {isRequestingOTP ? (
-                    <div className="flex items-center space-x-2">
-                      <LoadingSpinner size="sm" className="border-primary-foreground border-t-transparent" />
-                      <span>Enviando...</span>
+                {!otpFlow.canSendOTP && (
+                  <div className="glass-card p-3 rounded-xl bg-amber-50 border border-amber-200">
+                    <div className="flex items-center gap-2 text-amber-800">
+                      <Clock className="h-4 w-4" />
+                      <span className="text-sm">
+                        Aguarde {otpFlow.remainingCooldown} segundos para enviar novamente
+                      </span>
                     </div>
-                  ) : (
-                    "Enviar Código"
-                  )}
-                </Button>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleBack}
+                    className="flex-1"
+                    disabled={otpFlow.isSending}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar
+                  </Button>
+                  <Button
+                    onClick={handleRequestOTP}
+                    disabled={otpFlow.isSending || !otpFlow.phone || !otpFlow.canSendOTP}
+                    className="flex-1"
+                  >
+                    {otpFlow.isSending ? (
+                      <div className="flex items-center space-x-2">
+                        <LoadingSpinner size="sm" className="border-primary-foreground border-t-transparent" />
+                        <span>Enviando...</span>
+                      </div>
+                    ) : (
+                      "Enviar Código"
+                    )}
+                  </Button>
+                </div>
+              </>
+          ) : otpFlow.step === 'sending' ? (
+            <div className="space-y-6 text-center">
+              <div className="flex flex-col items-center space-y-4">
+                <LoadingSpinner size="lg" className="border-primary border-t-transparent" />
+                <p className="text-sm text-muted-foreground">
+                  Enviando código de verificação...
+                </p>
               </div>
-            </>
+            </div>
           ) : (
             <>
               <div className="space-y-4 text-center">
@@ -194,9 +182,10 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
                   <Label>Código de Verificação</Label>
                   <div className="flex justify-center">
                     <InputOTP
-                      value={code}
-                      onChange={setCode}
+                      value={otpFlow.code}
+                      onChange={otpFlow.setCode}
                       maxLength={6}
+                      disabled={otpFlow.isVerifying}
                     >
                       <InputOTPGroup>
                         <InputOTPSlot index={0} />
@@ -210,16 +199,25 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
                   </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground">
-                  Não recebeu o código?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setStep('phone')}
-                    className="text-primary hover:underline"
-                  >
-                    Tentar novamente
-                  </button>
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Não recebeu o código?{" "}
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      disabled={otpFlow.isSending || !otpFlow.canSendOTP}
+                      className="text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {otpFlow.isSending ? "Enviando..." : "Reenviar código"}
+                    </button>
+                  </p>
+                  
+                  {!otpFlow.canSendOTP && (
+                    <p className="text-xs text-amber-600">
+                      Aguarde {otpFlow.remainingCooldown}s para reenviar
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-3">
@@ -227,16 +225,17 @@ const OTPLoginModal = ({ open, onOpenChange }: OTPLoginModalProps) => {
                   variant="outline"
                   onClick={handleBack}
                   className="flex-1"
+                  disabled={otpFlow.isVerifying}
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Alterar
                 </Button>
                 <Button
                   onClick={handleVerifyOTP}
-                  disabled={isVerifying || code.length !== 6}
+                  disabled={otpFlow.isVerifying || otpFlow.code.length !== 6}
                   className="flex-1"
                 >
-                  {isVerifying ? (
+                  {otpFlow.isVerifying ? (
                     <div className="flex items-center space-x-2">
                       <LoadingSpinner size="sm" className="border-primary-foreground border-t-transparent" />
                       <span>Verificando...</span>

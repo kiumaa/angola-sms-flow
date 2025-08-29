@@ -106,17 +106,18 @@ serve(async (req) => {
       );
     }
 
-    // Clean up any existing unused OTPs for this phone number to prevent conflicts
-    const { error: cleanupError } = await supabase
+    // CRITICAL: Clean up ALL existing OTPs for this phone number to prevent conflicts
+    console.log('Cleaning up existing OTPs for phone:', phone);
+    const { error: cleanupError, count: deletedCount } = await supabase
       .from('otp_requests')
       .delete()
-      .eq('phone', phone)
-      .eq('used', false);
+      .eq('phone', phone);
     
     if (cleanupError) {
-      console.log('Note: Could not clean existing OTPs:', cleanupError);
+      console.error('Failed to clean existing OTPs:', cleanupError);
+      // Continue anyway, but log the issue
     } else {
-      console.log('Cleaned up existing unused OTPs for phone:', phone);
+      console.log(`Cleaned up ${deletedCount || 0} existing OTPs for phone:`, phone);
     }
 
     // Validate international phone format
@@ -145,41 +146,53 @@ serve(async (req) => {
       );
     }
 
-    // Rate limiting: Check attempts in last 30 minutes
+    // Enhanced rate limiting - prevent too many requests from same phone
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    
-    const { data: recentAttempts, error: attemptsError } = await supabase
+    const { data: recentRequests, error: rateLimitError } = await supabase
       .from('otp_requests')
-      .select('attempts')
+      .select('id, created_at')
       .eq('phone', phone)
-      .gte('created_at', thirtyMinutesAgo);
+      .gte('created_at', thirtyMinutesAgo)
+      .order('created_at', { ascending: false });
 
-    if (attemptsError) {
-      console.error('Error checking rate limit:', attemptsError);
-      return new Response(
-        JSON.stringify({ error: 'Internal server error' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Calculate total attempts in last 30 minutes
-    const totalAttempts = recentAttempts.reduce((sum, attempt) => sum + (attempt.attempts || 1), 0);
-    
-    if (totalAttempts >= 3) {
-      console.log(`Rate limit exceeded for phone ${phone}: ${totalAttempts} attempts in last 30 minutes`);
+    if (rateLimitError) {
+      console.error('Error checking rate limit:', rateLimitError);
+    } else if (recentRequests && recentRequests.length >= 3) {
+      console.log(`Rate limit exceeded for phone ${phone}: ${recentRequests.length} attempts in last 30 minutes`);
       return new Response(
         JSON.stringify({ 
-          error: 'Muitas tentativas. Tente novamente em 30 minutos.',
-          retryAfter: 30 * 60 // seconds
+          success: false, 
+          error: 'Muitas tentativas. Aguarde 30 minutos antes de tentar novamente.' 
         }),
         { 
           status: 429, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+    
+    // Additional IP-based rate limiting
+    const clientIP = getClientIP(req);
+    if (clientIP) {
+      const { data: ipRequests } = await supabase
+        .from('otp_requests')
+        .select('id')
+        .eq('ip_address', clientIP)
+        .gte('created_at', thirtyMinutesAgo);
+        
+      if (ipRequests && ipRequests.length >= 5) {
+        console.log(`IP rate limit exceeded for ${clientIP}: ${ipRequests.length} attempts in last 30 minutes`);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Muitas tentativas deste endereço IP. Tente novamente mais tarde.' 
+          }),
+          { 
+            status: 429, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
     }
 
     // Generate OTP code and hash it
