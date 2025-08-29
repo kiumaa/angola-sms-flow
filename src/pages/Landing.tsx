@@ -94,10 +94,10 @@ const Landing = () => {
             number: "24/7",
             label: "Suporte Ativo"
           }].map((stat, index) => <div key={index} className="group">
-                <div className="text-4xl font-bold text-primary mb-2 transition-all duration-300 group-hover:scale-105 min-h-[48px] flex items-center justify-center">
+                <div className="text-4xl font-bold text-primary mb-2 transition-all duration-300 group-hover:scale-105 h-[48px] flex items-center justify-center">
                   {stat.number}
                 </div>
-                <div className="text-muted-foreground">{stat.label}</div>
+                <div className="text-muted-foreground text-center">{stat.label}</div>
               </div>)}
           </div>
         </div>

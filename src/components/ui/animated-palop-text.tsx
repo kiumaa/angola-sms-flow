@@ -27,23 +27,24 @@ export const AnimatedPalopText = ({ className }: AnimatedPalopTextProps) => {
   }, []);
 
   return (
-    <div className={`relative inline-block min-w-[80px] sm:min-w-[90px] md:min-w-[100px] text-center ${className}`}>
+    <div className={`relative inline-flex items-center justify-center min-w-[64px] h-[48px] ${className}`}>
       <AnimatePresence mode="wait">
         <motion.span
           key={currentIndex}
-          initial={{ opacity: 0, y: 20, scale: 0.8 }}
+          initial={{ opacity: 0, y: 10, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.8 }}
+          exit={{ opacity: 0, y: -10, scale: 0.9 }}
           transition={{
-            duration: 0.5,
+            duration: 0.4,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 flex items-center justify-center text-4xl sm:text-5xl md:text-6xl leading-tight"
+          className="absolute inset-0 flex items-center justify-center text-4xl leading-none"
+          style={{ lineHeight: 1 }}
         >
           {PALOP_COUNTRIES[currentIndex]}
         </motion.span>
-        {/* Invisible placeholder to maintain layout */}
-        <span className="invisible text-4xl sm:text-5xl md:text-6xl leading-tight">
+        {/* Invisible placeholder to maintain consistent height */}
+        <span className="invisible text-4xl leading-none" style={{ lineHeight: 1 }}>
           🇸🇹
         </span>
       </AnimatePresence>
