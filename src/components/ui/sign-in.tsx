@@ -65,7 +65,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <div className="animate-element animate-delay-100 flex justify-center">
               <BrandLogo size="lg" showText={true} />
             </div>
-            <p className="animate-element animate-delay-200 text-muted-foreground">{description}</p>
+            <p className="animate-element animate-delay-200 text-muted-foreground text-center">Conecte-se e transforme sua comunicação com facilidade e eficiência</p>
 
             <form className="space-y-5" onSubmit={onSignIn}>
               <div className="animate-element animate-delay-300">
