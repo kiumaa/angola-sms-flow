@@ -116,11 +116,6 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
                                             </Link>
                                         </ShinyButton>
                                     </div>
-                                    <Button key={2} asChild size="lg" variant="ghost" className="h-10.5 rounded-xl px-5">
-                                        <Link to="/quick-send" className="text-nowrap">
-                                            Demo Grátis
-                                        </Link>
-                                    </Button>
                                 </AnimatedGroup>
                             </div>
                         </div>
