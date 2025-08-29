@@ -109,11 +109,11 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
                 },
                 ...transitionVariants
               }} className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
-                                    <RainbowButton key={1}>
-                                        <Link to="/register" className="text-nowrap">
+                                    <Link key={1} to="/register">
+                                        <RainbowButton className="text-nowrap">
                                             Começar Agora
-                                        </Link>
-                                    </RainbowButton>
+                                        </RainbowButton>
+                                    </Link>
                                 </AnimatedGroup>
                             </div>
                         </div>
