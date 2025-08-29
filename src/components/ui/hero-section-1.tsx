@@ -99,7 +99,7 @@ export function HeroSection() {
                                     </Link>
                         
                                     <h1 className="mt-8 max-w-4xl mx-auto text-balance text-6xl md:text-7xl lg:mt-16 xl:text-[5.25rem] font-bold">
-                                        SMS Marketing Profissional para Angola
+                                        Conecte-se com os seus clientes e venda de forma simples, rápida e eficaz
                                     </h1>
                                     <p className="mx-auto mt-8 max-w-2xl text-balance text-lg text-muted-foreground">
                                         Plataforma completa para envio de SMS em massa, gestão de contactos e campanhas publicitárias em Angola. Conecte-se com seus clientes de forma eficaz.
