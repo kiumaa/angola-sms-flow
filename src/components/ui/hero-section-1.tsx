@@ -38,32 +38,16 @@ export function HeroSection() {
                 </div>
                 <section>
                     <div className="relative pt-24 md:pt-36">
-                        <AnimatedGroup variants={{
-            container: {
-              visible: {
-                transition: {
-                  delayChildren: 1
-                }
-              }
-            },
-            item: {
-              hidden: {
-                opacity: 0,
-                y: 20
-              },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: {
-                  type: 'spring',
-                  bounce: 0.3,
-                  duration: 2
-                }
-              }
-            }
-          }} className="absolute inset-0 -z-20">
-                            <img src="/PC.png" alt="Angola SMS Dashboard" className="absolute inset-x-0 top-56 -z-20 block lg:top-32 opacity-60" width="3276" height="4095" />
-                        </AnimatedGroup>
+                        {/* PC Dashboard Image - positioned higher in z-index */}
+                        <div className="absolute inset-0 z-0 flex items-center justify-center">
+                          <img 
+                            src="/PC.png" 
+                            alt="Angola SMS Dashboard" 
+                            className="w-full max-w-5xl opacity-80 object-contain" 
+                            width="3276" 
+                            height="4095" 
+                          />
+                        </div>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
                         <div className="mx-auto max-w-7xl px-6">
                             <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
