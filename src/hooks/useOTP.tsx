@@ -55,16 +55,19 @@ export const useOTP = () => {
   /**
    * Verify OTP code and authenticate user
    */
-  const verifyOTP = async (phone: string, code: string): Promise<{ success: boolean; error?: string; isNewUser?: boolean }> => {
+  const verifyOTP = async (phone: string, code: string, registrationData?: any): Promise<{ success: boolean; error?: string; isNewUser?: boolean; magicLink?: string }> => {
     setLoading(true);
     setError(null);
 
     try {
       // Verify OTP via secure endpoint
       const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
-        body: {
-          phone,
-          code
+        body: { 
+          phone, 
+          code,
+          fullName: registrationData?.fullName,
+          company: registrationData?.company,
+          email: registrationData?.email
         }
       });
 
@@ -81,14 +84,11 @@ export const useOTP = () => {
         return { success: false, error: errorMessage };
       }
 
-      // If we get a magic link, we can use it to authenticate
-      if (verifyData.magic_link) {
-        // Redirect to magic link for authentication
-        window.location.href = verifyData.magic_link;
-        return { success: true, isNewUser: verifyData.is_new_user };
-      }
-
-      return { success: true, isNewUser: verifyData.is_new_user };
+      return { 
+        success: true, 
+        isNewUser: verifyData.is_new_user,
+        magicLink: verifyData.magic_link
+      };
     } catch (err) {
       const errorMessage = 'Erro ao verificar OTP';
       setError(errorMessage);

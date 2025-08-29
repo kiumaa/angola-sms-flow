@@ -9,6 +9,9 @@ const corsHeaders = {
 interface VerifyOTPRequest {
   phone: string;
   code: string;
+  fullName?: string;
+  company?: string;
+  email?: string;
 }
 
 // Helper function to hash OTP code with pepper
@@ -47,7 +50,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body
-    const { phone, code }: VerifyOTPRequest = await req.json();
+    const { phone, code, fullName, company, email }: VerifyOTPRequest = await req.json();
 
     if (!phone || !code) {
       return new Response(
@@ -161,16 +164,18 @@ serve(async (req) => {
 
     // If no user exists, create a new user
     if (!profile) {
-      // Generate a temporary email based on phone
-      const tempEmail = `user+${phone.replace('+', '')}@temp.smsao.ao`;
+      // Use provided email or generate temp email
+      const userEmail = email || `user+${phone.replace('+', '')}@temp.smsao.ao`;
       const tempPassword = Math.random().toString(36).slice(-12) + 'A1!'; // Temp password
       
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: tempEmail,
+        email: userEmail,
         password: tempPassword,
         phone: phone,
         user_metadata: {
           phone: phone,
+          full_name: fullName || `Usuário ${phone}`,
+          company: company,
           registration_method: 'otp'
         }
       });
@@ -189,13 +194,14 @@ serve(async (req) => {
       userId = authData.user.id;
       isNewUser = true;
 
-      // Update profile with phone number (the trigger should have created the profile)
+      // Update profile with complete data (the trigger should have created the profile)
       await supabase
         .from('profiles')
         .update({ 
           phone: phone,
-          email: tempEmail,
-          full_name: `Usuário ${phone}`
+          email: userEmail,
+          full_name: fullName || `Usuário ${phone}`,
+          company_name: company || null
         })
         .eq('user_id', userId);
     }
@@ -203,7 +209,7 @@ serve(async (req) => {
     // Create session for the user
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
-      email: profile?.email || `user+${phone.replace('+', '')}@temp.smsao.ao`,
+      email: profile?.email || email || `user+${phone.replace('+', '')}@temp.smsao.ao`,
       options: {
         redirectTo: `${req.headers.get('origin') || 'http://localhost:5173'}/dashboard`
       }

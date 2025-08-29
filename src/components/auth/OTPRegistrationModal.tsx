@@ -13,10 +13,11 @@ interface OTPRegistrationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   phone: string;
+  registrationData?: any;
   onVerified: () => void;
 }
 
-const OTPRegistrationModal = ({ open, onOpenChange, phone, onVerified }: OTPRegistrationModalProps) => {
+const OTPRegistrationModal = ({ open, onOpenChange, phone, registrationData, onVerified }: OTPRegistrationModalProps) => {
   const [step, setStep] = useState<'sending' | 'verify' | 'verified'>('sending');
   const [code, setCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -74,19 +75,22 @@ const OTPRegistrationModal = ({ open, onOpenChange, phone, onVerified }: OTPRegi
     setIsVerifying(true);
 
     try {
-      const result = await verifyOTP(phone, code);
+      const result = await verifyOTP(phone, code, registrationData);
       
       if (result.success) {
         setStep('verified');
         toast({
-          title: "Telefone verificado! ✅",
-          description: "Seu número foi confirmado com sucesso",
+          title: "Conta criada com sucesso! 🎉",
+          description: `Bem-vindo à plataforma SMS.AO. Você ganhou 5 SMS grátis!`,
         });
         
-        // Wait a moment then call onVerified
+        // Redirect to dashboard using magic link or direct navigation
         setTimeout(() => {
-          onVerified();
-          onOpenChange(false);
+          if (result.magicLink) {
+            window.location.href = result.magicLink;
+          } else {
+            window.location.href = '/dashboard';
+          }
         }, 1500);
       } else {
         toast({

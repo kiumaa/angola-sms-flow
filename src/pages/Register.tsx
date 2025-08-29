@@ -72,7 +72,7 @@ const Register = () => {
 };
 const registrationBenefits = [{
   icon: Gift,
-  title: "10 SMS Grátis",
+  title: "5 SMS Grátis",
   description: "Comece testando nossa plataforma sem custos e comprove a qualidade excepcional e velocidade de entrega dos seus SMS em Angola"
 }, {
   icon: Zap,

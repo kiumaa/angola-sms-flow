@@ -166,21 +166,26 @@ export const ModernSignupForm: React.FC = () => {
       return;
     }
 
-    // Se OTP estiver habilitado, solicitar verificação
+    // Se OTP estiver habilitado (que deve ser sempre), solicitar verificação
     if (settings.otp_enabled) {
       setRegistrationData({
-        ...formData,
-        phone: formData.phone
+        fullName: formData.fullName,
+        company: formData.company,
+        email: formData.email,
+        phone: phoneResult.e164
       });
       setShowOtpModal(true);
       return;
     }
     
+    // Fallback para registro tradicional (não deveria ser usado)
     await createAccount();
   };
 
   const handlePhoneVerified = () => {
-    createAccount();
+    // OTP verification handles account creation and redirection
+    // This function is kept for compatibility but shouldn't be called
+    console.log('Phone verified - redirecting to dashboard');
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
@@ -564,6 +569,7 @@ export const ModernSignupForm: React.FC = () => {
           open={showOtpModal}
           onOpenChange={setShowOtpModal}
           phone={registrationData.phone}
+          registrationData={registrationData}
           onVerified={handlePhoneVerified}
         />
       )}
