@@ -7,7 +7,6 @@ import { SlideButton } from '@/components/ui/slide-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import { useScrollZoom } from '@/hooks/useScrollZoom';
 import { cn } from '@/lib/utils';
-import PCImage from '@/public/PC.png';
 const transitionVariants = {
   item: {
     hidden: {
@@ -47,7 +46,7 @@ export function HeroSection() {
                             style={{ transform: `scale(${scale})` }}
                           >
                             <img
-                              src={PCImage}
+                              src="/PC.png"
                               alt="SMS Angola Dashboard Preview"
                               className="max-w-4xl w-full h-auto rounded-2xl shadow-2xl shadow-primary/20"
                             />
