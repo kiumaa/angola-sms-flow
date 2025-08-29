@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedGroup } from '@/components/ui/animated-group';
-import { ShinyButton } from '@/components/ui/shiny-button';
+import { SlideButton } from '@/components/ui/slide-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import { cn } from '@/lib/utils';
 const transitionVariants = {
@@ -79,12 +79,12 @@ export function HeroSection() {
                 },
                 ...transitionVariants
               }} className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
-                                    <div key={1} className="bg-foreground/10 rounded-[14px] border p-0.5">
-                                        <ShinyButton className="rounded-xl px-5 text-base h-11">
+                                    <div key={1}>
+                                        <SlideButton className="rounded-xl text-base">
                                             <Link to="/register" className="text-nowrap">
                                                 Começar Agora
                                             </Link>
-                                        </ShinyButton>
+                                        </SlideButton>
                                     </div>
                                     <Button key={2} asChild size="lg" variant="ghost" className="h-10.5 rounded-xl px-5">
                                         <Link to="/quick-send" className="text-nowrap">
