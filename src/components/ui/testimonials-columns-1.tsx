@@ -1,17 +1,18 @@
+
 "use client";
 import React from "react";
 import { motion } from "motion/react";
 
-// Import testimonial images
-import esperancaSantos from "@/assets/testimonials/esperanca-santos.jpg";
-import osvaldoTeixeira from "@/assets/testimonials/osvaldo-teixeira.jpg";
-import beneditaFrancisco from "@/assets/testimonials/benedita-francisco.jpg";
-import miguelSantos from "@/assets/testimonials/miguel-santos.jpg";
-import mariaCabral from "@/assets/testimonials/maria-cabral.jpg";
-import antonioManuel from "@/assets/testimonials/antonio-manuel.jpg";
-import sofiaMachado from "@/assets/testimonials/sofia-machado.jpg";
-import carlosNeto from "@/assets/testimonials/carlos-neto.jpg";
-import isabelCosta from "@/assets/testimonials/isabel-costa.jpg";
+// Import testimonial images - using the new uploaded photos
+import person1 from "@/assets/testimonials/person-1.jpg";
+import person2 from "@/assets/testimonials/person-2.jpg";
+import person3 from "@/assets/testimonials/person-3.jpg";
+import person4 from "@/assets/testimonials/person-4.jpg";
+import person5 from "@/assets/testimonials/person-5.jpg";
+import person6 from "@/assets/testimonials/person-6.jpg";
+import person7 from "@/assets/testimonials/person-7.jpg";
+import person8 from "@/assets/testimonials/person-8.jpg";
+import person9 from "@/assets/testimonials/person-9.jpg";
 
 export const TestimonialsColumn = (props: {
   className?: string;
@@ -64,64 +65,64 @@ export const TestimonialsColumn = (props: {
 
 const testimonials = [
   {
-    text: "O SMSAO transformou as nossas campanhas de marketing em Luanda. A taxa de entrega é excelente e chegamos a todos os bairros da cidade.",
-    image: esperancaSantos,
+    text: "O SMS AO transformou as nossas campanhas de marketing em Luanda. A taxa de entrega é excelente e chegamos a todos os bairros da cidade.",
+    image: person1,
     name: "Esperança Santos",
     role: "Directora de Marketing",
     flag: "🇦🇴"
   },
   {
-    text: "Com o SMS em massa conseguimos promover os nossos produtos em todo o país. Desde Benguela até Cabinda, os clientes recebem as nossas ofertas.",
-    image: osvaldoTeixeira,
+    text: "Com o SMS AO conseguimos promover os nossos produtos em todo o país. Desde Benguela até Cabinda, os clientes recebem as nossas ofertas.",
+    image: person2,
     name: "Osvaldo Teixeira",
     role: "Empresário",
     flag: "🇦🇴"
   },
   {
-    text: "O suporte técnico é fantástico. Ajudaram-nos a configurar campanhas personalizadas para o mercado angolano com grande sucesso.",
-    image: beneditaFrancisco,
+    text: "O suporte técnico do SMS AO é fantástico. Ajudaram-nos a configurar campanhas personalizadas para o mercado angolano com grande sucesso.",
+    image: person3,
     name: "Benedita Francisco",
     role: "Gestora de Comunicação",
     flag: "🇦🇴"
   },
   {
-    text: "Excelente plataforma para o mercado lusófono. Usamos tanto em Portugal como em Angola com resultados consistentes.",
-    image: miguelSantos,
+    text: "Excelente plataforma para o mercado lusófono. Usamos o SMS AO tanto em Portugal como em Angola com resultados consistentes.",
+    image: person4,
     name: "Miguel Santos",
     role: "Director Comercial",
     flag: "🇵🇹"
   },
   {
-    text: "Preços justos e transparentes, perfeito para pequenas empresas cabo-verdianas. Sem taxas escondidas e com excelente relação qualidade-preço.",
-    image: mariaCabral,
+    text: "O SMS AO tem preços justos e transparentes, perfeito para pequenas empresas cabo-verdianas. Sem taxas escondidas e com excelente relação qualidade-preço.",
+    image: person5,
     name: "Maria Cabral",
     role: "Gestora Financeira",
     flag: "🇨🇻"
   },
   {
-    text: "A integração com os nossos sistemas foi simples. A documentação da API é clara e a implementação foi rápida e eficaz.",
-    image: antonioManuel,
+    text: "A integração do SMS AO com os nossos sistemas foi simples. A documentação da API é clara e a implementação foi rápida e eficaz.",
+    image: person6,
     name: "António Manuel",
     role: "Programador IT",
     flag: "🇦🇴"
   },
   {
-    text: "Entrega rápida de SMS em Moçambique. Os nossos clientes recebem as notificações em tempo real, melhorando o nosso atendimento.",
-    image: sofiaMachado,
+    text: "O SMS AO garante entrega rápida em Moçambique. Os nossos clientes recebem as notificações em tempo real, melhorando o nosso atendimento.",
+    image: person7,
     name: "Sofia Machado",
     role: "Gestora de Operações",
     flag: "🇲🇿"
   },
   {
-    text: "As funcionalidades de gestão de contactos ajudam-nos a organizar a nossa base de dados e segmentar campanhas por regiões de Angola.",
-    image: carlosNeto,
+    text: "As funcionalidades de gestão de contactos do SMS AO ajudam-nos a organizar a nossa base de dados e segmentar campanhas por regiões de Angola.",
+    image: person8,
     name: "Carlos Neto",
     role: "Director de Vendas",
     flag: "🇦🇴"
   },
   {
-    text: "O SMSAO melhorou significativamente o nosso engagement em São Tomé. Taxa de abertura muito superior ao email marketing tradicional.",
-    image: isabelCosta,
+    text: "O SMS AO melhorou significativamente o nosso engagement em São Tomé. Taxa de abertura muito superior ao email marketing tradicional.",
+    image: person9,
     name: "Isabel Costa",
     role: "Responsável de Comunicações",
     flag: "🇸🇹"
@@ -144,14 +145,14 @@ export const Testimonials = () => {
           className="flex flex-col items-center justify-center max-w-[540px] mx-auto"
         >
           <div className="flex justify-center">
-            <div className="border py-1 px-4 rounded-lg text-sm text-muted-foreground">Testimoniais</div>
+            <div className="border py-1 px-4 rounded-lg text-sm text-muted-foreground">Testemunhos</div>
           </div>
           
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tighter mt-5 text-center">
             O que os nossos clientes dizem
           </h2>
           <p className="text-center mt-5 text-muted-foreground">
-            Veja o que os nossos clientes têm a dizer sobre a nossa plataforma SMS.
+            Veja o que os nossos clientes têm a dizer sobre a nossa plataforma SMS AO.
           </p>
         </motion.div>
         
