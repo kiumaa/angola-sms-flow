@@ -1,123 +1,146 @@
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ArrowRight, Zap } from "lucide-react";
 import React from "react";
+import { Button } from "./button";
+import { Card, CardContent } from "./card";
+import { usePackages } from "@/hooks/usePackages";
+import { useNavigate } from "react-router-dom";
 
 const Pricing1 = () => {
-  // Pricing plan data
-  const pricingPlans = [
-    {
-      title: "Starter",
-      popular: false,
-      description:
-        "Perfect for individuals or small teams just getting started with their projects.",
-      price: "$499",
-      features: [
-        "Basic support",
-        "1 project included",
-        "Community access",
-        "Email support",
-        "Cancel anytime",
-      ],
-    },
-    {
-      title: "Pro",
-      popular: true,
-      description:
-        "It is most ideal for growing teams who need more features and priority support .",
-      price: "$1,299",
-      features: [
-        "Priority support",
-        "Up to 5 projects",
-        "Team collaboration",
-        "Advanced analytics",
-        "Monthly check-ins",
-        "Cancel anytime",
-      ],
-    },
-    {
-      title: "Enterprise",
-      popular: false,
-      description:
-        "Best for large organizations requiring custom solutions and dedicated support.",
-      price: "Custom",
-      features: [
-        "Dedicated account manager",
-        "Unlimited projects",
-        "Custom integrations",
-        "24/7 support",
-        "Onboarding & training",
-        "Cancel anytime",
-      ],
-    },
-  ];
+  const { packages, loading } = usePackages();
+  const navigate = useNavigate();
+
+  const handlePurchase = (packageId: string) => {
+    navigate(`/checkout/${packageId}`);
+  };
+
+  if (loading) {
+    return (
+      <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
+        <div className="flex flex-col items-center gap-7 w-full">
+          <h2 className="font-medium text-2xl leading-6 text-center">
+            Carregando pacotes...
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-96 bg-muted animate-pulse rounded-2xl" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // Sort packages by credits and mark middle one as popular
+  const sortedPackages = [...packages].sort((a, b) => a.credits - b.credits);
+  const middleIndex = Math.floor(sortedPackages.length / 2);
 
   return (
-    <section className="flex flex-col items-center justify-center gap-20  w-[95%] mx-auto py-20 bg-background text-foreground">
+    <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
       <div className="flex flex-col items-center gap-7 w-full">
         <h2 className="font-medium text-2xl leading-6 text-center">
-          Simple and transparent pricing
+          Pacotes de Créditos SMS
         </h2>
+        <p className="text-muted-foreground text-center max-w-2xl">
+          Escolha o pacote ideal para suas necessidades de comunicação empresarial
+        </p>
       </div>
 
-      <div className="flex justify-between flex-wrap max-w-4xl">
-        {pricingPlans.map((plan, index) => (
-          <div
-            key={index}
-            className={`flex-1 border border-primary/10 rounded-none ${
-              index === 1 ? "border-t border-b border-l-0 border-r-0" : ""
-            }`}
-          >
-            <div className="p-[30px] flex flex-col h-full gap-6 justify-between">
-              <div className="flex flex-col gap-6">
-                <div className="p-0 flex flex-col gap-4">
-                  <div className="font-medium text-xl leading-5">
-                    {plan.title}{" "}
-                    {plan.popular && (
-                      <span className="text-sm leading-[14px] opacity-80 font-normal">
-                        // most popular
-                      </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
+        {sortedPackages.map((pkg, index) => {
+          const isPopular = index === middleIndex;
+          const pricePerSMS = (pkg.price_kwanza / pkg.credits).toFixed(2);
+          
+          return (
+            <Card
+              key={pkg.id}
+              className={`glass-card relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-glow ${
+                isPopular 
+                  ? 'border-primary ring-2 ring-primary/20 shadow-glow' 
+                  : 'border-border hover:border-primary/30'
+              }`}
+            >
+              {isPopular && (
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <Zap className="w-3 h-3" />
+                    Mais Popular
+                  </div>
+                </div>
+              )}
+              
+              <CardContent className="p-8 h-full flex flex-col">
+                <div className="flex flex-col gap-6 flex-grow">
+                  <div className="text-center">
+                    <h3 className="font-medium text-xl mb-2">{pkg.name}</h3>
+                    {pkg.description && (
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {pkg.description}
+                      </p>
                     )}
                   </div>
-                  <p className="opacity-80 font-normal text-sm leading-[22px]">
-                    {plan.description}
-                  </p>
-                  <div className="font-normal text-xs leading-3">
-                    <span className="font-medium text-base leading-4">
-                      {plan.price}
-                    </span>
-                    <span> monthly</span>
+
+                  <div className="text-center">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-3xl font-semibold">
+                        {pkg.price_kwanza.toLocaleString('pt-AO')}
+                      </span>
+                      <span className="text-muted-foreground text-sm">Kz</span>
+                    </div>
+                    <p className="text-muted-foreground text-xs mt-1">
+                      {pkg.credits.toLocaleString()} créditos SMS
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      ~{pricePerSMS} Kz por SMS
+                    </p>
+                  </div>
+
+                  <div className="border-t border-border pt-6">
+                    <div className="space-y-3">
+                      {[
+                        `${pkg.credits.toLocaleString()} créditos SMS`,
+                        "Dashboard completo",
+                        "Suporte técnico",
+                        "Relatórios detalhados",
+                        "Envio programado",
+                        "Gestão de contactos"
+                      ].map((feature, featureIndex) => (
+                        <div
+                          key={featureIndex}
+                          className="flex items-center gap-3"
+                        >
+                          <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <hr />
 
-                <div className="flex flex-col h-[165px] justify-between">
-                  {plan.features.map((feature, featureIndex) => (
-                    <div
-                      key={featureIndex}
-                      className="flex items-center gap-1.5"
-                    >
-                      <CheckIcon className="w-[15px] h-[15px]" />
-                      <span className="font-normal text-sm leading-[15.4px]">
-                        {feature}
-                      </span>
-                    </div>
-                  ))}
+                <div className="pt-6 border-t border-border mt-6">
+                  <Button
+                    onClick={() => handlePurchase(pkg.id)}
+                    className={`w-full transition-all duration-300 group ${
+                      isPopular
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border'
+                    }`}
+                    size="lg"
+                  >
+                    Escolher Pacote
+                    <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                  </Button>
                 </div>
-              </div>
-              <hr />
-              <div className="p-0 ">
-                <button
-                  className={`w-[120px] h-10 rounded-none ${
-                    index === 1
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "bg-secondary text-secondary-foreground border border-[#0000001a] hover:bg-gray-50"
-                  }`}
-                >
-                  Book a call
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      
+      <div className="text-center max-w-2xl">
+        <p className="text-muted-foreground text-sm">
+          Todos os pacotes incluem acesso completo à plataforma, sem taxas ocultas. 
+          Créditos não utilizados nunca expiram.
+        </p>
       </div>
     </section>
   );
