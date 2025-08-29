@@ -6,7 +6,6 @@ import { AnimatedGroup } from '@/components/ui/animated-group';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import { cn } from '@/lib/utils';
-
 const transitionVariants = {
   item: {
     hidden: {
@@ -26,7 +25,6 @@ const transitionVariants = {
     }
   }
 };
-
 export function HeroSection() {
   return <>
             <HeroHeader />
@@ -40,13 +38,7 @@ export function HeroSection() {
                     <div className="relative pt-24 md:pt-36">
                         {/* PC Dashboard Image - positioned higher in z-index */}
                         <div className="absolute inset-0 z-0 flex items-center justify-center">
-                          <img 
-                            src="/PC.png" 
-                            alt="Angola SMS Dashboard" 
-                            className="w-full max-w-5xl opacity-80 object-contain" 
-                            width="3276" 
-                            height="4095" 
-                          />
+                          
                         </div>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
                         <div className="mx-auto max-w-7xl px-6">
@@ -115,7 +107,7 @@ export function HeroSection() {
             ...transitionVariants
           }}>
                             <div className="relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
-                                <div aria-hidden className="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%" />
+                                
                                 <div className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto max-w-6xl overflow-hidden rounded-2xl border p-4 shadow-lg shadow-zinc-950/15 ring-1">
                                     <img className="bg-background aspect-[16/9] relative hidden rounded-2xl dark:block" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
                                     <img className="z-2 border-border/25 aspect-[16/9] relative rounded-2xl border dark:hidden" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
@@ -163,7 +155,6 @@ export function HeroSection() {
             </main>
         </>;
 }
-
 const menuItems = [{
   name: 'Funcionalidades',
   href: '/dashboard'
@@ -177,7 +168,6 @@ const menuItems = [{
   name: 'Sobre',
   href: '/dashboard'
 }];
-
 const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -246,7 +236,6 @@ const HeroHeader = () => {
             </nav>
         </header>;
 };
-
 const Logo = ({
   className
 }: {
