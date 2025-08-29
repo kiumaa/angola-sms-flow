@@ -16,27 +16,31 @@ export const useOTP = () => {
     setError(null);
 
     try {
-      // Client-side phone validation
-      const phoneRegex = /^\+244[9][0-9]{8}$/;
+      // Client-side phone validation - support international numbers
+      const phoneRegex = /^\+\d{8,15}$/;
       if (!phoneRegex.test(phone)) {
-        throw new Error('Formato de telefone inválido. Use +244XXXXXXXXX');
+        throw new Error('Formato de telefone inválido. Use +[código do país][número]');
       }
 
       // Send OTP request to secure endpoint (no code generation on frontend)
+      console.log('Sending OTP request for phone:', phone);
       const { data: smsData, error: smsError } = await supabase.functions.invoke('send-otp', {
         body: {
           phone: phone.trim()
         }
       });
+      console.log('OTP send response:', { smsData, smsError });
 
       if (smsError) {
         console.error('Failed to send OTP request:', smsError);
+        console.error('SMS Error details:', JSON.stringify(smsError, null, 2));
         const errorMessage = smsError.message || 'Erro ao enviar código OTP';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
 
       if (!smsData?.success) {
+        console.error('SMS send failed:', smsData);
         const errorMessage = smsData?.error || 'Erro ao enviar código OTP';
         setError(errorMessage);
         return { success: false, error: errorMessage };
@@ -44,7 +48,8 @@ export const useOTP = () => {
       
       return { success: true };
     } catch (err) {
-      const errorMessage = 'Erro ao solicitar OTP';
+      console.error('OTP request exception:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao solicitar OTP';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -61,6 +66,7 @@ export const useOTP = () => {
 
     try {
       // Verify OTP via secure endpoint
+      console.log('Verifying OTP for phone:', phone, 'with code:', code);
       const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
         body: { 
           phone, 
@@ -70,9 +76,11 @@ export const useOTP = () => {
           email: registrationData?.email
         }
       });
+      console.log('OTP verify response:', { verifyData, verifyError });
 
       if (verifyError) {
         console.error('Failed to verify OTP:', verifyError);
+        console.error('Verify Error details:', JSON.stringify(verifyError, null, 2));
         const errorMessage = verifyError.message || 'Erro ao verificar código';
         setError(errorMessage);
         return { success: false, error: errorMessage };
@@ -90,7 +98,8 @@ export const useOTP = () => {
         magicLink: verifyData.magic_link
       };
     } catch (err) {
-      const errorMessage = 'Erro ao verificar OTP';
+      console.error('OTP verification exception:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao verificar OTP';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
