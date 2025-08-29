@@ -178,10 +178,6 @@ serve(async (req) => {
     } else {
       console.log('Cleaned up other unused OTPs for phone:', phone);
     }
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
 
     // Check if user exists with this phone number
     const { data: profile, error: profileError } = await supabase
