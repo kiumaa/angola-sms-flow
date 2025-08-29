@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { SlideButton } from '@/components/ui/slide-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
+import { useScrollZoom } from '@/hooks/useScrollZoom';
 import { cn } from '@/lib/utils';
+import PCImage from '@/public/PC.png';
 const transitionVariants = {
   item: {
     hidden: {
@@ -26,6 +28,8 @@ const transitionVariants = {
   }
 };
 export function HeroSection() {
+  const { scale } = useScrollZoom();
+  
   return <>
             <HeroHeader />
             <main className="overflow-hidden">
@@ -36,9 +40,18 @@ export function HeroSection() {
                 </div>
                 <section>
                     <div className="relative pt-24 md:pt-36">
-                        {/* PC Dashboard Image - positioned higher in z-index */}
-                        <div className="absolute inset-0 z-0 flex items-center justify-center">
-                          
+                        {/* PC Dashboard Image with scroll zoom effect */}
+                        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+                          <div 
+                            className="relative transform transition-transform duration-300 ease-out"
+                            style={{ transform: `scale(${scale})` }}
+                          >
+                            <img
+                              src={PCImage}
+                              alt="SMS Angola Dashboard Preview"
+                              className="max-w-4xl w-full h-auto rounded-2xl shadow-2xl shadow-primary/20"
+                            />
+                          </div>
                         </div>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
                         <div className="mx-auto max-w-7xl px-6">
@@ -106,12 +119,9 @@ export function HeroSection() {
             },
             ...transitionVariants
           }}>
-                            <div className="relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
-                                
-                                <div className="bg-background relative mx-auto max-w-7xl overflow-hidden rounded-2xl p-2">
-                                    <img className="bg-background aspect-[16/9] relative hidden rounded-2xl dark:block" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
-                                    
-                                </div>
+                            <div className="relative mt-8 px-2 sm:mt-12 md:mt-20">
+                                {/* Spacer to push content below the background image */}
+                                <div className="h-96 md:h-[500px] lg:h-[600px]"></div>
                             </div>
                         </AnimatedGroup>
                     </div>
