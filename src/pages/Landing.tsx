@@ -20,7 +20,7 @@ const Landing = () => {
       <HeroSection />
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-muted/5 relative">
+      <section id="features" className="py-24 bg-muted/5 relative -mt-12 pt-36">
         <div className="container mx-auto px-6 relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-6 text-foreground">
