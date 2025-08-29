@@ -90,7 +90,7 @@ serve(async (req) => {
     // Hash the provided code to compare with stored hash
     const hashedCode = await hashOTPCode(code, otpPepper);
 
-    // Find valid OTP request
+    // Find valid OTP request - get the most recent one that matches
     const { data: otpRequest, error: findError } = await supabase
       .from('otp_requests')
       .select('*')
@@ -101,6 +101,8 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    console.log(`OTP verification attempt for ${phone}: found OTP = ${!!otpRequest}, hash = ${hashedCode.substring(0, 8)}...`);
 
     if (findError) {
       console.error('Error finding OTP request:', findError);
@@ -114,7 +116,17 @@ serve(async (req) => {
     }
 
     if (!otpRequest) {
-      console.log(`Invalid or expired OTP attempt for phone ${phone}`);
+      // Log all OTPs for this phone to help debug
+      const { data: allOtps } = await supabase
+        .from('otp_requests')
+        .select('id, code, used, expires_at, created_at')
+        .eq('phone', phone)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      console.log(`Invalid or expired OTP attempt for phone ${phone}. Recent OTPs:`, allOtps);
+      console.log(`Looking for hash: ${hashedCode}`);
+      
       return new Response(
         JSON.stringify({ error: 'Código inválido ou expirado' }),
         { 

@@ -21,17 +21,21 @@ const OTPRegistrationModal = ({ open, onOpenChange, phone, registrationData, onV
   const [step, setStep] = useState<'sending' | 'verify' | 'verified'>('sending');
   const [code, setCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
   const { requestOTP, verifyOTP } = useOTP();
 
-  // Send OTP when modal opens
+  // Send OTP when modal opens (prevent duplicate calls)
   useEffect(() => {
-    if (open && phone) {
+    if (open && phone && !isSending && step === 'sending') {
       handleSendOTP();
     }
   }, [open, phone]);
 
   const handleSendOTP = async () => {
+    if (isSending) return; // Prevent duplicate calls
+    
+    setIsSending(true);
     setStep('sending');
     
     try {
@@ -59,6 +63,8 @@ const OTPRegistrationModal = ({ open, onOpenChange, phone, registrationData, onV
         variant: "destructive",
       });
       onOpenChange(false);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -114,6 +120,7 @@ const OTPRegistrationModal = ({ open, onOpenChange, phone, registrationData, onV
   };
 
   const handleResendCode = () => {
+    if (isSending) return; // Prevent spam clicking
     setCode("");
     handleSendOTP();
   };
@@ -194,9 +201,9 @@ const OTPRegistrationModal = ({ open, onOpenChange, phone, registrationData, onV
                   variant="outline"
                   onClick={handleResendCode}
                   className="w-full"
-                  disabled={isVerifying}
+                  disabled={isVerifying || isSending}
                 >
-                  Reenviar Código
+                  {isSending ? "Enviando..." : "Reenviar Código"}
                 </Button>
               </div>
             </>

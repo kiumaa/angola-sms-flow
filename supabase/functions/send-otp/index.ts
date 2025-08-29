@@ -106,6 +106,19 @@ serve(async (req) => {
       );
     }
 
+    // Clean up any existing unused OTPs for this phone number to prevent conflicts
+    const { error: cleanupError } = await supabase
+      .from('otp_requests')
+      .delete()
+      .eq('phone', phone)
+      .eq('used', false);
+    
+    if (cleanupError) {
+      console.log('Note: Could not clean existing OTPs:', cleanupError);
+    } else {
+      console.log('Cleaned up existing unused OTPs for phone:', phone);
+    }
+
     // Validate international phone format
     if (!/^\+\d{8,15}$/.test(phone)) {
       return new Response(
