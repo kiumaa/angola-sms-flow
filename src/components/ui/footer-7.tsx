@@ -1,5 +1,7 @@
 import React from "react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 
 interface Footer7Props {
   logo?: {
@@ -87,15 +89,9 @@ export const Footer7 = ({
           <div className="flex w-full flex-col justify-between gap-6 lg:items-start">
             {/* Logo */}
             <div className="flex items-center gap-2 lg:justify-start">
-              <a href={logo.url}>
-                <img
-                  src={logo.src}
-                  alt={logo.alt}
-                  title={logo.title}
-                  className="h-8"
-                />
-              </a>
-              <h2 className="text-xl font-semibold">{logo.title}</h2>
+              <Link to={logo.url} className="flex items-center gap-2">
+                <BrandLogo size="md" />
+              </Link>
             </div>
             <p className="max-w-[70%] text-sm text-muted-foreground">
               {description}
@@ -120,7 +116,13 @@ export const Footer7 = ({
                       key={linkIdx}
                       className="font-medium hover:text-primary"
                     >
-                      <a href={link.href}>{link.name}</a>
+                      {link.href.startsWith('/') ? (
+                        <Link to={link.href}>{link.name}</Link>
+                      ) : (
+                        <a href={link.href} target={link.href.startsWith('http') ? '_blank' : undefined} rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}>
+                          {link.name}
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -133,7 +135,11 @@ export const Footer7 = ({
           <ul className="order-1 flex flex-col gap-2 md:order-2 md:flex-row">
             {legalLinks.map((link, idx) => (
               <li key={idx} className="hover:text-primary">
-                <a href={link.href}> {link.name}</a>
+                {link.href.startsWith('/') ? (
+                  <Link to={link.href}> {link.name}</Link>
+                ) : (
+                  <a href={link.href}> {link.name}</a>
+                )}
               </li>
             ))}
           </ul>

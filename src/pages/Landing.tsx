@@ -7,6 +7,8 @@ import { HeroSection } from "@/components/ui/hero-section-1";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { Link } from "react-router-dom";
 import { useDynamicBranding } from "@/hooks/useDynamicBranding";
+import { Footer7 } from "@/components/ui/footer-7";
+import { FaWhatsapp, FaEnvelope } from "react-icons/fa";
 
 const Landing = () => {
   // Apply dynamic branding
@@ -123,52 +125,54 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Simple Footer */}
-      <footer className="py-12 px-6 border-t border-border bg-muted/20">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <BrandLogo size="md" />
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Plataforma profissional de SMS para Angola.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4 text-foreground">Suporte</h4>
-              <div className="space-y-2 text-sm">
-                <a href="https://wa.me/244933493788" target="_blank" rel="noopener noreferrer" className="block text-muted-foreground hover:text-primary transition-colors">
-                  WhatsApp: +244 933 493 788
-                </a>
-                <a href="mailto:suporte@sms.ao" className="block text-muted-foreground hover:text-primary transition-colors">
-                  suporte@sms.ao
-                </a>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4 text-foreground">Acesso Rápido</h4>
-              <div className="space-y-2 text-sm">
-                <Link to="/register" className="block text-muted-foreground hover:text-primary transition-colors">
-                  Criar Conta
-                </Link>
-                <Link to="/login" className="block text-muted-foreground hover:text-primary transition-colors">
-                  Entrar
-                </Link>
-                <Link to="/quick-send" className="block text-muted-foreground hover:text-primary transition-colors">
-                  Envio Rápido
-                </Link>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-border pt-6 text-center">
-            <p className="text-muted-foreground text-sm">© 2025 SMS.AO - Todos os direitos reservados</p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer Section */}
+      <Footer7 
+        logo={{
+          url: "/",
+          src: "", // BrandLogo will be used instead
+          alt: "SMS.AO Logo",
+          title: "SMS.AO"
+        }}
+        sections={[
+          {
+            title: "Produto",
+            links: [
+              { name: "Funcionalidades", href: "/#features" },
+              { name: "Preços", href: "/#pricing" },
+              { name: "Envio Rápido", href: "/quick-send" },
+              { name: "Status do Sistema", href: "/system-status" }
+            ]
+          },
+          {
+            title: "Suporte",
+            links: [
+              { name: "WhatsApp: +244 933 493 788", href: "https://wa.me/244933493788" },
+              { name: "Email: suporte@sms.ao", href: "mailto:suporte@sms.ao" },
+              { name: "Central de Ajuda", href: "#" },
+              { name: "Documentação", href: "#" }
+            ]
+          },
+          {
+            title: "Legal",
+            links: [
+              { name: "Termos de Uso", href: "/legal/terms" },
+              { name: "Política de Privacidade", href: "/legal/privacy" },
+              { name: "Política de Cookies", href: "#" },
+              { name: "Conformidade", href: "#" }
+            ]
+          }
+        ]}
+        description="Plataforma profissional de SMS para Angola. Envie mensagens de forma rápida, segura e confiável para todo o território angolano."
+        socialLinks={[
+          { icon: <FaWhatsapp className="size-5" />, href: "https://wa.me/244933493788", label: "WhatsApp" },
+          { icon: <FaEnvelope className="size-5" />, href: "mailto:suporte@sms.ao", label: "Email" }
+        ]}
+        copyright="© 2025 SMS.AO - Todos os direitos reservados."
+        legalLinks={[
+          { name: "Termos de Uso", href: "/legal/terms" },
+          { name: "Política de Privacidade", href: "/legal/privacy" }
+        ]}
+      />
     </div>;
 };
 
