@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 
 // --- HELPER COMPONENTS (ICONS) ---
 
@@ -61,7 +62,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       <section className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="flex flex-col gap-6">
-            <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">{title}</h1>
+            <div className="animate-element animate-delay-100 flex justify-center">
+              <BrandLogo size="lg" showText={true} />
+            </div>
             <p className="animate-element animate-delay-200 text-muted-foreground">{description}</p>
 
             <form className="space-y-5" onSubmit={onSignIn}>
