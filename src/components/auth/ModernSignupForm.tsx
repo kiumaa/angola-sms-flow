@@ -531,8 +531,7 @@ export const ModernSignupForm: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      Criar minha conta premium
-                      <Zap className="w-4 h-4 ml-2" />
+                      Criar conta
                     </>
                   )}
                 </Button>
