@@ -2,6 +2,17 @@
 import React from "react";
 import { motion } from "motion/react";
 
+// Import testimonial images
+import esperancaSantos from "@/assets/testimonials/esperanca-santos.jpg";
+import osvaldoTeixeira from "@/assets/testimonials/osvaldo-teixeira.jpg";
+import beneditaFrancisco from "@/assets/testimonials/benedita-francisco.jpg";
+import miguelSantos from "@/assets/testimonials/miguel-santos.jpg";
+import mariaCabral from "@/assets/testimonials/maria-cabral.jpg";
+import antonioManuel from "@/assets/testimonials/antonio-manuel.jpg";
+import sofiaMachado from "@/assets/testimonials/sofia-machado.jpg";
+import carlosNeto from "@/assets/testimonials/carlos-neto.jpg";
+import isabelCosta from "@/assets/testimonials/isabel-costa.jpg";
+
 export const TestimonialsColumn = (props: {
   className?: string;
   testimonials: typeof testimonials;
@@ -23,20 +34,23 @@ export const TestimonialsColumn = (props: {
       >
         {new Array(2).fill(0).map((_, index) => (
           <React.Fragment key={index}>
-            {props.testimonials.map(({ text, image, name, role }, i) => (
+            {props.testimonials.map(({ text, image, name, role, flag }, i) => (
               <div className="p-10 rounded-3xl border shadow-lg shadow-primary/10 max-w-xs w-full" key={`${index}-${i}`}>
-                <div>{text}</div>
-                <div className="flex items-center gap-2 mt-5">
+                <div className="text-sm leading-relaxed">{text}</div>
+                <div className="flex items-center gap-3 mt-5">
                   <img
                     width={40}
                     height={40}
                     src={image}
                     alt={name}
-                    className="h-10 w-10 rounded-full"
+                    className="h-10 w-10 rounded-full object-cover"
                   />
                   <div className="flex flex-col">
-                    <div className="font-medium tracking-tight leading-5">{name}</div>
-                    <div className="leading-5 opacity-60 tracking-tight">{role}</div>
+                    <div className="font-medium tracking-tight leading-5 flex items-center gap-1">
+                      <span>{flag}</span>
+                      <span>{name}</span>
+                    </div>
+                    <div className="leading-5 opacity-60 tracking-tight text-sm">{role}</div>
                   </div>
                 </div>
               </div>
@@ -50,58 +64,67 @@ export const TestimonialsColumn = (props: {
 
 const testimonials = [
   {
-    text: "SMSAO transformed our marketing campaigns with reliable SMS delivery and excellent delivery rates across Angola.",
-    image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-    name: "Maria Santos",
-    role: "Marketing Director",
+    text: "O SMSAO transformou as nossas campanhas de marketing em Luanda. A taxa de entrega é excelente e chegamos a todos os bairros da cidade.",
+    image: esperancaSantos,
+    name: "Esperança Santos",
+    role: "Directora de Marketing",
+    flag: "🇦🇴"
   },
   {
-    text: "The bulk SMS feature saved us hours of work. We can now reach thousands of customers instantly with promotional offers.",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    name: "João Silva",
-    role: "Business Owner",
+    text: "Com o SMS em massa conseguimos promover os nossos produtos em todo o país. Desde Benguela até Cabinda, os clientes recebem as nossas ofertas.",
+    image: osvaldoTeixeira,
+    name: "Osvaldo Teixeira",
+    role: "Empresário",
+    flag: "🇦🇴"
   },
   {
-    text: "Customer support is outstanding. They helped us set up our SMS campaigns and provided ongoing technical assistance.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-    name: "Ana Costa",
-    role: "Customer Success Manager",
+    text: "O suporte técnico é fantástico. Ajudaram-nos a configurar campanhas personalizadas para o mercado angolano com grande sucesso.",
+    image: beneditaFrancisco,
+    name: "Benedita Francisco",
+    role: "Gestora de Comunicação",
+    flag: "🇦🇴"
   },
   {
-    text: "The delivery reports and analytics help us track campaign performance and optimize our messaging strategy effectively.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    name: "Carlos Mendes",
-    role: "Digital Marketing Specialist",
+    text: "Excelente plataforma para o mercado lusófono. Usamos tanto em Portugal como em Angola com resultados consistentes.",
+    image: miguelSantos,
+    name: "Miguel Santos",
+    role: "Director Comercial",
+    flag: "🇵🇹"
   },
   {
-    text: "Affordable pricing with transparent credit system. No hidden fees and excellent value for money compared to competitors.",
-    image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=150&h=150&fit=crop&crop=face",
-    name: "Luisa Ferreira",
-    role: "Finance Manager",
+    text: "Preços justos e transparentes, perfeito para pequenas empresas cabo-verdianas. Sem taxas escondidas e com excelente relação qualidade-preço.",
+    image: mariaCabral,
+    name: "Maria Cabral",
+    role: "Gestora Financeira",
+    flag: "🇨🇻"
   },
   {
-    text: "Easy integration with our existing systems. The API documentation is clear and implementation was straightforward.",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face",
-    name: "Pedro Oliveira",
-    role: "IT Developer",
+    text: "A integração com os nossos sistemas foi simples. A documentação da API é clara e a implementação foi rápida e eficaz.",
+    image: antonioManuel,
+    name: "António Manuel",
+    role: "Programador IT",
+    flag: "🇦🇴"
   },
   {
-    text: "Quick SMS delivery and high success rates. Our customers receive notifications promptly, improving our service quality.",
-    image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face",
-    name: "Sofia Rodrigues",
-    role: "Operations Manager",
+    text: "Entrega rápida de SMS em Moçambique. Os nossos clientes recebem as notificações em tempo real, melhorando o nosso atendimento.",
+    image: sofiaMachado,
+    name: "Sofia Machado",
+    role: "Gestora de Operações",
+    flag: "🇲🇿"
   },
   {
-    text: "The contact management features help us organize our customer database and target specific groups effectively.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-    name: "Miguel Torres",
-    role: "Sales Director",
+    text: "As funcionalidades de gestão de contactos ajudam-nos a organizar a nossa base de dados e segmentar campanhas por regiões de Angola.",
+    image: carlosNeto,
+    name: "Carlos Neto",
+    role: "Director de Vendas",
+    flag: "🇦🇴"
   },
   {
-    text: "SMSAO improved our customer engagement significantly. Higher open rates compared to email marketing campaigns.",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
-    name: "Isabel Gomes",
-    role: "Communications Lead",
+    text: "O SMSAO melhorou significativamente o nosso engagement em São Tomé. Taxa de abertura muito superior ao email marketing tradicional.",
+    image: isabelCosta,
+    name: "Isabel Costa",
+    role: "Responsável de Comunicações",
+    flag: "🇸🇹"
   },
 ];
 
