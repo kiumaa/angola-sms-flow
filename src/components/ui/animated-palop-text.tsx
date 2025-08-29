@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PALOP_COUNTRIES = [
-  'Angola',
-  'Moçambique', 
-  'Cabo Verde',
-  'Guiné-Bissau',
-  'São Tomé e Príncipe'
+  '🇦🇴', // Angola
+  '🇲🇿', // Moçambique
+  '🇨🇻', // Cabo Verde
+  '🇬🇼', // Guiné-Bissau
+  '🇸🇹'  // São Tomé e Príncipe
 ];
 
 interface AnimatedPalopTextProps {
@@ -27,7 +27,7 @@ export const AnimatedPalopText = ({ className }: AnimatedPalopTextProps) => {
   }, []);
 
   return (
-    <div className={`relative inline-block min-w-[120px] sm:min-w-[140px] md:min-w-[160px] text-center ${className}`}>
+    <div className={`relative inline-block min-w-[80px] sm:min-w-[90px] md:min-w-[100px] text-center ${className}`}>
       <AnimatePresence mode="wait">
         <motion.span
           key={currentIndex}
@@ -38,13 +38,13 @@ export const AnimatedPalopText = ({ className }: AnimatedPalopTextProps) => {
             duration: 0.5,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 flex items-center justify-center font-bold text-primary text-2xl sm:text-3xl md:text-4xl leading-tight"
+          className="absolute inset-0 flex items-center justify-center text-4xl sm:text-5xl md:text-6xl leading-tight"
         >
           {PALOP_COUNTRIES[currentIndex]}
         </motion.span>
         {/* Invisible placeholder to maintain layout */}
-        <span className="invisible font-bold text-2xl sm:text-3xl md:text-4xl leading-tight">
-          São Tomé e Príncipe
+        <span className="invisible text-4xl sm:text-5xl md:text-6xl leading-tight">
+          🇸🇹
         </span>
       </AnimatePresence>
     </div>
