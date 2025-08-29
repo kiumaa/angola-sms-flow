@@ -6,6 +6,27 @@ import { AnimatedGroup } from '@/components/ui/animated-group';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import { cn } from '@/lib/utils';
+
+const useScrollZoom = () => {
+  const [scrollY, setScrollY] = React.useState(0);
+  
+  React.useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  const getZoomScale = () => {
+    const maxScroll = 800; // Maximum scroll distance for full zoom effect
+    const maxZoom = 1.2; // Maximum zoom scale
+    const minZoom = 1; // Minimum zoom scale
+    
+    const scrollProgress = Math.min(scrollY / maxScroll, 1);
+    return minZoom + (maxZoom - minZoom) * scrollProgress;
+  };
+  
+  return { scale: getZoomScale() };
+};
 const transitionVariants = {
   item: {
     hidden: {
@@ -26,6 +47,8 @@ const transitionVariants = {
   }
 };
 export function HeroSection() {
+  const { scale } = useScrollZoom();
+  
   return <>
             <HeroHeader />
             <main className="overflow-hidden">
@@ -106,11 +129,18 @@ export function HeroSection() {
             },
             ...transitionVariants
           }}>
-                            <div className="relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
+                            <div className="relative mt-8 px-2 sm:mt-12 md:mt-20">
                                 
-                                <div className="bg-background relative mx-auto max-w-7xl overflow-hidden rounded-2xl p-2">
-                                    <img className="bg-background aspect-[16/9] relative hidden rounded-2xl dark:block" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
-                                    
+                                <div className="bg-background relative mx-auto max-w-7xl rounded-2xl p-2">
+                                    <img className="bg-background w-full h-auto relative hidden rounded-2xl dark:block" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
+                                    <img 
+                                        className="z-2 w-full h-auto relative rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center" 
+                                        style={{ transform: `scale(${scale})` }}
+                                        src="/PC.png" 
+                                        alt="SMS Dashboard" 
+                                        width="2700" 
+                                        height="1440" 
+                                    />
                                 </div>
                             </div>
                         </AnimatedGroup>
