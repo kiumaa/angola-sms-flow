@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, Zap, Check, X, Shield, User, Mail, Phone, Building, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useRegistrationSettings } from '@/hooks/useRegistrationSettings';
 import OTPRegistrationModal from '@/components/auth/OTPRegistrationModal';
+import { InternationalPhoneInput } from '@/components/shared/InternationalPhoneInput';
 import { normalizeInternationalPhone, DEFAULT_COUNTRY, type PhoneCountry } from '@/lib/internationalPhoneNormalization';
 
 interface FormData {
@@ -19,7 +19,6 @@ interface FormData {
   company: string;
   email: string;
   phone: string;
-  countryCode: string;
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
@@ -58,7 +57,6 @@ export const ModernSignupForm: React.FC = () => {
     company: '',
     email: '',
     phone: '',
-    countryCode: '+244',
     password: '',
     confirmPassword: '',
     acceptTerms: false
@@ -258,36 +256,16 @@ export const ModernSignupForm: React.FC = () => {
 
               <div>
                 <Label className="text-sm font-medium text-foreground">Telefone/WhatsApp</Label>
-                <div className="flex gap-2 mt-2">
-                  <Select value={formData.countryCode} onValueChange={(value) => updateFormData('countryCode', value)}>
-                    <SelectTrigger className="w-24 modern-input border-border/50 focus:border-primary">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
-                      {COUNTRY_CODES.map((item) => (
-                        <SelectItem key={item.code} value={item.code}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs opacity-60">{item.country}</span>
-                            <span>{item.code}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="tel"
-                    placeholder="934 736 823"
+                <div className="mt-2">
+                  <InternationalPhoneInput
                     value={formData.phone}
-                    onChange={(e) => updateFormData('phone', e.target.value)}
-                    className="modern-input flex-1 border-border/50 focus:border-primary"
+                    onChange={(value) => updateFormData('phone', value)}
+                    country={selectedCountry}
+                    onCountryChange={setSelectedCountry}
+                    showValidation={true}
+                    autoDetectCountry={true}
                   />
                 </div>
-                {formData.phone.length >= 9 && (
-                  <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-400">
-                    <Check className="w-4 h-4" />
-                    <span>Número válido ({formData.countryCode.replace('+', '')} {formData.phone})</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -445,7 +423,7 @@ export const ModernSignupForm: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Telefone:</span>
-                  <span className="font-medium">{formData.countryCode} {formData.phone}</span>
+                  <span className="font-medium">{formData.phone}</span>
                 </div>
               </div>
 
