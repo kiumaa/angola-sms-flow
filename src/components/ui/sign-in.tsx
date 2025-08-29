@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 
@@ -12,6 +13,44 @@ const GoogleIcon = () => (
         <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.022 35.026 44 30.038 44 24c0-2.641-.21-5.236-.611-7.743z" />
     </svg>
 );
+
+// --- ANIMATED PHRASES COMPONENT ---
+
+const AnimatedPhrases = () => {
+  const phrases = [
+    "Conecte-se e transforme sua comunicação com facilidade e eficiência",
+    "Desperte o poder da comunicação inteligente em suas mãos",
+    "Sua mensagem, nossa tecnologia. Resultados extraordinários",
+    "Conecte corações, conquiste mentes, transforme negócios",
+    "A revolução da comunicação começa com você"
+  ];
+
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsVisible(false);
+      
+      setTimeout(() => {
+        setCurrentPhraseIndex((prev) => (prev + 1) % phrases.length);
+        setIsVisible(true);
+      }, 300);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [phrases.length]);
+
+  return (
+    <div className="h-12 flex items-center justify-center">
+      <p className={`text-muted-foreground text-center transition-all duration-300 ${
+        isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-2'
+      }`}>
+        {phrases[currentPhraseIndex]}
+      </p>
+    </div>
+  );
+};
 
 // --- TYPE DEFINITIONS ---
 
@@ -65,7 +104,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <div className="animate-element animate-delay-100 flex justify-center">
               <BrandLogo size="lg" showText={true} />
             </div>
-            <p className="animate-element animate-delay-200 text-muted-foreground text-center">Conecte-se e transforme sua comunicação com facilidade e eficiência</p>
+            <div className="animate-element animate-delay-200">
+              <AnimatedPhrases />
+            </div>
 
             <form className="space-y-5" onSubmit={onSignIn}>
               <div className="animate-element animate-delay-300">
