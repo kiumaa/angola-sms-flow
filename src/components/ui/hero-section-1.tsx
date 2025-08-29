@@ -62,7 +62,7 @@ export function HeroSection() {
               }
             }
           }} className="absolute inset-0 -z-20">
-                            <img src="/src/PC.png" alt="Angola SMS Dashboard" className="absolute inset-x-0 top-56 -z-20 block lg:top-32 opacity-60" width="3276" height="4095" />
+                            <img src="/PC.png" alt="Angola SMS Dashboard" className="absolute inset-x-0 top-56 -z-20 block lg:top-32 opacity-60" width="3276" height="4095" />
                         </AnimatedGroup>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
                         <div className="mx-auto max-w-7xl px-6">
