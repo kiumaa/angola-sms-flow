@@ -321,11 +321,17 @@ async function sendViaBulkSMS(
       result: result
     });
 
-    if (response.ok && result?.id) {
-      console.log('SMS enviado com sucesso:', result.id);
+    if (response.ok && Array.isArray(result) && result[0]?.id) {
+      console.log('SMS enviado com sucesso:', result[0].id);
       return {
         success: true,
-        messageId: result.id
+        messageId: result[0].id
+      };
+    } else if (response.ok) {
+      console.log('SMS enviado mas formato de resposta inesperado:', result);
+      return {
+        success: true,
+        messageId: 'success'
       };
     } else {
       console.error('Erro da API BulkSMS:', result);
