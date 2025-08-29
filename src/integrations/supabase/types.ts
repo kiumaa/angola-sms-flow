@@ -1328,6 +1328,10 @@ export type Database = {
         Args: { admin_user_id: string; request_id: string }
         Returns: boolean
       }
+      check_admin_rate_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           action_type: string
@@ -1424,6 +1428,14 @@ export type Database = {
       update_campaign_stats: {
         Args: { _campaign_id: string }
         Returns: undefined
+      }
+      validate_admin_role_change: {
+        Args: {
+          admin_id: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
