@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedGroup } from '@/components/ui/animated-group';
-import { ShinyButton } from '@/components/ui/shiny-button';
+import { RainbowButton } from '@/components/ui/rainbow-button';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import { Particles } from '@/components/ui/particles';
 import { cn } from '@/lib/utils';
@@ -109,13 +109,11 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
                 },
                 ...transitionVariants
               }} className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
-                                    <div key={1} className="bg-foreground/10 rounded-[14px] border p-0.5">
-                                        <ShinyButton className="rounded-xl px-5 text-base h-11">
-                                            <Link to="/register" className="text-nowrap">
-                                                Começar Agora
-                                            </Link>
-                                        </ShinyButton>
-                                    </div>
+                                    <RainbowButton key={1}>
+                                        <Link to="/register" className="text-nowrap">
+                                            Começar Agora
+                                        </Link>
+                                    </RainbowButton>
                                 </AnimatedGroup>
                             </div>
                         </div>
