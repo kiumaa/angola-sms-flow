@@ -120,9 +120,6 @@ const Landing = () => {
             <p className="text-xl md:text-2xl mb-4 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed animate-fade-in">
               Junte-se a <span className="font-semibold text-primary-foreground">centenas de empresas angolanas</span> que já confiam na nossa plataforma para alcançar seus clientes de forma eficaz.
             </p>
-            <p className="text-lg mb-12 text-primary-foreground/80 max-w-2xl mx-auto animate-fade-in">
-              ✓ Entrega garantida em todo Angola &nbsp;&nbsp; ✓ Suporte especializado 24/7 &nbsp;&nbsp; ✓ Sem compromisso inicial
-            </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-scale-in">
               <Button asChild size="lg" className="text-xl px-12 py-6 font-bold bg-white text-primary border-2 border-white hover:bg-white/90 hover:scale-105 shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-xl">
