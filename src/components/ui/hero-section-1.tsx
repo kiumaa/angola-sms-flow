@@ -8,7 +8,6 @@ import { BrandLogo } from '@/components/shared/BrandLogo';
 import { Particles } from '@/components/ui/particles';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
-
 const useScrollZoom = () => {
   const [scrollY, setScrollY] = React.useState(0);
   React.useEffect(() => {
@@ -28,7 +27,6 @@ const useScrollZoom = () => {
     scale: getZoomScale()
   };
 };
-
 const transitionVariants = {
   item: {
     hidden: {
@@ -48,7 +46,6 @@ const transitionVariants = {
     }
   }
 };
-
 export function HeroSection() {
   const {
     scale
@@ -79,7 +76,7 @@ export function HeroSection() {
                             <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
                                 <AnimatedGroup variants={transitionVariants}>
                                     <Link to="/register" className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-black/5 transition-all duration-300 dark:border-t-white/5 dark:shadow-zinc-950">
-                                        <span className="text-foreground text-sm">Entre e Ganhe 5 Céditos Grátis 🎉</span>
+                                        <span className="text-foreground text-sm">Entre e Ganhe 5 Créditos Grátis 🎉</span>
                                         <span className="dark:border-background block h-4 w-0.5 border-l bg-white dark:bg-zinc-700"></span>
 
                                         <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500">
@@ -138,12 +135,12 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
           }}>
                             <div className="relative mt-8 px-2 sm:mt-12 md:mt-20">
                                 
-                                <div className="bg-background relative mx-auto max-w-7xl rounded-2xl p-2">
-                                    <img className="bg-background w-full h-auto relative hidden rounded-2xl dark:block shadow-2xl" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
-                                    <img className="z-2 w-full h-auto relative rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center shadow-2xl" style={{
-                  transform: `scale(${scale})`
+                                 <div className="bg-background relative mx-auto max-w-7xl rounded-2xl p-2 pb-8 md:pb-16">
+                                     <img className="bg-background w-full h-auto relative hidden rounded-2xl dark:block shadow-2xl" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
+                                     <img className="z-2 w-full h-auto relative rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center shadow-2xl" style={{
+                  transform: `scale(${Math.min(scale, 1.05)})`
                 }} src="/PC.png" alt="SMS Dashboard" width="2700" height="1440" />
-                                </div>
+                                 </div>
                             </div>
                         </AnimatedGroup>
                     </div>
@@ -151,7 +148,6 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
             </main>
         </>;
 }
-
 const menuItems = [{
   name: 'Funcionalidades',
   href: '/dashboard'
@@ -165,7 +161,6 @@ const menuItems = [{
   name: 'Sobre',
   href: '/dashboard'
 }];
-
 const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -234,7 +229,6 @@ const HeroHeader = () => {
             </nav>
         </header>;
 };
-
 const Logo = ({
   className
 }: {
