@@ -290,35 +290,52 @@ async function sendViaBulkSMS(
   try {
     const authHeader = `Basic ${btoa(`${tokenId}:${tokenSecret}`)}`;
     
+    // Formato correto para BulkSMS v1 API - sem array messages
+    const requestBody = {
+      to: phone,
+      from: resolveSenderId('SMSAO'),
+      body: `Seu código de acesso é: ${code}`
+    };
+    
+    console.log('BulkSMS request:', {
+      url: 'https://api.bulksms.com/v1/messages',
+      method: 'POST',
+      body: { ...requestBody, body: '[CÓDIGO OTP OCULTO]' } // Log sem expor o código
+    });
+    
     const response = await fetch('https://api.bulksms.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': authHeader
       },
-      body: JSON.stringify({
-        messages: [{
-          to: phone,
-          from: resolveSenderId('SMSAO'), // Usar helper para garantir normalização
-          body: `Seu código de acesso é: ${code}`
-        }]
-      })
+      body: JSON.stringify(requestBody)
     });
 
     const result = await response.json();
+    
+    console.log('BulkSMS response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      result: result
+    });
 
-    if (response.ok && Array.isArray(result) && result[0]?.id) {
+    if (response.ok && result?.id) {
+      console.log('SMS enviado com sucesso:', result.id);
       return {
         success: true,
-        messageId: result[0].id
+        messageId: result.id
       };
     } else {
+      console.error('Erro da API BulkSMS:', result);
       return {
         success: false,
-        error: result.detail || result.error?.description || `HTTP ${response.status}`
+        error: result.detail || result.error?.description || result.message || `HTTP ${response.status}: ${response.statusText}`
       };
     }
   } catch (error) {
+    console.error('Erro na requisição BulkSMS:', error);
     return {
       success: false,
       error: error.message
