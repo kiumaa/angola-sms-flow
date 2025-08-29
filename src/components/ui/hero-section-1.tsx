@@ -8,26 +8,24 @@ import { BrandLogo } from '@/components/shared/BrandLogo';
 import { Particles } from '@/components/ui/particles';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
-
 const useScrollZoom = () => {
   const [scrollY, setScrollY] = React.useState(0);
-  
   React.useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
   const getZoomScale = () => {
     const maxScroll = 800; // Maximum scroll distance for full zoom effect
     const maxZoom = 1.2; // Maximum zoom scale
     const minZoom = 1; // Minimum zoom scale
-    
+
     const scrollProgress = Math.min(scrollY / maxScroll, 1);
     return minZoom + (maxZoom - minZoom) * scrollProgress;
   };
-  
-  return { scale: getZoomScale() };
+  return {
+    scale: getZoomScale()
+  };
 };
 const transitionVariants = {
   item: {
@@ -49,14 +47,16 @@ const transitionVariants = {
   }
 };
 export function HeroSection() {
-  const { scale } = useScrollZoom();
-  const { theme } = useTheme();
+  const {
+    scale
+  } = useScrollZoom();
+  const {
+    theme
+  } = useTheme();
   const [particleColor, setParticleColor] = React.useState('#ffffff');
-
   React.useEffect(() => {
     setParticleColor(theme === 'dark' ? '#ffffff' : '#000000');
   }, [theme]);
-  
   return <>
             <HeroHeader />
             <main className="overflow-hidden">
@@ -69,14 +69,7 @@ export function HeroSection() {
                     <div className="relative pt-24 md:pt-36">
                         {/* Particles Background */}
                         <div className="absolute inset-0 z-0 flex items-center justify-center">
-                          <Particles
-                            className="absolute inset-0"
-                            quantity={80}
-                            ease={70}
-                            size={0.6}
-                            staticity={40}
-                            color={particleColor}
-                          />
+                          <Particles className="absolute inset-0" quantity={80} ease={70} size={0.6} staticity={40} color={particleColor} />
                         </div>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
                         <div className="mx-auto max-w-7xl px-6">
@@ -98,12 +91,11 @@ export function HeroSection() {
                                         </div>
                                     </Link>
                         
-                                    <h1 className="mt-8 max-w-4xl mx-auto text-balance text-6xl md:text-7xl lg:mt-16 xl:text-[5.25rem] font-bold">
+                                    <h1 className="mt-8 max-w-4xl mx-auto text-balance text-6xl md:text-7xl lg:mt-16 xl:text-[5.25rem] font-bold my-[18px]">
                                         Conecte-se com os seus Clientes e Venda de forma simples, rápida e eficaz
                                     </h1>
-                                    <p className="mx-auto mt-8 max-w-2xl text-balance text-lg text-muted-foreground">
-                                        Plataforma completa para envio de SMS em massa, gestão de contactos e campanhas publicitárias em Angola. Conecte-se com seus clientes de forma eficaz.
-                                    </p>
+                                    <p className="mt-8 max-w-4xl text-balance text-muted-foreground mx-0 px-0 text-center text-lg font-light">Está pronto para aumentar as suas vendas, melhorar a comunicação e fidelizar clientes?
+A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em segundos.</p>
                                 </AnimatedGroup>
 
                                 <AnimatedGroup variants={{
@@ -148,14 +140,9 @@ export function HeroSection() {
                                 
                                 <div className="bg-background relative mx-auto max-w-7xl rounded-2xl p-2">
                                     <img className="bg-background w-full h-auto relative hidden rounded-2xl dark:block" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
-                                    <img 
-                                        className="z-2 w-full h-auto relative rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center" 
-                                        style={{ transform: `scale(${scale})` }}
-                                        src="/PC.png" 
-                                        alt="SMS Dashboard" 
-                                        width="2700" 
-                                        height="1440" 
-                                    />
+                                    <img className="z-2 w-full h-auto relative rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center" style={{
+                  transform: `scale(${scale})`
+                }} src="/PC.png" alt="SMS Dashboard" width="2700" height="1440" />
                                 </div>
                             </div>
                         </AnimatedGroup>
