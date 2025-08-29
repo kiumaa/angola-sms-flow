@@ -123,9 +123,9 @@ const Landing = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-scale-in">
-              <Button asChild size="lg" variant="secondary" className="text-lg px-10 py-4 font-semibold hover-scale shadow-lg hover:shadow-xl transition-all duration-300">
-                <Link to="/register" className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
+              <Button asChild size="lg" className="text-xl px-12 py-6 font-bold bg-white text-primary border-2 border-white hover:bg-white/90 hover:scale-105 shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-xl">
+                <Link to="/register" className="flex items-center gap-3">
+                  <MessageSquare className="w-6 h-6" />
                   Começar Agora - Grátis
                 </Link>
               </Button>
