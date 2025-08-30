@@ -40,33 +40,46 @@ interface BulkSMSResponse {
   error?: string
 }
 
-// Função para buscar credenciais do banco de dados
+// SECURE function to fetch credentials from encrypted Supabase secrets
 async function getBulkSMSCredentials(supabase: any) {
   try {
-    const { data, error } = await supabase
+    console.log('Loading BulkSMS credentials from secure secrets...');
+    
+    // First check if we have configured secrets in the database
+    const { data: config, error: configError } = await supabase
       .from('sms_configurations')
-      .select('api_token_id, api_token_secret')
+      .select('api_token_id_secret_name, api_token_secret_name, credentials_encrypted')
       .eq('gateway_name', 'bulksms')
       .eq('is_active', true)
       .single();
 
-    if (error) {
-      console.error('Erro ao buscar credenciais do banco:', error);
-      // Fallback para variáveis de ambiente
+    if (configError || !config) {
+      console.warn('No secure SMS configuration found, using environment fallback');
       return {
         tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
         tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
       };
     }
 
-    console.log('Credenciais carregadas do banco de dados');
+    // Use encrypted secrets if available
+    if (config.credentials_encrypted && config.api_token_id_secret_name && config.api_token_secret_name) {
+      console.log('Using encrypted secrets for BulkSMS credentials');
+      return {
+        tokenId: Deno.env.get(config.api_token_id_secret_name),
+        tokenSecret: Deno.env.get(config.api_token_secret_name)
+      };
+    }
+
+    // Fall back to environment variables for the configured secret names
+    console.log('Using environment variables for BulkSMS credentials');
     return {
-      tokenId: data.api_token_id,
-      tokenSecret: data.api_token_secret
+      tokenId: Deno.env.get(config.api_token_id_secret_name || 'BULKSMS_TOKEN_ID'),
+      tokenSecret: Deno.env.get(config.api_token_secret_name || 'BULKSMS_TOKEN_SECRET')
     };
+    
   } catch (error) {
-    console.error('Erro ao conectar com banco para credenciais:', error);
-    // Fallback para variáveis de ambiente
+    console.error('Error loading secure credentials:', error);
+    // Secure fallback to environment variables
     return {
       tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
       tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
@@ -153,24 +166,25 @@ serve(async (req) => {
       console.log(`Using default Sender ID: ${resolvedSenderId}`)
     }
 
-    // Buscar credenciais do banco de dados
+    // Load secure credentials using encrypted secrets
     const credentials = await getBulkSMSCredentials(supabase);
     const bulkSMSTokenId = credentials.tokenId;
     const bulkSMSTokenSecret = credentials.tokenSecret;
 
     if (!bulkSMSTokenId) {
-      console.error('BulkSMS credentials not configured');
+      console.error('BulkSMS credentials not configured in secure secrets');
       return new Response(JSON.stringify({
         success: false,
-        error: 'BulkSMS API credentials not configured'
+        error: 'BulkSMS API credentials not configured in secure storage'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log(`Using BulkSMS Token ID: ${bulkSMSTokenId.substring(0, 8)}...`)
-    console.log(`Token Secret available: ${!!bulkSMSTokenSecret}`)
+    // Log only partial credentials for security
+    console.log(`Using secure BulkSMS Token ID: ${bulkSMSTokenId.substring(0, 4)}****`)
+    console.log(`Secure Token Secret available: ${!!bulkSMSTokenSecret}`)
     console.log(`Sending SMS to ${contacts.length} contacts with sender: ${resolvedSenderId}`)
 
     // Send SMS via BulkSMS API v1
