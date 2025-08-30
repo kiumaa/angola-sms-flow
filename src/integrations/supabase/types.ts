@@ -1041,9 +1041,12 @@ export type Database = {
       sms_configurations: {
         Row: {
           api_token_id: string | null
+          api_token_id_secret_name: string | null
           api_token_secret: string | null
+          api_token_secret_name: string | null
           balance: number | null
           created_at: string
+          credentials_encrypted: boolean | null
           gateway_name: string
           id: string
           is_active: boolean
@@ -1052,9 +1055,12 @@ export type Database = {
         }
         Insert: {
           api_token_id?: string | null
+          api_token_id_secret_name?: string | null
           api_token_secret?: string | null
+          api_token_secret_name?: string | null
           balance?: number | null
           created_at?: string
+          credentials_encrypted?: boolean | null
           gateway_name: string
           id?: string
           is_active?: boolean
@@ -1063,9 +1069,12 @@ export type Database = {
         }
         Update: {
           api_token_id?: string | null
+          api_token_id_secret_name?: string | null
           api_token_secret?: string | null
+          api_token_secret_name?: string | null
           balance?: number | null
           created_at?: string
+          credentials_encrypted?: boolean | null
           gateway_name?: string
           id?: string
           is_active?: boolean
@@ -1464,6 +1473,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      migrate_sms_credentials_to_secrets: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       reject_credit_request: {
         Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean
@@ -1487,6 +1500,10 @@ export type Database = {
           target_user_id: string
         }
         Returns: boolean
+      }
+      validate_sms_configuration: {
+        Args: { config_id: string }
+        Returns: Json
       }
     }
     Enums: {
