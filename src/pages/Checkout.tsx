@@ -140,82 +140,86 @@ const Checkout = () => {
 
   return (
     <DashboardLayout>
-      <motion.div 
-        className="space-y-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Progress Steps */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <CheckoutProgressSteps currentStep={2} />
-        </motion.div>
-
-        {/* Header */}
+      <div className="container mx-auto max-w-6xl px-4">
         <motion.div 
-          className="glass-card p-8 bg-gradient-hero relative overflow-hidden"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          className="space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-          <div className="flex items-center gap-4 relative">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/credits")}
-              className="glass-card border-glass-border hover:shadow-glow transition-all duration-300"
+          {/* Progress Steps */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <CheckoutProgressSteps currentStep={2} />
+          </motion.div>
+
+          {/* Header */}
+          <motion.div 
+            className="glass-card p-6 bg-gradient-hero relative overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+            <div className="flex items-center gap-4 relative">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/credits")}
+                className="glass-card border-glass-border hover:shadow-glow transition-all duration-300"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
+              <div className="flex-1">
+                <h1 className="text-3xl font-light mb-2 gradient-text">
+                  Finalizar Compra
+                </h1>
+                <p className="text-muted-foreground">
+                  Confirme seu pedido e complete o pagamento via transferência bancária
+                </p>
+              </div>
+              <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-primary font-medium">Seguro SSL</span>
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Enhanced Order Summary - Takes 2 columns */}
+            <motion.div
+              className="lg:col-span-2"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-4xl font-light mb-2 gradient-text">
-                Finalizar Compra
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Confirme seu pedido e complete o pagamento via transferência bancária
-              </p>
-            </div>
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-primary font-medium">Seguro SSL</span>
-            </div>
+              <EnhancedOrderSummary 
+                selectedPackage={selectedPackage} 
+                userCredits={credits}
+              />
+            </motion.div>
+
+            {/* Enhanced Payment Instructions - Takes 1 column */}
+            <motion.div
+              className="lg:col-span-1"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <EnhancedPaymentInstructions
+                bankDetails={bankDetails}
+                amount={selectedPackage.price_kwanza}
+                isProcessing={isProcessing}
+                onConfirmOrder={handlePurchase}
+              />
+            </motion.div>
           </div>
         </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Enhanced Order Summary */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <EnhancedOrderSummary 
-              selectedPackage={selectedPackage} 
-              userCredits={credits}
-            />
-          </motion.div>
-
-          {/* Enhanced Payment Instructions */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <EnhancedPaymentInstructions
-              bankDetails={bankDetails}
-              amount={selectedPackage.price_kwanza}
-              isProcessing={isProcessing}
-              onConfirmOrder={handlePurchase}
-            />
-          </motion.div>
-        </div>
-      </motion.div>
+      </div>
     </DashboardLayout>
   );
 };
