@@ -68,8 +68,8 @@ export function HeroSection() {
                     <div className="h-[80rem] absolute left-0 top-0 w-56 -rotate-45 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.06)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)] [translate:5%_-50%]" />
                     <div className="h-[80rem] -translate-y-[350px] absolute left-0 top-0 w-56 -rotate-45 bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.04)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)]" />
                 </div>
-                <section className="pb-20 md:pb-32">
-                    <div className="relative pt-24 md:pt-36">
+                <section className="pb-16 sm:pb-20 md:pb-32">
+                    <div className="relative pt-20 sm:pt-24 md:pt-36">
                         {/* Particles Background */}
                         <div className="absolute inset-0 z-0 flex items-center justify-center">
                           <Particles className="absolute inset-0" quantity={80} ease={70} size={0.6} staticity={40} color={particleColor} />
@@ -78,8 +78,8 @@ export function HeroSection() {
                         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                             <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
                                 <AnimatedGroup variants={transitionVariants}>
-                                    <Link to="/register" className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-black/5 transition-all duration-300 dark:border-t-white/5 dark:shadow-zinc-950">
-                                        <span className="text-foreground text-sm">Entre e Ganhe 5 Créditos Grátis 🎉</span>
+                                    <Link to="/register" className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-2 sm:gap-4 rounded-full border p-1 pl-3 sm:pl-4 shadow-md shadow-black/5 transition-all duration-300 dark:border-t-white/5 dark:shadow-zinc-950">
+                                        <span className="text-foreground text-xs sm:text-sm">Entre e Ganhe 5 Créditos Grátis 🎉</span>
                                         <span className="dark:border-background block h-4 w-0.5 border-l bg-white dark:bg-zinc-700"></span>
 
                                         <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500">
@@ -94,10 +94,10 @@ export function HeroSection() {
                                         </div>
                                     </Link>
                         
-                                    <h2 className="mt-6 sm:mt-8 lg:mt-12 xl:mt-16 max-w-5xl mx-auto text-balance text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-[5.25rem] font-bold leading-tight sm:leading-tight md:leading-[1.1] lg:leading-[1.05] xl:leading-[1.02] px-2 sm:px-4">
+                                    <h2 className="mt-4 sm:mt-6 md:mt-8 lg:mt-12 xl:mt-16 max-w-5xl mx-auto text-balance text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold leading-tight sm:leading-tight md:leading-[1.1] lg:leading-[1.05] xl:leading-[1.02] px-2 sm:px-4">
                                         Conecte-se com os seus Clientes e Venda de forma simples, rápida e eficaz
                                     </h2>
-                                    <p className="mt-6 sm:mt-8 max-w-3xl lg:max-w-4xl text-balance text-muted-foreground mx-auto px-4 sm:px-6 text-center text-base sm:text-lg lg:text-xl font-light leading-relaxed">Está pronto para aumentar as suas vendas, melhorar a comunicação e fidelizar clientes?
+                                    <p className="mt-4 sm:mt-6 md:mt-8 max-w-3xl lg:max-w-4xl text-balance text-muted-foreground mx-auto px-4 sm:px-6 text-center text-sm sm:text-base lg:text-lg xl:text-xl font-light leading-relaxed">Está pronto para aumentar as suas vendas, melhorar a comunicação e fidelizar clientes?
 A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em segundos.</p>
                                 </AnimatedGroup>
 
@@ -111,12 +111,12 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
                   }
                 },
                 ...transitionVariants
-              }} className="mt-8 sm:mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
+               }} className="mt-6 sm:mt-8 md:mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
                                     <Link key={1} to="/register" className="group">
-                                        <button className="relative inline-flex h-12 sm:h-14 animate-pulse overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
+                                        <button className="relative inline-flex h-10 sm:h-12 md:h-14 animate-pulse overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
                                             <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#393BB2_50%,#E2E8F0_100%)]" />
-                                            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-black px-6 sm:px-8 py-1 text-sm sm:text-base font-medium text-white backdrop-blur-3xl gap-2 hover:bg-gray-900 transition-all duration-300 transform hover:scale-105">
-                                                <Play className="w-4 h-4" />
+                                            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-black px-4 sm:px-6 md:px-8 py-1 text-xs sm:text-sm md:text-base font-medium text-white backdrop-blur-3xl gap-2 hover:bg-gray-900 transition-all duration-300 transform hover:scale-105">
+                                                <Play className="w-3 h-3 sm:w-4 sm:h-4" />
                                                 Experimentar Agora
                                             </span>
                                         </button>
@@ -136,11 +136,11 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
             },
             ...transitionVariants
           }}>
-                            <div className="relative mt-8 px-2 sm:mt-12 md:mt-16 lg:mt-20">
+                            <div className="relative mt-6 sm:mt-8 md:mt-12 lg:mt-16 xl:mt-20 px-2">
                                 
-                                 <div className="bg-background relative mx-auto max-w-[90rem] rounded-2xl p-1 sm:p-2 pb-4 sm:pb-8 md:pb-16">
-                                     <img className="bg-background w-full h-auto relative hidden rounded-2xl dark:block shadow-2xl" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
-                                     <img className="z-2 w-full h-auto relative rounded-xl sm:rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center shadow-xl sm:shadow-2xl min-h-[200px] sm:min-h-[300px] md:min-h-[400px]" style={{
+                                 <div className="bg-background relative mx-auto max-w-[90rem] rounded-xl sm:rounded-2xl p-1 sm:p-2 pb-4 sm:pb-8 md:pb-16">
+                                     <img className="bg-background w-full h-auto relative hidden rounded-xl sm:rounded-2xl dark:block shadow-2xl" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
+                                     <img className="z-2 w-full h-auto relative rounded-lg sm:rounded-xl md:rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center shadow-lg sm:shadow-xl md:shadow-2xl min-h-[150px] sm:min-h-[200px] md:min-h-[300px] lg:min-h-[400px]" style={{
                   transform: `scale(${Math.min(scale, 1.08)})`
                 }} src="/PC.png" alt="SMS Dashboard" width="2700" height="1440" />
                                  </div>

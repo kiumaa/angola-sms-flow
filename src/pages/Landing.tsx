@@ -18,16 +18,16 @@ const Landing = () => {
       <HeroSection />
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-muted/5 relative -mt-12 pt-36">
-        <div className="container mx-auto px-6 relative">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-6 text-foreground">
+      <section id="features" className="py-16 sm:py-20 lg:py-24 bg-muted/5 relative -mt-8 sm:-mt-12 pt-24 sm:pt-32 lg:pt-36">
+        <div className="container mx-auto px-4 sm:px-6 relative">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-foreground">
               Funcionalidades Essenciais
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Envio de SMS simples, rápido e profissional</p>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg lg:text-xl">Envio de SMS simples, rápido e profissional</p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[{
             icon: <Zap className="h-8 w-8" />,
             title: "Envio Rápido",
@@ -50,14 +50,14 @@ const Landing = () => {
             description: "Plataforma intuitiva e responsiva, otimizada para o mercado angolano."
           }, {
             icon: <Clock className="h-8 w-8" />,
-            title: "Suporte 24/7",
-            description: "Atendimento dedicado via WhatsApp e email para resolver suas dúvidas."
-          }].map((feature, index) => <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
-                <div className="text-primary mb-4">
+              title: "Suporte 24/7",
+              description: "Atendimento dedicado via WhatsApp e email para resolver suas dúvidas."
+            }].map((feature, index) => <Card key={index} className="p-4 sm:p-6 hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
+                <div className="text-primary mb-3 sm:mb-4">
                   {feature.icon}
                 </div>
-                <CardTitle className="text-xl font-semibold mb-3 text-foreground">{feature.title}</CardTitle>
-                <CardDescription className="text-muted-foreground leading-relaxed">
+                <CardTitle className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-foreground">{feature.title}</CardTitle>
+                <CardDescription className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                   {feature.description}
                 </CardDescription>
               </Card>)}
@@ -72,9 +72,9 @@ const Landing = () => {
       <Pricing1 />
 
       {/* Stats Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
+      <section className="py-16 sm:py-20 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
             {[{
             number: "99.9%",
             label: "Disponibilidade"
@@ -88,17 +88,17 @@ const Landing = () => {
             number: "24/7",
             label: "Suporte Ativo"
           }].map((stat, index) => <div key={index} className="group">
-                <div className="text-4xl font-bold text-primary mb-2 transition-all duration-300 group-hover:scale-105 h-[48px] flex items-center justify-center">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2 transition-all duration-300 group-hover:scale-105 h-[32px] sm:h-[40px] lg:h-[48px] flex items-center justify-center">
                   {stat.number}
                 </div>
-                <div className="text-muted-foreground text-center">{stat.label}</div>
+                <div className="text-sm sm:text-base text-muted-foreground text-center">{stat.label}</div>
               </div>)}
           </div>
         </div>
       </section>
 
       {/* Enhanced CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground relative overflow-hidden">
+      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground relative overflow-hidden">
         {/* Background Pattern - Responsivo */}
         <div className="absolute inset-0 opacity-10 md:opacity-20">
           <div className="w-full h-full bg-repeat bg-[length:30px_30px] md:bg-[length:60px_60px]" style={{
@@ -106,25 +106,25 @@ const Landing = () => {
         }}></div>
         </div>
         
-        <div className="container mx-auto px-6 text-center relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 text-center relative z-10">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 animate-fade-in">
               Transforme a Comunicação da Sua Empresa
             </h2>
-            <p className="text-xl md:text-2xl mb-4 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed animate-fade-in py-0 my-[20px]">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed animate-fade-in">
               Junte-se a <span className="font-semibold text-primary-foreground">centenas de empresas</span> que já confiam na nossa plataforma para alcançar seus clientes de forma eficaz.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-scale-in">
-              <Button asChild size="lg" className="text-xl px-12 py-6 font-bold bg-white text-primary border-2 border-white hover:bg-white/90 hover:scale-105 shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-xl">
-                <Link to="/register" className="flex items-center gap-3">
-                  <MessageSquare className="w-6 h-6" />
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center animate-scale-in">
+              <Button asChild size="lg" className="w-full sm:w-auto text-base sm:text-lg lg:text-xl px-8 sm:px-12 py-4 sm:py-6 font-bold bg-white text-primary border-2 border-white hover:bg-white/90 hover:scale-105 shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-xl">
+                <Link to="/register" className="flex items-center justify-center gap-3">
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                   Começar Agora - Grátis
                 </Link>
               </Button>
             </div>
             
-            <div className="mt-8 text-sm text-primary-foreground/70 animate-fade-in">
+            <div className="mt-6 sm:mt-8 text-xs sm:text-sm text-primary-foreground/70 animate-fade-in">
               <p>🔒 Seus dados estão seguros conosco • 🚀 Configuração em menos de 2 minutos</p>
             </div>
           </div>

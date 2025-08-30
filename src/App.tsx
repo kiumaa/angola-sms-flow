@@ -13,6 +13,7 @@ import { ConsentProvider } from "./components/shared/ConsentProvider";
 import AdminLayout from "./components/layout/AdminLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useThemeAwareFavicon } from "./hooks/useThemeAwareFavicon";
+import { usePageMetaTags } from "./hooks/usePageMetaTags";
 
 // Import lazy components from the centralized file
 import {
@@ -56,6 +57,9 @@ const queryClient = new QueryClient();
 function App() {
   // Initialize theme-aware favicon
   useThemeAwareFavicon();
+  
+  // Apply page-specific meta tags
+  usePageMetaTags();
   
   return (
     <ErrorBoundary>

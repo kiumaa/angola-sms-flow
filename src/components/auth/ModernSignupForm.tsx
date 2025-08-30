@@ -13,6 +13,7 @@ import { useRegistrationSettings } from '@/hooks/useRegistrationSettings';
 import OTPRegistrationModal from '@/components/auth/OTPRegistrationModal';
 import { InternationalPhoneInput } from '@/components/shared/InternationalPhoneInput';
 import { normalizeInternationalPhone, DEFAULT_COUNTRY, type PhoneCountry } from '@/lib/internationalPhoneNormalization';
+import { WelcomeCreditsModal } from './WelcomeCreditsModal';
 
 interface FormData {
   fullName: string;
@@ -51,6 +52,8 @@ export const ModernSignupForm: React.FC = () => {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [registrationData, setRegistrationData] = useState<any>(null);
   const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(DEFAULT_COUNTRY);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [welcomeUserEmail, setWelcomeUserEmail] = useState<string>('');
   
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
@@ -181,9 +184,12 @@ export const ModernSignupForm: React.FC = () => {
   };
 
   const handlePhoneVerified = () => {
-    // OTP verification handles account creation and redirection
-    // This function is kept for compatibility but shouldn't be called
-    console.log('Phone verified - redirecting to dashboard');
+    // Show welcome modal with credits info
+    setWelcomeUserEmail(formData.email);
+    setShowWelcomeModal(true);
+    
+    // Close OTP modal
+    setShowOtpModal(false);
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
@@ -550,6 +556,15 @@ export const ModernSignupForm: React.FC = () => {
           onVerified={handlePhoneVerified}
         />
       )}
+
+      <WelcomeCreditsModal
+        isOpen={showWelcomeModal}
+        onClose={() => {
+          setShowWelcomeModal(false);
+          navigate('/dashboard');
+        }}
+        userEmail={welcomeUserEmail}
+      />
     </>
   );
 };
