@@ -24,10 +24,18 @@ export const WhatsAppSupportButton = ({
   const handleWhatsAppSupport = () => {
     const userName = user?.email?.split('@')[0] || 'Usuário';
     const userEmail = user?.email || '';
-    const whatsappNumber = '244923456789'; // Número configurável
+    const whatsappNumber = '244933493788'; // KB Agency WhatsApp
     
     const message = encodeURIComponent(
-      `Olá! Sou ${userName} (${userEmail}) e preciso de suporte com minha conta SMS AO. Atualmente tenho ${credits} créditos.`
+      `Olá! Sou ${userName} (${userEmail}) da plataforma SMS AO e preciso de suporte técnico com minha conta.
+
+📊 Informações da Conta:
+• Email: ${userEmail}
+• Créditos disponíveis: ${credits}
+
+💬 Como posso ajudar com sua dúvida sobre envio de SMS, configurações ou funcionalidades da plataforma?
+
+Aguardo seu retorno para dar suporte rápido e eficiente! 🚀`
     );
     
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
