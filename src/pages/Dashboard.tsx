@@ -292,7 +292,7 @@ const Dashboard = () => {
                   <span className="font-medium text-green-600">{stats?.deliveryRate || 95}%</span>
                 </div>
                 
-                <div className="pt-3 border-t space-y-2">
+                <div className="pt-3 border-t flex flex-col gap-2">
                   <Button onClick={() => navigate("/credits")} className="w-full" variant="outline">
                     <CreditCard className="h-4 w-4 mr-2" />
                     Comprar Créditos
