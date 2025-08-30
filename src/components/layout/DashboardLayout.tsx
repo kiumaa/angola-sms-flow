@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import NotificationCenter from "@/components/shared/NotificationCenter";
+import { WhatsAppSupportButton } from "@/components/shared/WhatsAppSupportButton";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -102,6 +103,7 @@ const DashboardLayout = ({
                 <span className="font-bold text-primary ml-1">{credits}</span>
               </div>
               <NotificationCenter />
+              <WhatsAppSupportButton />
               <div className="text-sm text-muted-foreground">
                 {user?.email}
               </div>

@@ -10,6 +10,7 @@ import { useDynamicBranding } from "@/hooks/useDynamicBranding";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { WhatsAppSupportButton } from "@/components/shared/WhatsAppSupportButton";
 const Dashboard = () => {
   const navigate = useNavigate();
   const {
@@ -291,11 +292,12 @@ const Dashboard = () => {
                   <span className="font-medium text-green-600">{stats?.deliveryRate || 95}%</span>
                 </div>
                 
-                <div className="pt-3 border-t">
+                <div className="pt-3 border-t space-y-2">
                   <Button onClick={() => navigate("/credits")} className="w-full" variant="outline">
                     <CreditCard className="h-4 w-4 mr-2" />
                     Comprar Créditos
                   </Button>
+                  <WhatsAppSupportButton variant="ghost" size="sm" className="w-full" showText />
                 </div>
               </CardContent>
             </Card>
