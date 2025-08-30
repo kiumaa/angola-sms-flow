@@ -268,7 +268,7 @@ Valor: ${(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz
                   className="glass-card border-green-500/30 text-green-400 hover:bg-green-500/10 flex-1"
                   size="sm"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
+                  <MessageSquare className="h-4 w-4 mr-2" />
                   Enviar Comprovante
                 </Button>
               </div>
