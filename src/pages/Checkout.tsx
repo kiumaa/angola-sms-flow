@@ -73,10 +73,10 @@ const Checkout = () => {
 
   // Bank details for transfer
   const bankDetails = {
-    bank: "Banco BAI",
+    bank: "BFA | Banco de Fomento Angola, S.A.",
     account: "123456789",
-    iban: "AO06 0006 0000 1234 5678 9012 3",
-    holder: "SMS MARKETING ANGOLA LDA",
+    iban: "0006 0000 3442 5465 3012.5",
+    holder: "KB AGENCY- PRESTAÇÃO DE SERVIÇOS,LDA",
     reference: selectedPackage?.id?.substring(0, 8).toUpperCase() || "REF00000"
   };
 

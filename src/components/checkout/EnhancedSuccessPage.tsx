@@ -81,7 +81,7 @@ Valor: ${(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz
 
   const openWhatsApp = () => {
     const message = `Olá! Envio comprovante de pagamento do Pedido ${bankDetails.reference}. Valor: ${(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz para ativação de ${transaction.credits_purchased?.toLocaleString()} créditos SMS.`;
-    window.open(`https://wa.me/244900000000?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/244933493788?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const timelineSteps = [

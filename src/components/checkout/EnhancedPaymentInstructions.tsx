@@ -264,7 +264,78 @@ export const EnhancedPaymentInstructions = ({
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+         </AnimatePresence>
+
+        {/* Outros Métodos de Pagamento (Em Breve) */}
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <h4 className="font-medium text-muted-foreground">Outros Métodos de Pagamento (Em Breve)</h4>
+          
+          <div className="space-y-3">
+            {[
+              {
+                name: "Multicaixa Express",
+                description: "Pagamento via Multicaixa Express",
+                icon: "📱",
+                color: "from-blue-500/10 to-blue-500/5"
+              },
+              {
+                name: "Pagamento por Referência",
+                description: "Gere uma referência para pagamento",
+                icon: "🏧",
+                color: "from-purple-500/10 to-purple-500/5"
+              },
+              {
+                name: "Cartão (via Stripe)",
+                description: "Pagamento seguro com cartão de crédito",
+                icon: "💳",
+                color: "from-green-500/10 to-green-500/5"
+              }
+            ].map((method, index) => (
+              <motion.div
+                key={index}
+                className={`
+                  p-4 rounded-2xl bg-gradient-to-r ${method.color} 
+                  border border-muted/20 opacity-60 cursor-not-allowed
+                  relative overflow-hidden
+                `}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 0.6, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{method.icon}</span>
+                    <div>
+                      <h5 className="font-medium text-foreground/70">{method.name}</h5>
+                      <p className="text-sm text-muted-foreground">{method.description}</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
+                    Em Breve
+                  </Badge>
+                </div>
+                
+                {/* Overlay para indicar indisponibilidade */}
+                <div className="absolute inset-0 bg-muted/10 backdrop-blur-[1px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+                  <span className="text-sm font-medium text-muted-foreground bg-background/80 px-3 py-1 rounded-full">
+                    Disponível em breve
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">
+              💡 Novos métodos de pagamento serão adicionados em breve para sua comodidade
+            </p>
+          </div>
+        </motion.div>
 
         {/* Confirm Button */}
         <motion.div 
