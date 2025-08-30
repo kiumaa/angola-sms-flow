@@ -161,7 +161,7 @@ Valor: ${(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               <h1 className="text-4xl font-light mb-4 gradient-text">
-                🎉 Pedido Confirmado!
+                Pedido Confirmado!
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
                 Parabéns! Seu pedido foi registrado com sucesso. 
