@@ -85,6 +85,7 @@ const Login = () => {
         onSignIn={handleSignIn}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
+        onPhoneLogin={() => setShowOTPModal(true)}
       />
       
       {/* OTP Login Modal */}
@@ -92,19 +93,6 @@ const Login = () => {
         open={showOTPModal} 
         onOpenChange={setShowOTPModal} 
       />
-      
-      {/* Floating OTP Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <button
-          onClick={() => setShowOTPModal(true)}
-          className="p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          title="Entrar com Telefone"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        </button>
-      </div>
     </div>
   );
 };
