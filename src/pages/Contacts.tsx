@@ -8,7 +8,11 @@ import { Plus, Upload, Download, Search, Users, FileText, Phone, MessageSquare }
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import CSVImport from "@/components/contacts/CSVImport";
+import ContactForm from "@/components/contacts/ContactForm";
+import ContactViewModal from "@/components/contacts/ContactViewModal";
+import ContactListForm from "@/components/contacts/ContactListForm";
 import { useContacts } from "@/hooks/useContacts";
 import { ContactStats } from "@/components/contacts/ContactStats";
 import { ContactActions } from "@/components/contacts/ContactActions";
@@ -17,12 +21,19 @@ import { EmptyState } from "@/components/shared/EmptyState";
 const Contacts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showImport, setShowImport] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [showContactView, setShowContactView] = useState(false);
+  const [showListForm, setShowListForm] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [editingContact, setEditingContact] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { 
     contacts, 
     contactLists, 
     loading: isLoading, 
+    createContact,
+    updateContact,
     deleteContact,
     searchContacts,
     refetch 
@@ -45,18 +56,37 @@ const Contacts = () => {
   };
 
   const handleViewContact = (contact: any) => {
-    // TODO: Implement view contact modal/page
-    console.log('View contact:', contact);
+    setSelectedContact(contact);
+    setShowContactView(true);
   };
 
   const handleEditContact = (contact: any) => {
-    // TODO: Implement edit contact modal
-    console.log('Edit contact:', contact);
+    setEditingContact(contact);
+    setShowContactForm(true);
   };
 
   const handleToggleBlock = async (contactId: string, isBlocked: boolean) => {
-    // TODO: Implement toggle block functionality
-    console.log('Toggle block:', contactId, isBlocked);
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .update({ is_blocked: isBlocked })
+        .eq('id', contactId);
+
+      if (error) throw error;
+
+      toast({
+        title: isBlocked ? "Contato bloqueado" : "Contato desbloqueado",
+        description: `O contato foi ${isBlocked ? 'bloqueado' : 'desbloqueado'} com sucesso.`,
+      });
+
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status do contato.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSendSMS = (contact: any) => {
@@ -64,8 +94,82 @@ const Contacts = () => {
   };
 
   const handleSendEmail = (contact: any) => {
-    // TODO: Implement send email functionality
-    console.log('Send email:', contact);
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "O envio de emails será implementado em breve.",
+    });
+  };
+
+  const handleSaveContact = async (contactData: any) => {
+    try {
+      if (editingContact) {
+        await updateContact(editingContact.id, contactData);
+        toast({
+          title: "Contato atualizado",
+          description: "As informações do contato foram atualizadas com sucesso.",
+        });
+      } else {
+        await createContact(contactData);
+        toast({
+          title: "Contato criado",
+          description: "Novo contato adicionado com sucesso.",
+        });
+      }
+      
+      setShowContactForm(false);
+      setEditingContact(null);
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: editingContact 
+          ? "Não foi possível atualizar o contato." 
+          : "Não foi possível criar o contato.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportContacts = () => {
+    if (contacts.length === 0) {
+      toast({
+        title: "Nenhum contato",
+        description: "Não há contatos para exportar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Nome', 'Telefone', 'Email', 'Empresa', 'Status', 'Tags', 'Data de Criação'];
+    const csvContent = [
+      headers.join(','),
+      ...contacts.map(contact => [
+        `"${contact.name || ''}"`,
+        `"${contact.phone_e164 || contact.phone || ''}"`,
+        `"${contact.email || ''}"`,
+        `"${contact.attributes?.company || ''}"`,
+        `"${contact.is_blocked ? 'Bloqueado' : 'Ativo'}"`,
+        `"${contact.tags ? contact.tags.join('; ') : ''}"`,
+        `"${new Date(contact.created_at).toLocaleDateString('pt-BR')}"`
+      ].join(','))
+    ].join('\n');
+
+    // Download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `contatos_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Exportação concluída",
+      description: `${contacts.length} contatos foram exportados com sucesso.`,
+    });
   };
 
   const handleImportSuccess = (importedContacts: any[]) => {
@@ -120,7 +224,10 @@ const Contacts = () => {
                 Importar CSV
               </Button>
               <Button 
-                onClick={() => {/* Add new contact logic */}}
+                onClick={() => {
+                  setEditingContact(null);
+                  setShowContactForm(true);
+                }}
                 className="button-futuristic text-lg px-8 py-6"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -146,7 +253,11 @@ const Contacts = () => {
                       className="pl-10 h-12 rounded-2xl glass-card border-glass-border"
                     />
                   </div>
-                  <Button variant="outline" className="glass-card border-glass-border">
+                  <Button 
+                    variant="outline" 
+                    className="glass-card border-glass-border"
+                    onClick={handleExportContacts}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Exportar
                   </Button>
@@ -183,7 +294,10 @@ const Contacts = () => {
                         <Button 
                           variant="outline"
                           className="glass-card border-glass-border"
-                          onClick={() => {/* TODO: Open add contact modal */}}
+                          onClick={() => {
+                            setEditingContact(null);
+                            setShowContactForm(true);
+                          }}
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Adicionar Contato
@@ -333,6 +447,7 @@ const Contacts = () => {
                 <Button 
                   variant="outline" 
                   className="w-full glass-card border-glass-border border-dashed hover:border-primary"
+                  onClick={() => setShowListForm(true)}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Lista
@@ -356,15 +471,51 @@ const Contacts = () => {
           </div>
         </div>
 
-        {/* CSV Import Modal */}
+        {/* Modals */}
         {showImport && (
           <CSVImport 
             onImportComplete={() => {
-              // Refresh contacts list (in a real app this would fetch from API)
               setShowImport(false);
+              refetch();
+              toast({
+                title: "Importação concluída",
+                description: "Contatos importados com sucesso.",
+              });
             }}
           />
         )}
+
+        <ContactForm
+          open={showContactForm}
+          onOpenChange={(open) => {
+            setShowContactForm(open);
+            if (!open) setEditingContact(null);
+          }}
+          contact={editingContact}
+          onSave={handleSaveContact}
+        />
+
+        <ContactViewModal
+          open={showContactView}
+          onOpenChange={setShowContactView}
+          contact={selectedContact}
+          onEdit={handleEditContact}
+          onToggleBlock={handleToggleBlock}
+          onSendSMS={handleSendSMS}
+          onSendEmail={handleSendEmail}
+        />
+
+        <ContactListForm
+          open={showListForm}
+          onOpenChange={setShowListForm}
+          onSave={() => {
+            refetch();
+            toast({
+              title: "Lista criada",
+              description: "Nova lista de contatos criada com sucesso.",
+            });
+          }}
+        />
       </div>
     </DashboardLayout>
   );
