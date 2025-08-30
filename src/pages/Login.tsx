@@ -81,7 +81,7 @@ const Login = () => {
       <SignInPage
         title="Seja Bem-vindo(a) ao SMS AO"
         description="Acesse sua conta e continue sua jornada conosco"
-        heroImageSrc="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=2160&q=80"
+        heroImageSrc="/src/img/main.png"
         onSignIn={handleSignIn}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
