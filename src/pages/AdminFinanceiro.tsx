@@ -15,7 +15,7 @@ import {
   CreditCard,
   BarChart3
 } from "lucide-react";
-import AdminLayout from "@/components/layout/AdminLayout";
+
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -147,231 +147,227 @@ export default function AdminFinanceiro() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Painel Financeiro</h1>
-            <p className="text-muted-foreground">
-              Controle financeiro e análise de rentabilidade
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Painel Financeiro</h1>
+          <p className="text-muted-foreground">
+            Controle financeiro e análise de rentabilidade
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          {['7d', '30d', '90d', 'all'].map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={cn(
+                "px-3 py-1 text-sm rounded-md transition-colors",
+                timeRange === range 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-muted hover:bg-muted/80"
+              )}
+            >
+              {range === 'all' ? 'Tudo' : range}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Métricas principais */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics?.totalRevenue.toLocaleString()} Kz</div>
+            <p className="text-xs text-muted-foreground">
+              Excluindo créditos grátis
             </p>
-          </div>
-          
-          <div className="flex gap-2">
-            {['7d', '30d', '90d', 'all'].map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={cn(
-                  "px-3 py-1 text-sm rounded-md transition-colors",
-                  timeRange === range 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted hover:bg-muted/80"
-                )}
-              >
-                {range === 'all' ? 'Tudo' : range}
-              </button>
-            ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Métricas principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">SMS Enviadas</CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics?.totalSMSSent.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Todas as mensagens enviadas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Créditos Grátis</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics?.totalFreeCredits.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Boas-vindas e promoções
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Margem de Lucro</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={cn(
+              "text-2xl font-bold",
+              (metrics?.profitMargin || 0) > 50 ? "text-green-600" : 
+              (metrics?.profitMargin || 0) > 20 ? "text-yellow-600" : "text-red-600"
+            )}>
+              {metrics?.profitMargin.toFixed(1)}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Estimativa baseada em custos
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="countries" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="countries">Por País</TabsTrigger>
+          <TabsTrigger value="packages">Pacotes</TabsTrigger>
+          <TabsTrigger value="alerts">Alertas</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="countries" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                SMS por País
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{metrics?.totalRevenue.toLocaleString()} Kz</div>
-              <p className="text-xs text-muted-foreground">
-                Excluindo créditos grátis
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">SMS Enviadas</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics?.totalSMSSent.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                Todas as mensagens enviadas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Créditos Grátis</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics?.totalFreeCredits.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                Boas-vindas e promoções
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Margem de Lucro</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={cn(
-                "text-2xl font-bold",
-                (metrics?.profitMargin || 0) > 50 ? "text-green-600" : 
-                (metrics?.profitMargin || 0) > 20 ? "text-yellow-600" : "text-red-600"
-              )}>
-                {metrics?.profitMargin.toFixed(1)}%
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Estimativa baseada em custos
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="countries" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="countries">Por País</TabsTrigger>
-            <TabsTrigger value="packages">Pacotes</TabsTrigger>
-            <TabsTrigger value="alerts">Alertas</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="countries" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  SMS por País
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(metrics?.smsByCountry || {}).map(([country, data]: [string, any]) => {
-                    const costData = metrics?.costEstimate[country];
-                    const avgCostPerSMS = costData ? (costData.cost / data.count) : 0;
-                    
-                    return (
-                      <div key={country} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="space-y-1">
-                          <div className="font-medium">{country}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {data.count.toLocaleString()} SMS • Multiplicador: {data.multiplier}x
-                          </div>
-                        </div>
-                        <div className="text-right space-y-1">
-                          <div className="font-medium">{data.credits.toLocaleString()} créditos</div>
-                          <div className="text-sm text-muted-foreground">
-                            €{avgCostPerSMS.toFixed(4)} por SMS
-                          </div>
+              <div className="space-y-4">
+                {Object.entries(metrics?.smsByCountry || {}).map(([country, data]: [string, any]) => {
+                  const costData = metrics?.costEstimate[country];
+                  const avgCostPerSMS = costData ? (costData.cost / data.count) : 0;
+                  
+                  return (
+                    <div key={country} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="space-y-1">
+                        <div className="font-medium">{country}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {data.count.toLocaleString()} SMS • Multiplicador: {data.multiplier}x
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="packages" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Análise de Pacotes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {metrics?.packageStats.map((pkg, index) => (
-                    <div key={index} className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{pkg.name}</h3>
-                        <Badge variant="outline">{pkg.credits.toLocaleString()} créditos</Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <div className="text-muted-foreground">Preço</div>
-                          <div className="font-medium">{pkg.price.toLocaleString()} Kz</div>
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground">Vendidos</div>
-                          <div className="font-medium">{pkg.sold}</div>
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground">Receita</div>
-                          <div className="font-medium">{pkg.revenue.toLocaleString()} Kz</div>
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground">Kz por crédito</div>
-                          <div className="font-medium">{pkg.pricePerCredit.toFixed(2)}</div>
+                      <div className="text-right space-y-1">
+                        <div className="font-medium">{data.credits.toLocaleString()} créditos</div>
+                        <div className="text-sm text-muted-foreground">
+                          €{avgCostPerSMS.toFixed(4)} por SMS
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="alerts" className="space-y-4">
-            <div className="space-y-4">
-              {/* Alerta de margem baixa */}
-              {(metrics?.profitMargin || 0) < 20 && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Margem de lucro baixa:</strong> A margem atual de {metrics?.profitMargin.toFixed(1)}% 
-                    está abaixo do recomendado (20%). Considere ajustar preços ou renegociar custos.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {/* Alerta de países com alta variação de custo */}
-              {Object.entries(metrics?.smsByCountry || {}).map(([country, data]: [string, any]) => {
-                if (data.multiplier > 2) {
-                  return (
-                    <Alert key={country}>
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Custo elevado - {country}:</strong> Multiplicador de {data.multiplier}x 
-                        pode impactar a rentabilidade. Monitorar demanda vs margem.
-                      </AlertDescription>
-                    </Alert>
                   );
-                }
-                return null;
-              })}
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              {/* Info sobre créditos grátis */}
+        <TabsContent value="packages" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Análise de Pacotes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {metrics?.packageStats.map((pkg, index) => (
+                  <div key={index} className="p-4 border rounded-lg space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium">{pkg.name}</h3>
+                      <Badge variant="outline">{pkg.credits.toLocaleString()} créditos</Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <div className="text-muted-foreground">Preço</div>
+                        <div className="font-medium">{pkg.price.toLocaleString()} Kz</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Vendidos</div>
+                        <div className="font-medium">{pkg.sold}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Receita</div>
+                        <div className="font-medium">{pkg.revenue.toLocaleString()} Kz</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Kz por crédito</div>
+                        <div className="font-medium">{pkg.pricePerCredit.toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="alerts" className="space-y-4">
+          <div className="space-y-4">
+            {/* Alerta de margem baixa */}
+            {(metrics?.profitMargin || 0) < 20 && (
               <Alert>
-                <CreditCard className="h-4 w-4" />
+                <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Créditos grátis:</strong> {metrics?.totalFreeCredits.toLocaleString()} créditos 
-                  foram oferecidos gratuitamente. Estes não são contabilizados na receita mas 
-                  representam custos operacionais.
+                  <strong>Margem de lucro baixa:</strong> A margem atual de {metrics?.profitMargin.toFixed(1)}% 
+                  está abaixo do recomendado (20%). Considere ajustar preços ou renegociar custos.
                 </AlertDescription>
               </Alert>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AdminLayout>
+            )}
+
+            {/* Alerta de países com alta variação de custo */}
+            {Object.entries(metrics?.smsByCountry || {}).map(([country, data]: [string, any]) => {
+              if (data.multiplier > 2) {
+                return (
+                  <Alert key={country}>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Custo elevado - {country}:</strong> Multiplicador de {data.multiplier}x 
+                      pode impactar a rentabilidade. Monitorar demanda vs margem.
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+              return null;
+            })}
+
+            {/* Info sobre créditos grátis */}
+            <Alert>
+              <CreditCard className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Créditos grátis:</strong> {metrics?.totalFreeCredits.toLocaleString()} créditos 
+                foram oferecidos gratuitamente. Estes não são contabilizados na receita mas 
+                representam custos operacionais.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
