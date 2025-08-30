@@ -32,6 +32,7 @@ import {
   LazyUserSettings,
   LazyComingSoon,
   LazyAdminDashboard,
+  LazyAdminFinanceiro,
   LazyAdminUsers,
   LazyAdminPackages,
   LazyAdminTransactions,
@@ -180,6 +181,7 @@ function App() {
                 }
               >
                 <Route index element={<LazyAdminDashboard />} />
+                <Route path="financeiro" element={<LazyAdminFinanceiro />} />
                 <Route path="users" element={<LazyAdminUsers />} />
                 <Route path="packages" element={<LazyAdminPackages />} />
                 <Route path="transactions" element={<LazyAdminTransactions />} />

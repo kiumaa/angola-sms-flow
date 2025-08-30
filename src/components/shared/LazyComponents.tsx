@@ -26,6 +26,7 @@ export const LazyComingSoon = lazy(() => import("@/pages/ComingSoon"));
 
 // Admin Components
 export const LazyAdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+export const LazyAdminFinanceiro = lazy(() => import("@/pages/AdminFinanceiro"));
 export const LazyAdminUsers = lazy(() => import("@/pages/AdminUsers"));
 export const LazyAdminPackages = lazy(() => import("@/pages/AdminPackages"));
 export const LazyAdminSettings = lazy(() => import("@/pages/AdminSettings"));

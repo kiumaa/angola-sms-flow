@@ -84,6 +84,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   
   // Financeiro
   {
+    key: 'financeiro',
+    label: 'Painel Financeiro',
+    href: '/admin/financeiro',
+    icon: DollarSign,
+    category: 'financial'
+  },
+  {
     key: 'packages',
     label: 'Pacotes de Créditos',
     href: '/admin/packages',

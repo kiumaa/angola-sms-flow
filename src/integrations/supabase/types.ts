@@ -197,6 +197,8 @@ export type Database = {
           campaign_id: string
           contact_id: string | null
           cost_credits: number | null
+          country_code: string | null
+          credits_multiplier: number | null
           delivered_at: string | null
           error_code: string | null
           error_detail: string | null
@@ -216,6 +218,8 @@ export type Database = {
           campaign_id: string
           contact_id?: string | null
           cost_credits?: number | null
+          country_code?: string | null
+          credits_multiplier?: number | null
           delivered_at?: string | null
           error_code?: string | null
           error_detail?: string | null
@@ -235,6 +239,8 @@ export type Database = {
           campaign_id?: string
           contact_id?: string | null
           cost_credits?: number | null
+          country_code?: string | null
+          credits_multiplier?: number | null
           delivered_at?: string | null
           error_code?: string | null
           error_detail?: string | null
@@ -516,6 +522,36 @@ export type Database = {
         }
         Relationships: []
       }
+      country_pricing: {
+        Row: {
+          country_code: string
+          country_name: string
+          created_at: string
+          credits_multiplier: number
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          country_code: string
+          country_name: string
+          created_at?: string
+          credits_multiplier?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          credits_multiplier?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_adjustments: {
         Row: {
           adjustment_type: string
@@ -523,6 +559,7 @@ export type Database = {
           created_at: string
           delta: number
           id: string
+          is_free_credit: boolean | null
           new_balance: number
           previous_balance: number
           reason: string
@@ -534,6 +571,7 @@ export type Database = {
           created_at?: string
           delta: number
           id?: string
+          is_free_credit?: boolean | null
           new_balance: number
           previous_balance: number
           reason: string
@@ -545,6 +583,7 @@ export type Database = {
           created_at?: string
           delta?: number
           id?: string
+          is_free_credit?: boolean | null
           new_balance?: number
           previous_balance?: number
           reason?: string
@@ -830,7 +869,9 @@ export type Database = {
         Row: {
           bulksms_message_id: string | null
           contact_id: string | null
+          country_code: string | null
           created_at: string
+          credits_multiplier: number | null
           delivered_at: string | null
           error_code: string | null
           error_detail: string | null
@@ -845,7 +886,9 @@ export type Database = {
         Insert: {
           bulksms_message_id?: string | null
           contact_id?: string | null
+          country_code?: string | null
           created_at?: string
+          credits_multiplier?: number | null
           delivered_at?: string | null
           error_code?: string | null
           error_detail?: string | null
@@ -860,7 +903,9 @@ export type Database = {
         Update: {
           bulksms_message_id?: string | null
           contact_id?: string | null
+          country_code?: string | null
           created_at?: string
+          credits_multiplier?: number | null
           delivered_at?: string | null
           error_code?: string | null
           error_detail?: string | null
@@ -1070,7 +1115,9 @@ export type Database = {
           campaign_id: string | null
           completed_at: string | null
           cost_credits: number | null
+          country_code: string | null
           created_at: string
+          credits_multiplier: number | null
           delivered_at: string | null
           error_code: string | null
           error_message: string | null
@@ -1091,7 +1138,9 @@ export type Database = {
           campaign_id?: string | null
           completed_at?: string | null
           cost_credits?: number | null
+          country_code?: string | null
           created_at?: string
+          credits_multiplier?: number | null
           delivered_at?: string | null
           error_code?: string | null
           error_message?: string | null
@@ -1112,7 +1161,9 @@ export type Database = {
           campaign_id?: string | null
           completed_at?: string | null
           cost_credits?: number | null
+          country_code?: string | null
           created_at?: string
+          credits_multiplier?: number | null
           delivered_at?: string | null
           error_code?: string | null
           error_message?: string | null

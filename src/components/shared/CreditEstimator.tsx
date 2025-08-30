@@ -2,23 +2,29 @@ import { useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calculator, CreditCard, Users, AlertTriangle } from "lucide-react";
+import { Calculator, CreditCard, Users, AlertTriangle, Globe } from "lucide-react";
 import { calculateSMSSegments } from "@/lib/smsUtils";
 import { cn } from "@/lib/utils";
+import { useCountryPricing } from "@/hooks/useCountryPricing";
+import { analyzePhoneNumbersCosts, formatCostBreakdown } from "@/lib/countryPricingUtils";
 
 interface CreditEstimatorProps {
   message: string;
   recipientCount: number;
   userCredits: number;
   className?: string;
+  phoneNumbers?: string[]; // Lista de números para análise de país
 }
 
 export function CreditEstimator({ 
   message, 
   recipientCount, 
   userCredits, 
-  className 
+  className,
+  phoneNumbers = []
 }: CreditEstimatorProps) {
+  const { pricing, loading: pricingLoading } = useCountryPricing();
+  
   const estimation = useMemo(() => {
     if (!message || recipientCount === 0) {
       return {
@@ -26,23 +32,35 @@ export function CreditEstimator({
         totalCredits: 0,
         costPerSms: 1,
         canAfford: true,
-        remainingCredits: userCredits
+        remainingCredits: userCredits,
+        costAnalysis: null
       };
     }
 
     const segmentInfo = calculateSMSSegments(message);
-    const totalCredits = segmentInfo.segments * recipientCount;
+    const baseCreditsPerSms = segmentInfo.segments;
+    
+    // Análise de custos por país se temos números específicos
+    let costAnalysis = null;
+    let totalCredits = baseCreditsPerSms * recipientCount;
+    
+    if (phoneNumbers.length > 0 && pricing.length > 0) {
+      costAnalysis = analyzePhoneNumbersCosts(phoneNumbers, pricing);
+      totalCredits = costAnalysis.totalCredits * baseCreditsPerSms;
+    }
+    
     const canAfford = totalCredits <= userCredits;
     const remainingCredits = userCredits - totalCredits;
 
     return {
       segmentInfo,
       totalCredits,
-      costPerSms: segmentInfo.segments,
+      costPerSms: baseCreditsPerSms,
       canAfford,
-      remainingCredits
+      remainingCredits,
+      costAnalysis
     };
-  }, [message, recipientCount, userCredits]);
+  }, [message, recipientCount, userCredits, phoneNumbers, pricing]);
 
   const creditUsagePercentage = userCredits > 0 ? 
     Math.min((estimation.totalCredits / userCredits) * 100, 100) : 0;
@@ -70,11 +88,38 @@ export function CreditEstimator({
 
         {/* Cost per SMS */}
         <div className="flex items-center justify-between text-sm">
-          <span>Custo por SMS:</span>
+          <span>Custo base por SMS:</span>
           <Badge variant={estimation.segmentInfo.segments > 1 ? "destructive" : "default"}>
             {estimation.costPerSms} crédito{estimation.costPerSms > 1 ? 's' : ''}
           </Badge>
         </div>
+
+        {/* Breakdown por país se disponível */}
+        {estimation.costAnalysis && (
+          <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Globe className="h-4 w-4" />
+              <span>Custos por País:</span>
+            </div>
+            {estimation.costAnalysis.breakdown.map((item, index) => (
+              <div key={index} className="flex items-center justify-between text-xs">
+                <span>{item.countryName}: {item.count} SMS</span>
+                <Badge variant={item.multiplier > 1 ? "secondary" : "outline"} className="text-xs">
+                  {item.totalCredits * estimation.costPerSms} créditos
+                  {item.multiplier > 1 && ` (${item.multiplier}x)`}
+                </Badge>
+              </div>
+            ))}
+            {estimation.costAnalysis.hasMultipliers && (
+              <div className="flex items-start gap-2 p-2 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded">
+                <AlertTriangle className="h-3 w-3 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-amber-700 dark:text-amber-300">
+                  Alguns destinos têm custos diferenciados
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Total cost */}
         <div className="flex items-center justify-between text-sm font-medium">
