@@ -1040,9 +1040,7 @@ export type Database = {
       }
       sms_configurations: {
         Row: {
-          api_token_id: string | null
           api_token_id_secret_name: string | null
-          api_token_secret: string | null
           api_token_secret_name: string | null
           balance: number | null
           created_at: string
@@ -1054,9 +1052,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          api_token_id?: string | null
           api_token_id_secret_name?: string | null
-          api_token_secret?: string | null
           api_token_secret_name?: string | null
           balance?: number | null
           created_at?: string
@@ -1068,9 +1064,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          api_token_id?: string | null
           api_token_id_secret_name?: string | null
-          api_token_secret?: string | null
           api_token_secret_name?: string | null
           balance?: number | null
           created_at?: string
@@ -1500,6 +1494,10 @@ export type Database = {
           target_user_id: string
         }
         Returns: boolean
+      }
+      validate_secure_sms_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       validate_sms_configuration: {
         Args: { config_id: string }
