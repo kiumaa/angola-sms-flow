@@ -178,9 +178,6 @@ Valor: ${(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz
               <Badge className="bg-green-500/20 text-green-400 px-6 py-3 text-lg">
                 Pedido #{bankDetails.reference}
               </Badge>
-              <Badge className="bg-blue-500/20 text-blue-400 px-6 py-3 text-lg">
-                {(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz
-              </Badge>
             </motion.div>
           </CardContent>
         </Card>
