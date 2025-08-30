@@ -64,12 +64,6 @@ export const EnhancedOrderSummary = ({ selectedPackage, userCredits = 0 }: Enhan
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Preço por SMS:</span>
-              <span className="font-medium">
-                {pricePerSMS.toFixed(2)} Kz
-              </span>
-            </div>
-            <div className="flex justify-between">
               <span className="text-muted-foreground">Validade:</span>
               <span className="font-medium">{validityDays} dias</span>
             </div>
