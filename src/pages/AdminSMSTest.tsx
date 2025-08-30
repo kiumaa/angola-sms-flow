@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Send, TestTube, CheckCircle, XCircle, Clock, Zap } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import CountryCodeSelector from '@/components/admin/CountryCodeSelector';
+import SMSFunctionalityTest from '@/components/admin/SMSFunctionalityTest';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TestResult {
   id: string;
@@ -206,6 +208,19 @@ const AdminSMSTest = () => {
         </p>
       </div>
 
+      {/* Tabs for different test types */}
+      <Tabs defaultValue="comprehensive" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="comprehensive">Teste Completo</TabsTrigger>
+          <TabsTrigger value="manual">Teste Manual</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="comprehensive" className="space-y-6">
+          <SMSFunctionalityTest />
+        </TabsContent>
+        
+        <TabsContent value="manual" className="space-y-6">
+
       {/* Test Form */}
       <Card>
         <CardHeader>
@@ -376,6 +391,8 @@ const AdminSMSTest = () => {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
