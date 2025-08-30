@@ -63,10 +63,6 @@ export const EnhancedOrderSummary = ({ selectedPackage, userCredits = 0 }: Enhan
                 {selectedPackage.credits.toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Validade:</span>
-              <span className="font-medium">{validityDays} dias</span>
-            </div>
           </div>
         </motion.div>
 
