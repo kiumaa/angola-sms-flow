@@ -123,7 +123,7 @@ Valor: ${(transaction.amount_kwanza / 1000).toFixed(0)}.000 Kz
     { label: "Banco", value: bankDetails.bank, field: "banco", icon: CreditCard },
     { label: "Titular", value: bankDetails.holder, field: "titular", icon: Shield },
     { label: "Conta", value: bankDetails.account, field: "conta", icon: Copy },
-    { label: "IBAN", value: bankDetails.iban, field: "iban", icon: Copy },
+    { label: "IBAN", value: `AO06 ${bankDetails.iban}`, field: "iban", icon: Copy },
     { label: "Referência", value: bankDetails.reference, field: "referencia", icon: AlertCircle }
   ];
 
