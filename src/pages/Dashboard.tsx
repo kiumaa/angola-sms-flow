@@ -341,17 +341,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/quick-send")}>
-              <CardContent className="p-4 text-center">
-                <div className="p-2 bg-green-500/10 rounded-lg w-fit mx-auto mb-2">
-                  <Zap className="h-5 w-5 text-green-500" />
-                </div>
-                <h3 className="font-medium text-sm">Envio Instantâneo</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Rápido e confiável
-                </p>
-              </CardContent>
-            </Card>
             </div>
           </div>
         </div>
