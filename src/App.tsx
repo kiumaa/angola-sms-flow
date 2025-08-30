@@ -13,7 +13,7 @@ import { ConsentProvider } from "./components/shared/ConsentProvider";
 import AdminLayout from "./components/layout/AdminLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useThemeAwareFavicon } from "./hooks/useThemeAwareFavicon";
-import { usePageMetaTags } from "./hooks/usePageMetaTags";
+import { MetaTagsProvider } from "./components/shared/MetaTagsProvider";
 
 // Import lazy components from the centralized file
 import {
@@ -58,9 +58,6 @@ function App() {
   // Initialize theme-aware favicon
   useThemeAwareFavicon();
   
-  // Apply page-specific meta tags
-  usePageMetaTags();
-  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -75,7 +72,8 @@ function App() {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <BrandProvider>
+                <MetaTagsProvider>
+                  <BrandProvider>
                   <ConsentProvider>
                     <Suspense fallback={<MessageSendingLoader />}>
             <Routes>
@@ -210,7 +208,8 @@ function App() {
             </Routes>
                     </Suspense>
                   </ConsentProvider>
-                </BrandProvider>
+                  </BrandProvider>
+                </MetaTagsProvider>
               </BrowserRouter>
             </TooltipProvider>
           </ThemeProvider>
