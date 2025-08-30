@@ -189,7 +189,7 @@ export const EnhancedPaymentInstructions = ({
                   { label: "Banco", value: bankDetails.bank, field: "banco" },
                   { label: "Titular", value: bankDetails.holder, field: "titular" },
                   { label: "Conta", value: bankDetails.account, field: "conta" },
-                  { label: "IBAN", value: bankDetails.iban, field: "iban" },
+                  { label: "IBAN", value: `AO06 ${bankDetails.iban}`, field: "iban" },
                   { label: "Referência", value: bankDetails.reference, field: "referencia" }
                 ].map((item, index) => (
                   <motion.div 
