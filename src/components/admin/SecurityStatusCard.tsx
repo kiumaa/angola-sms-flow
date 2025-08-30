@@ -73,20 +73,20 @@ export const SecurityStatusCard: React.FC<SecurityStatusCardProps> = ({ classNam
             </Badge>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
             <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <CheckCircle className="w-5 h-5 text-green-600" />
               <div>
-                <p className="font-medium text-amber-900 dark:text-amber-100">
-                  Final Cleanup Pending
+                <p className="font-medium text-green-900 dark:text-green-100">
+                  Security Migration Complete
                 </p>
-                <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Remove old credential columns after verification
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Plaintext credentials permanently removed
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className="border-amber-500 text-amber-700">
-              Pending
+            <Badge variant="outline" className="border-green-500 text-green-700">
+              Completed
             </Badge>
           </div>
         </div>

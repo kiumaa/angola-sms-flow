@@ -206,8 +206,9 @@ export default function AdminSMSConfiguration() {
         }
 
         if (data) {
-          setApiTokenId(data.api_token_id || '');
-          setApiTokenSecret(data.api_token_secret || '');
+          // Configuração agora usa apenas secrets seguros
+          setApiTokenId(''); // Limpar pois agora usa secrets
+          setApiTokenSecret(''); // Limpar pois agora usa secrets
           setConnectionStatus('success');
           
           // Usar saldo salvo se disponível e recente (menos de 1 hora)
