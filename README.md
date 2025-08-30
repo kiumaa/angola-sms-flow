@@ -15,7 +15,7 @@ Sistema completo de SMS Marketing para Angola com autenticação OTP, campanhas 
 - ✅ Monitoramento em tempo real
 - ✅ Dashboard administrativo completo
 - ✅ Sistema de créditos e transações
-- ✅ Gateways múltiplos (BulkSMS, Africa's Talking)
+- ✅ Gateway SMS (BulkSMS)
 - ✅ Analytics avançado com exportação
 - ✅ Notificações push em tempo real
 - ✅ Cache inteligente e otimizações
@@ -24,7 +24,7 @@ Sistema completo de SMS Marketing para Angola com autenticação OTP, campanhas 
 
 **Frontend:** React 18 + TypeScript + Tailwind CSS + shadcn/ui  
 **Backend:** Supabase (PostgreSQL + Edge Functions)  
-**SMS:** BulkSMS, Africa's Talking  
+**SMS:** BulkSMS  
 **Deploy:** Lovable, Vercel, Netlify
 
 ## 📋 Configuração
