@@ -528,8 +528,10 @@ export type Database = {
           country_name: string
           created_at: string
           credits_multiplier: number
+          gateway_cost_multiplier: Json | null
           id: string
           is_active: boolean
+          preferred_gateway: string | null
           updated_at: string
         }
         Insert: {
@@ -537,8 +539,10 @@ export type Database = {
           country_name: string
           created_at?: string
           credits_multiplier?: number
+          gateway_cost_multiplier?: Json | null
           id?: string
           is_active?: boolean
+          preferred_gateway?: string | null
           updated_at?: string
         }
         Update: {
@@ -546,8 +550,10 @@ export type Database = {
           country_name?: string
           created_at?: string
           credits_multiplier?: number
+          gateway_cost_multiplier?: Json | null
           id?: string
           is_active?: boolean
+          preferred_gateway?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -697,6 +703,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gateway_routing_rules: {
+        Row: {
+          cost_threshold: number | null
+          country_code: string
+          created_at: string | null
+          fallback_gateway: string | null
+          id: string
+          is_active: boolean | null
+          primary_gateway: string
+          priority_order: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          cost_threshold?: number | null
+          country_code: string
+          created_at?: string | null
+          fallback_gateway?: string | null
+          id?: string
+          is_active?: boolean | null
+          primary_gateway: string
+          priority_order?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          cost_threshold?: number | null
+          country_code?: string
+          created_at?: string | null
+          fallback_gateway?: string | null
+          id?: string
+          is_active?: boolean | null
+          primary_gateway?: string
+          priority_order?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       message_templates: {
         Row: {
@@ -1118,7 +1160,9 @@ export type Database = {
           campaign_id: string | null
           completed_at: string | null
           cost_credits: number | null
+          cost_optimization: boolean | null
           country_code: string | null
+          country_detected: string | null
           created_at: string
           credits_multiplier: number | null
           delivered_at: string | null
@@ -1126,12 +1170,14 @@ export type Database = {
           error_message: string | null
           fallback_attempted: boolean | null
           gateway_message_id: string | null
+          gateway_priority: string | null
           gateway_used: string | null
           id: string
           message: string
           original_gateway: string | null
           payload: Json | null
           phone_number: string
+          routing_decision: Json | null
           sent_at: string | null
           status: string | null
           updated_at: string | null
@@ -1141,7 +1187,9 @@ export type Database = {
           campaign_id?: string | null
           completed_at?: string | null
           cost_credits?: number | null
+          cost_optimization?: boolean | null
           country_code?: string | null
+          country_detected?: string | null
           created_at?: string
           credits_multiplier?: number | null
           delivered_at?: string | null
@@ -1149,12 +1197,14 @@ export type Database = {
           error_message?: string | null
           fallback_attempted?: boolean | null
           gateway_message_id?: string | null
+          gateway_priority?: string | null
           gateway_used?: string | null
           id?: string
           message: string
           original_gateway?: string | null
           payload?: Json | null
           phone_number: string
+          routing_decision?: Json | null
           sent_at?: string | null
           status?: string | null
           updated_at?: string | null
@@ -1164,7 +1214,9 @@ export type Database = {
           campaign_id?: string | null
           completed_at?: string | null
           cost_credits?: number | null
+          cost_optimization?: boolean | null
           country_code?: string | null
+          country_detected?: string | null
           created_at?: string
           credits_multiplier?: number | null
           delivered_at?: string | null
@@ -1172,12 +1224,14 @@ export type Database = {
           error_message?: string | null
           fallback_attempted?: boolean | null
           gateway_message_id?: string | null
+          gateway_priority?: string | null
           gateway_used?: string | null
           id?: string
           message?: string
           original_gateway?: string | null
           payload?: Json | null
           phone_number?: string
+          routing_decision?: Json | null
           sent_at?: string | null
           status?: string | null
           updated_at?: string | null
