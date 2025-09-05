@@ -40,21 +40,16 @@ serve(async (req) => {
         });
 
         if (response.ok) {
+          const profileData = await response.json();
           status = 'online';
           
-          const balanceResponse = await fetch('https://api.bulksms.com/v1/profile/balance', {
-            headers: {
-              'Authorization': `Basic ${authString}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (balanceResponse.ok) {
-            const balanceData = await balanceResponse.json();
-            balance = balanceData.balance;
+          // O endpoint profile já contém o balance no campo credits
+          if (profileData.credits && profileData.credits.balance !== undefined) {
+            balance = profileData.credits.balance;
           }
         } else {
-          throw new Error(`BulkSMS API error: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(`BulkSMS API error: ${response.status} - ${errorData.detail || errorData.title || 'Unknown error'}`);
         }
       } else {
         status = 'online';

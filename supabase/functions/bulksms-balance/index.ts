@@ -6,39 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Função para buscar credenciais do banco de dados
-async function getBulkSMSCredentials(supabase: any) {
-  try {
-    const { data, error } = await supabase
-      .from('sms_configurations')
-      .select('api_token_id, api_token_secret')
-      .eq('gateway_name', 'bulksms')
-      .eq('is_active', true)
-      .single();
-
-    if (error) {
-      console.error('Erro ao buscar credenciais do banco:', error);
-      // Fallback para variáveis de ambiente
-      return {
-        tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
-        tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
-      };
-    }
-
-    return {
-      tokenId: data.api_token_id,
-      tokenSecret: data.api_token_secret
-    };
-  } catch (error) {
-    console.error('Erro ao conectar com banco para credenciais:', error);
-    // Fallback para variáveis de ambiente
-    return {
-      tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
-      tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
-    };
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -61,39 +28,40 @@ serve(async (req) => {
       try {
         const body = await req.json();
         console.log('Request body received:', body);
-        if (body.apiTokenId) {
+        
+        if (body.tokenId && body.tokenSecret) {
           // Usar tokens do corpo da requisição (para teste)
-          console.log('Using tokens from request body');
-          apiTokenId = body.apiTokenId;
-          apiTokenSecret = body.apiTokenSecret || '';
+          console.log('Using tokens from request body for testing');
+          apiTokenId = body.tokenId;
+          apiTokenSecret = body.tokenSecret;
         } else {
-          // Buscar credenciais do banco de dados
-          console.log('Fetching credentials from database');
-          const credentials = await getBulkSMSCredentials(supabase);
-          apiTokenId = credentials.tokenId;
-          apiTokenSecret = credentials.tokenSecret;
+          // Buscar credenciais dos Supabase Secrets
+          console.log('Using credentials from Supabase Secrets');
+          apiTokenId = Deno.env.get('BULKSMS_TOKEN_ID') || '';
+          apiTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET') || '';
         }
       } catch (e) {
         console.error('Error parsing request body:', e);
-        // Buscar credenciais do banco de dados como fallback
-        const credentials = await getBulkSMSCredentials(supabase);
-        apiTokenId = credentials.tokenId;
-        apiTokenSecret = credentials.tokenSecret;
+        // Usar credenciais dos Supabase Secrets como fallback
+        apiTokenId = Deno.env.get('BULKSMS_TOKEN_ID') || '';
+        apiTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET') || '';
       }
     } else {
-      // Para GET, sempre buscar do banco
-      const credentials = await getBulkSMSCredentials(supabase);
-      apiTokenId = credentials.tokenId;
-      apiTokenSecret = credentials.tokenSecret;
+      // Para GET, sempre usar Supabase Secrets
+      console.log('Using credentials from Supabase Secrets');
+      apiTokenId = Deno.env.get('BULKSMS_TOKEN_ID') || '';
+      apiTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET') || '';
     }
 
-    if (!apiTokenId) {
-      console.error('❌ BulkSMS Token ID não encontrado');
+    if (!apiTokenId || !apiTokenSecret) {
+      console.error('❌ BulkSMS credenciais não encontradas');
+      console.log('Available env vars:', Object.keys(Deno.env.toObject()).filter(key => key.includes('BULK')));
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'BulkSMS Token ID não configurado',
-          details: 'Configure as credenciais BulkSMS no painel administrativo'
+          error: 'BulkSMS credenciais não configuradas',
+          details: 'Configure BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET nos Supabase Secrets',
+          available_secrets: Object.keys(Deno.env.toObject()).filter(key => key.includes('BULK'))
         }),
         { 
           status: 400, 
@@ -105,8 +73,8 @@ serve(async (req) => {
     console.log(`Fetching balance using Token ID: ${apiTokenId.substring(0, 8)}...`);
     
     // Create Basic Auth with Token ID:Token Secret format
-    const authString = `${apiTokenId}:${apiTokenSecret || ''}`;
-    console.log('Auth string format:', `${apiTokenId.substring(0, 8)}:${apiTokenSecret ? '***' : '(empty)'}`);
+    const authString = `${apiTokenId}:${apiTokenSecret}`;
+    console.log('Auth string format:', `${apiTokenId.substring(0, 8)}:***`);
 
     // Consultar saldo via BulkSMS API v1 usando endpoint profile com timeout
     const controller = new AbortController();
@@ -129,12 +97,32 @@ serve(async (req) => {
     console.log('Response status:', response.status);
 
     if (response.ok && data.credits) {
+      // Atualizar balance na tabela sms_configurations se for uma chamada do sistema
+      if (req.method === 'GET') {
+        try {
+          await supabase
+            .from('sms_configurations')
+            .upsert({
+              gateway_name: 'bulksms',
+              balance: data.credits.balance || 0,
+              last_balance_check: new Date().toISOString(),
+              is_active: true,
+              credentials_encrypted: true,
+              api_token_secret_name: 'BULKSMS_TOKEN_SECRET',
+              api_token_id_secret_name: 'BULKSMS_TOKEN_ID'
+            });
+        } catch (updateError) {
+          console.error('Error updating balance in database:', updateError);
+        }
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true,
           balance: data.credits.balance || 0,
           currency: 'USD',
-          last_checked: new Date().toISOString()
+          last_checked: new Date().toISOString(),
+          quota: data.quota || null
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -145,9 +133,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: data.detail || data.error?.description || 'Failed to fetch balance',
+          error: data.detail || data.title || 'Failed to fetch balance',
           details: `HTTP ${response.status}: ${response.statusText}`,
-          api_response: data
+          api_response: data,
+          suggestion: response.status === 401 ? 'Verifique as credenciais BulkSMS' : 'Verifique a conectividade com a API BulkSMS'
         }),
         { 
           status: 400, 

@@ -15,6 +15,7 @@ import { useMultiGatewayService } from '@/hooks/useMultiGatewayService';
 import { useCountryPricing } from '@/hooks/useCountryPricing';
 import SenderIDsSection from '@/components/admin/sms/SenderIDsSection';
 import SenderIDReport from '@/components/admin/SenderIDReport';
+import BulkSMSConfigModal from '@/components/admin/BulkSMSConfigModal';
 
 export default function AdminSMSConfiguration() {
   const { toast } = useToast();
@@ -498,15 +499,23 @@ export default function AdminSMSConfiguration() {
                   )}
                   Testar Conexão
                 </Button>
+                
+                <BulkSMSConfigModal onConfigured={refreshStatuses} />
               </div>
 
               <div className="text-sm text-muted-foreground p-4 bg-blue-50 dark:bg-blue-950/20 rounded-md">
                 <p><strong>Informações importantes:</strong></p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Use o botão "Configurar BulkSMS" para testar e configurar suas credenciais</li>
                   <li>As credenciais são armazenadas de forma segura via Supabase Secrets</li>
-                  <li>O teste de conexão verifica o saldo e a autenticidade das credenciais</li>
                   <li>Após configurar, o gateway estará disponível para envio de SMS</li>
+                  <li>Verifique se BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET estão configurados nos Supabase Secrets</li>
                 </ul>
+                
+                <div className="mt-3 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded text-yellow-800 dark:text-yellow-200">
+                  <p><strong>⚠️ Erro atual:</strong> Credenciais BulkSMS não configuradas ou inválidas.</p>
+                  <p>Clique em "Configurar BulkSMS" para resolver este problema.</p>
+                </div>
               </div>
             </CardContent>
           </Card>
