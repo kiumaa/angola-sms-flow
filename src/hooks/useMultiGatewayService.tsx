@@ -48,11 +48,11 @@ export const useMultiGatewayService = () => {
     try {
       setLoading(true);
 
-      // Get gateway configurations
+      // Get gateway configurations (all gateways, not just active)
       const { data: gatewayConfigs, error: configError } = await supabase
         .from('sms_gateways')
         .select('*')
-        .eq('is_active', true);
+        .order('name');
 
       if (configError) throw configError;
 
@@ -265,6 +265,31 @@ export const useMultiGatewayService = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const toggleGatewayActive = async (gatewayName: string, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('sms_gateways')
+        .update({ is_active: isActive })
+        .eq('name', gatewayName);
+
+      if (error) throw error;
+
+      toast({
+        title: "Gateway Atualizado",
+        description: `${gatewayName} ${isActive ? 'ativado' : 'desativado'} com sucesso`,
+      });
+
+      await fetchGatewayStatuses();
+    } catch (error) {
+      console.error('Error toggling gateway status:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar status do gateway",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
     gateways,
     metrics,
@@ -272,6 +297,7 @@ export const useMultiGatewayService = () => {
     sendSMS,
     testGateway,
     updateGatewayPriority,
+    toggleGatewayActive,
     refreshStatuses: fetchGatewayStatuses
   };
 };
