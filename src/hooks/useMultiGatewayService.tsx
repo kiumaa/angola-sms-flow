@@ -7,6 +7,8 @@ export interface GatewayStatus {
   displayName: string;
   available: boolean;
   configured: boolean;
+  is_active: boolean;
+  is_primary: boolean;
   balance?: number;
   responseTime?: number;
   errorRate?: number;
@@ -51,7 +53,7 @@ export const useMultiGatewayService = () => {
       // Get gateway configurations (all gateways, not just active)
       const { data: gatewayConfigs, error: configError } = await supabase
         .from('sms_gateways')
-        .select('*')
+        .select('name, display_name, is_active, is_primary, api_endpoint, auth_type')
         .order('name');
 
       if (configError) throw configError;
@@ -75,7 +77,9 @@ export const useMultiGatewayService = () => {
             name: config.name,
             displayName: config.display_name,
             available: statusData?.status === 'online',
-            configured: true,
+            configured: statusData?.status !== 'error',
+            is_active: config.is_active,
+            is_primary: config.is_primary,
             balance: statusData?.balance,
             responseTime: statusData?.response_time,
             lastChecked: new Date().toISOString(),
@@ -87,6 +91,8 @@ export const useMultiGatewayService = () => {
             displayName: config.display_name,
             available: false,
             configured: false,
+            is_active: config.is_active,
+            is_primary: config.is_primary,
             error: error instanceof Error ? error.message : 'Unknown error',
             lastChecked: new Date().toISOString()
           });

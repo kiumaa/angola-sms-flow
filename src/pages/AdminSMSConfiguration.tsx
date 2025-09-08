@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, RefreshCw, TestTube, Loader2, Send, BarChart3, AlertTriangle, CheckCircle, AlertCircle, MessageSquare, Zap, Globe } from "lucide-react";
+import { Settings, RefreshCw, TestTube, Loader2, Send, BarChart3, AlertTriangle, CheckCircle, AlertCircle, MessageSquare, Zap, Globe, Search } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { useCountryPricing } from '@/hooks/useCountryPricing';
 import SenderIDsSection from '@/components/admin/sms/SenderIDsSection';
 import SenderIDReport from '@/components/admin/SenderIDReport';
 import BulkSMSConfigModal from '@/components/admin/BulkSMSConfigModal';
+import SMSGatewayDiagnostics from '@/components/admin/SMSGatewayDiagnostics';
 
 export default function AdminSMSConfiguration() {
   const { toast } = useToast();
@@ -35,6 +36,7 @@ export default function AdminSMSConfiguration() {
   const [availableSenderIds, setAvailableSenderIds] = useState<string[]>([]);
   const [testingGateways, setTestingGateways] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [diagnosticGateway, setDiagnosticGateway] = useState<string | null>(null);
 
   const {
     gateways,
@@ -286,8 +288,8 @@ export default function AdminSMSConfiguration() {
           {/* Gateway Status Overview */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {gateways.map((gateway) => {
-              // Verificar se o gateway está ativo
-              const isActive = gateway.available || false;
+              // Usar o campo is_active do banco de dados
+              const isActive = gateway.is_active;
               
               return (
                 <Card key={gateway.name}>
@@ -356,11 +358,21 @@ export default function AdminSMSConfiguration() {
                           Testar
                         </Button>
                         
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDiagnosticGateway(gateway.name)}
+                          title="Diagnosticar"
+                        >
+                          <Search className="h-4 w-4" />
+                        </Button>
+                        
                         {gateway.name === 'bulksms' && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setActiveTab('bulksms')}
+                            title="Configurar"
                           >
                             <Settings className="h-4 w-4" />
                           </Button>
@@ -371,6 +383,7 @@ export default function AdminSMSConfiguration() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setActiveTab('bulkgate')}
+                            title="Configurar"
                           >
                             <Settings className="h-4 w-4" />
                           </Button>
@@ -635,6 +648,16 @@ export default function AdminSMSConfiguration() {
           <SenderIDReport />
         </TabsContent>
       </Tabs>
+
+      {/* Diagnostics */}
+      {diagnosticGateway && (
+        <div className="mt-6">
+          <SMSGatewayDiagnostics 
+            gatewayName={diagnosticGateway}
+            onClose={() => setDiagnosticGateway(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }
