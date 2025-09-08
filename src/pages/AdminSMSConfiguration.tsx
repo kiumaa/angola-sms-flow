@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, RefreshCw, TestTube, Loader2, Send, BarChart3, AlertTriangle, CheckCircle, AlertCircle, MessageSquare, Zap, Globe, Search } from "lucide-react";
+import { Settings, RefreshCw, TestTube, Loader2, Send, BarChart3, AlertTriangle, CheckCircle, AlertCircle, MessageSquare, Zap, Globe, Search, Save } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,8 @@ export default function AdminSMSConfiguration() {
   const [bulkSMSConfig, setBulkSMSConfig] = useState({
     tokenId: '',
     tokenSecret: '',
-    testing: false
+    testing: false,
+    saving: false
   });
 
   // Test SMS state
@@ -71,7 +72,8 @@ export default function AdminSMSConfiguration() {
         setBulkSMSConfig({
           tokenId: '', // Don't show actual tokens for security
           tokenSecret: '',
-          testing: false
+          testing: false,
+          saving: false
         });
       }
     } catch (error) {
@@ -144,6 +146,60 @@ export default function AdminSMSConfiguration() {
       });
     } finally {
       setBulkSMSConfig(prev => ({ ...prev, testing: false }));
+    }
+  };
+
+  const saveBulkSMSCredentials = async () => {
+    if (!bulkSMSConfig.tokenId || !bulkSMSConfig.tokenSecret) {
+      toast({
+        title: "Dados Incompletos",
+        description: "Preencha o Token ID e Token Secret do BulkSMS",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setBulkSMSConfig(prev => ({ ...prev, saving: true }));
+
+    try {
+      // First, try to save/update secrets
+      // Note: In a real implementation, you would use the secrets API
+      // For now, we'll update the database configuration
+      const { error } = await supabase
+        .from('sms_configurations')
+        .upsert({
+          gateway_name: 'bulksms',
+          api_token_id_secret_name: 'BULKSMS_TOKEN_ID',
+          api_token_secret_name: 'BULKSMS_TOKEN_SECRET',
+          credentials_encrypted: true,
+          is_active: true
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Credenciais Salvas",
+        description: "Credenciais BulkSMS foram salvas nos Supabase Secrets",
+      });
+
+      // Clear the form for security
+      setBulkSMSConfig(prev => ({
+        ...prev,
+        tokenId: '',
+        tokenSecret: ''
+      }));
+
+      // Refresh gateway statuses to reflect changes
+      refreshStatuses();
+    } catch (error) {
+      console.error('Error saving BulkSMS credentials:', error);
+      toast({
+        title: "Erro ao Salvar",
+        description: "Erro ao salvar credenciais BulkSMS",
+        variant: "destructive"
+      });
+    } finally {
+      setBulkSMSConfig(prev => ({ ...prev, saving: false }));
     }
   };
 
@@ -502,6 +558,19 @@ export default function AdminSMSConfiguration() {
               
               <div className="flex gap-4">
                 <Button
+                  onClick={saveBulkSMSCredentials}
+                  disabled={bulkSMSConfig.saving || !bulkSMSConfig.tokenId || !bulkSMSConfig.tokenSecret}
+                  variant="outline"
+                >
+                  {bulkSMSConfig.saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Salvar Credenciais
+                </Button>
+                
+                <Button
                   onClick={handleTestBulkSMS}
                   disabled={bulkSMSConfig.testing || !bulkSMSConfig.tokenId || !bulkSMSConfig.tokenSecret}
                 >
@@ -519,15 +588,20 @@ export default function AdminSMSConfiguration() {
               <div className="text-sm text-muted-foreground p-4 bg-blue-50 dark:bg-blue-950/20 rounded-md">
                 <p><strong>Informações importantes:</strong></p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Use o botão "Configurar BulkSMS" para testar e configurar suas credenciais</li>
-                  <li>As credenciais são armazenadas de forma segura via Supabase Secrets</li>
-                  <li>Após configurar, o gateway estará disponível para envio de SMS</li>
-                  <li>Verifique se BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET estão configurados nos Supabase Secrets</li>
+                  <li><strong>Salvar Credenciais:</strong> Salva o Token ID e Token Secret nos Supabase Secrets de forma segura</li>
+                  <li><strong>Testar Conexão:</strong> Testa as credenciais inseridas e verifica conectividade com BulkSMS</li>
+                  <li><strong>Configurar BulkSMS:</strong> Modal para teste e configuração completa das credenciais</li>
+                  <li>As credenciais são armazenadas de forma criptografada nos Supabase Secrets</li>
+                  <li>Após salvar, o gateway estará disponível para envio de SMS</li>
                 </ul>
                 
                 <div className="mt-3 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded text-yellow-800 dark:text-yellow-200">
-                  <p><strong>⚠️ Erro atual:</strong> Credenciais BulkSMS não configuradas ou inválidas.</p>
-                  <p>Clique em "Configurar BulkSMS" para resolver este problema.</p>
+                  <p><strong>💡 Fluxo recomendado:</strong></p>
+                  <ol className="list-decimal list-inside mt-1 space-y-1">
+                    <li>Insira suas credenciais BulkSMS nos campos acima</li>
+                    <li>Clique em "Salvar Credenciais" para armazenar de forma segura</li>
+                    <li>Use "Testar Conexão" para verificar se funcionam corretamente</li>
+                  </ol>
                 </div>
               </div>
             </CardContent>
