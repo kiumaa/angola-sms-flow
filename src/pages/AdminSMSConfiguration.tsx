@@ -175,14 +175,7 @@ export default function AdminSMSConfiguration() {
       if (data.success) {
         toast({
           title: "Credenciais Salvas",
-          description: "Credenciais BulkSMS foram salvas com sucesso",
-        });
-
-        // Show additional information about secrets setup
-        toast({
-          title: "Configuração de Secrets",
-          description: "Configure BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET nos Supabase Secrets com os valores fornecidos.",
-          duration: 8000
+          description: data.message || "Credenciais BulkSMS foram salvas com sucesso",
         });
 
         // Clear the form for security
@@ -195,9 +188,26 @@ export default function AdminSMSConfiguration() {
         // Refresh gateway statuses to reflect changes
         refreshStatuses();
       } else {
+        // Handle specific error cases
+        let errorTitle = "Erro ao Salvar";
+        let errorDescription = data.error || "Erro ao salvar credenciais";
+        
+        if (data.error?.includes('duplicate key')) {
+          errorTitle = "Configuração Atualizada";
+          errorDescription = "Credenciais BulkSMS foram atualizadas com sucesso";
+          
+          // Clear form and refresh on successful update
+          setBulkSMSConfig(prev => ({
+            ...prev,
+            tokenId: '',
+            tokenSecret: ''
+          }));
+          refreshStatuses();
+        }
+        
         toast({
-          title: "Erro ao Salvar",
-          description: data.error || "Erro ao salvar credenciais",
+          title: errorTitle,
+          description: errorDescription,
           variant: "destructive"
         });
       }

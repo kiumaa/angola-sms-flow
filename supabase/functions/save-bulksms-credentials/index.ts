@@ -38,21 +38,48 @@ serve(async (req) => {
 
     console.log('Saving credentials to database configuration...')
 
-    // Update the SMS configuration in the database
-    const { error: configError } = await supabase
+    // First, check if configuration already exists
+    const { data: existingConfig } = await supabase
       .from('sms_configurations')
-      .upsert({
-        gateway_name: 'bulksms',
-        api_token_id_secret_name: 'BULKSMS_TOKEN_ID',
-        api_token_secret_name: 'BULKSMS_TOKEN_SECRET',
-        credentials_encrypted: true,
-        is_active: true,
-        updated_at: new Date().toISOString()
-      })
+      .select('id')
+      .eq('gateway_name', 'bulksms')
+      .single()
 
-    if (configError) {
-      console.error('Database configuration error:', configError)
-      throw configError
+    if (existingConfig) {
+      // Update existing configuration
+      const { error: updateError } = await supabase
+        .from('sms_configurations')
+        .update({
+          api_token_id_secret_name: 'BULKSMS_TOKEN_ID',
+          api_token_secret_name: 'BULKSMS_TOKEN_SECRET',
+          credentials_encrypted: true,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('gateway_name', 'bulksms')
+
+      if (updateError) {
+        console.error('Database update error:', updateError)
+        throw updateError
+      }
+      console.log('BulkSMS configuration updated successfully')
+    } else {
+      // Insert new configuration
+      const { error: insertError } = await supabase
+        .from('sms_configurations')
+        .insert({
+          gateway_name: 'bulksms',
+          api_token_id_secret_name: 'BULKSMS_TOKEN_ID',
+          api_token_secret_name: 'BULKSMS_TOKEN_SECRET',
+          credentials_encrypted: true,
+          is_active: true
+        })
+
+      if (insertError) {
+        console.error('Database insert error:', insertError)
+        throw insertError
+      }
+      console.log('BulkSMS configuration created successfully')
     }
 
     console.log('BulkSMS configuration saved successfully')
