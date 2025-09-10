@@ -162,35 +162,45 @@ export default function AdminSMSConfiguration() {
     setBulkSMSConfig(prev => ({ ...prev, saving: true }));
 
     try {
-      // First, try to save/update secrets
-      // Note: In a real implementation, you would use the secrets API
-      // For now, we'll update the database configuration
-      const { error } = await supabase
-        .from('sms_configurations')
-        .upsert({
-          gateway_name: 'bulksms',
-          api_token_id_secret_name: 'BULKSMS_TOKEN_ID',
-          api_token_secret_name: 'BULKSMS_TOKEN_SECRET',
-          credentials_encrypted: true,
-          is_active: true
-        });
+      // Call the edge function to save credentials
+      const { data, error } = await supabase.functions.invoke('save-bulksms-credentials', {
+        body: {
+          tokenId: bulkSMSConfig.tokenId,
+          tokenSecret: bulkSMSConfig.tokenSecret
+        }
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Credenciais Salvas",
-        description: "Credenciais BulkSMS foram salvas nos Supabase Secrets",
-      });
+      if (data.success) {
+        toast({
+          title: "Credenciais Salvas",
+          description: "Credenciais BulkSMS foram salvas com sucesso",
+        });
 
-      // Clear the form for security
-      setBulkSMSConfig(prev => ({
-        ...prev,
-        tokenId: '',
-        tokenSecret: ''
-      }));
+        // Show additional information about secrets setup
+        toast({
+          title: "Configuração de Secrets",
+          description: "Configure BULKSMS_TOKEN_ID e BULKSMS_TOKEN_SECRET nos Supabase Secrets com os valores fornecidos.",
+          duration: 8000
+        });
 
-      // Refresh gateway statuses to reflect changes
-      refreshStatuses();
+        // Clear the form for security
+        setBulkSMSConfig(prev => ({
+          ...prev,
+          tokenId: '',
+          tokenSecret: ''
+        }));
+
+        // Refresh gateway statuses to reflect changes
+        refreshStatuses();
+      } else {
+        toast({
+          title: "Erro ao Salvar",
+          description: data.error || "Erro ao salvar credenciais",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error('Error saving BulkSMS credentials:', error);
       toast({
