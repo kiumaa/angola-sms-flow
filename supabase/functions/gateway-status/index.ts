@@ -51,8 +51,38 @@ serve(async (req) => {
           const errorData = await response.json();
           throw new Error(`BulkSMS API error: ${response.status} - ${errorData.detail || errorData.title || 'Unknown error'}`);
         }
+      } else if (gateway_name === 'bulkgate') {
+        const apiKey = Deno.env.get("BULKGATE_API_KEY");
+        
+        if (!apiKey) {
+          throw new Error("BulkGate API key not configured");
+        }
+
+        const response = await fetch('https://portal.bulkgate.com/api/1.0/info/user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            application_id: apiKey,
+            application_token: apiKey
+          }),
+          signal: AbortSignal.timeout(5000)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            status = 'online';
+            balance = data.data.credit || 0;
+          } else {
+            throw new Error(`BulkGate API error: ${data.error?.message || 'Unknown error'}`);
+          }
+        } else {
+          throw new Error(`BulkGate API error: ${response.status}`);
+        }
       } else {
-        status = 'online';
+        throw new Error(`Unknown gateway: ${gateway_name}`);
       }
     } catch (error) {
       console.error(`Gateway ${gateway_name} check failed:`, error);

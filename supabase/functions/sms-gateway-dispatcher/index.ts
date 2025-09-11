@@ -253,6 +253,8 @@ async function sendViaBulkSMS(message: SMSMessage, tokenId: string, tokenSecret:
 
 async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMSResult> {
   try {
+    console.log(`🚀 BulkGate: Sending to ${message.to} with Sender ID: SMSAO`);
+    
     const response = await fetch('https://portal.bulkgate.com/api/1.0/simple/transactional', {
       method: 'POST',
       headers: {
@@ -263,14 +265,16 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
         application_token: apiKey,
         number: message.to,
         text: message.text,
-        sender_id: message.from,
-        sender_id_value: message.from
+        sender_id: "text", // BulkGate requires this field for text sender ID
+        sender_id_value: "SMSAO" // Always use our approved Sender ID
       })
     });
 
     const data = await response.json();
+    console.log(`📨 BulkGate Response:`, { status: response.status, data });
 
     if (response.ok && data.data && data.data.status === 'accepted') {
+      console.log(`✅ BulkGate: Message sent successfully - ID: ${data.data.sms_id}`);
       return {
         success: true,
         messageId: data.data.sms_id,
@@ -278,6 +282,7 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
         cost: 1 // Default cost
       };
     } else {
+      console.error(`❌ BulkGate: Send failed -`, data);
       return {
         success: false,
         error: data.error?.message || 'Failed to send via BulkGate',
@@ -285,6 +290,7 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
       };
     }
   } catch (error) {
+    console.error(`💥 BulkGate: Connection error -`, error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'BulkGate connection error',
@@ -310,10 +316,19 @@ async function logSMSAttempt(
       error_message: result.finalResult.error,
       cost_credits: result.finalResult.cost || 1,
       fallback_attempted: result.fallbackUsed,
+      country_code: detectCountryFromPhone(message.to),
+      gateway_priority: result.attempts[0]?.gateway === result.finalResult.gateway ? 'primary' : 'fallback',
       payload: {
         attempts: result.attempts,
         countryDetected: detectCountryFromPhone(message.to),
-        fallbackUsed: result.fallbackUsed
+        fallbackUsed: result.fallbackUsed,
+        senderIdUsed: result.finalResult.gateway === 'bulkgate' ? 'SMSAO' : message.from,
+        routingDecision: {
+          countryCode: detectCountryFromPhone(message.to),
+          selectedGateway: result.attempts[0]?.gateway,
+          fallbackGateway: result.attempts[1]?.gateway,
+          timestamp: new Date().toISOString()
+        }
       }
     });
   } catch (error) {

@@ -17,6 +17,7 @@ import SenderIDsSection from '@/components/admin/sms/SenderIDsSection';
 import SenderIDReport from '@/components/admin/SenderIDReport';
 import BulkSMSConfigModal from '@/components/admin/BulkSMSConfigModal';
 import SMSGatewayDiagnostics from '@/components/admin/SMSGatewayDiagnostics';
+import CountryRoutingDashboard from '@/components/admin/CountryRoutingDashboard';
 
 export default function AdminSMSConfiguration() {
   const { toast } = useToast();
@@ -459,11 +460,12 @@ export default function AdminSMSConfiguration() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="bulksms">BulkSMS</TabsTrigger>
           <TabsTrigger value="bulkgate">BulkGate</TabsTrigger>
           <TabsTrigger value="routing">Roteamento</TabsTrigger>
+          <TabsTrigger value="countries">Países</TabsTrigger>
           <TabsTrigger value="testing">Testes</TabsTrigger>
           <TabsTrigger value="senderids">Sender IDs</TabsTrigger>
         </TabsList>
@@ -954,6 +956,46 @@ export default function AdminSMSConfiguration() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Countries Tab - Country-based routing dashboard */}
+        <TabsContent value="countries" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Roteamento por País</h2>
+              <p className="text-muted-foreground">
+                Visualizar como as mensagens são roteadas automaticamente baseado no país de destino
+              </p>
+            </div>
+            <Globe className="h-8 w-8 text-muted-foreground" />
+          </div>
+
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  Configuração Angola
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg">
+                  <div className="text-green-700 dark:text-green-400 space-y-2">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <span>🇦🇴 Angola (+244):</span>
+                      <Badge variant="default">BulkGate + Sender ID "SMSAO"</Badge>
+                    </div>
+                    <p className="text-sm">
+                      Todas as mensagens para números de Angola são automaticamente enviadas via BulkGate 
+                      usando o Sender ID "SMSAO" pré-aprovado, garantindo máxima entregabilidade.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <CountryRoutingDashboard />
+          </div>
         </TabsContent>
 
         {/* Sender IDs Tab */}

@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Send } from "lucide-react";
+import { Send, TestTube, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { validateAngolanPhone, normalizeAngolanPhone, validateInternationalPhone, normalizeInternationalPhone, sanitizeInput } from '@/lib/validation';
+import { Badge } from '@/components/ui/badge';
+import AngolaTestPanel from './AngolaTestPanel';
 
 // Helper function to detect country from phone number
 const detectCountryFromPhone = (phoneNumber: string): string => {
@@ -165,13 +167,19 @@ const SMSGatewayTester = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Testar Gateway SMS</CardTitle>
-        <CardDescription>
-          Envie um SMS de teste para verificar a configuração do gateway
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-6">
+      <AngolaTestPanel />
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube className="h-5 w-5" />
+            Teste Geral de Gateway SMS
+          </CardTitle>
+          <CardDescription>
+            Teste o envio de SMS para qualquer país e veja qual gateway é usado automaticamente
+          </CardDescription>
+        </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -288,6 +296,7 @@ const SMSGatewayTester = () => {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 };
 
