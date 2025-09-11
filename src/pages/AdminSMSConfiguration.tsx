@@ -29,6 +29,13 @@ export default function AdminSMSConfiguration() {
     saving: false
   });
 
+  // BulkGate Configuration
+  const [bulkGateConfig, setBulkGateConfig] = useState({
+    apiKey: '',
+    testing: false,
+    saving: false
+  });
+
   // Test SMS state
   const [testPhone, setTestPhone] = useState('');
   const [testSenderId, setTestSenderId] = useState('SMSAO');
@@ -223,6 +230,107 @@ export default function AdminSMSConfiguration() {
     }
   };
 
+  const handleTestBulkGate = async () => {
+    if (!bulkGateConfig.apiKey) {
+      toast({
+        title: "Configuração Incompleta",
+        description: "Preencha a API Key do BulkGate",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setBulkGateConfig(prev => ({ ...prev, testing: true }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('bulkgate-balance', {
+        body: {
+          apiKey: bulkGateConfig.apiKey
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        await saveBulkGateCredentials();
+        toast({
+          title: "Teste Bem-sucedido",
+          description: `Conexão estabelecida. Saldo: ${data.balance} ${data.currency}`,
+        });
+      } else {
+        toast({
+          title: "Erro no Teste",
+          description: data.error || "Falha na conexão com BulkGate",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('BulkGate test error:', error);
+      toast({
+        title: "Erro no Teste",
+        description: "Erro ao testar conexão BulkGate",
+        variant: "destructive"
+      });
+    } finally {
+      setBulkGateConfig(prev => ({ ...prev, testing: false }));
+    }
+  };
+
+  const saveBulkGateCredentials = async () => {
+    if (!bulkGateConfig.apiKey) {
+      toast({
+        title: "Dados Incompletos",
+        description: "Preencha a API Key do BulkGate",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setBulkGateConfig(prev => ({ ...prev, saving: true }));
+
+    try {
+      // Call the edge function to save credentials
+      const { data, error } = await supabase.functions.invoke('save-bulkgate-credentials', {
+        body: {
+          apiKey: bulkGateConfig.apiKey
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Credenciais Salvas",
+          description: data.message || "Credenciais BulkGate foram salvas com sucesso",
+        });
+
+        // Clear the form for security
+        setBulkGateConfig(prev => ({
+          ...prev,
+          apiKey: ''
+        }));
+
+        // Refresh gateway statuses to reflect changes
+        refreshStatuses();
+      } else {
+        toast({
+          title: "Erro ao Salvar",
+          description: data.error || "Erro ao salvar credenciais",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error saving BulkGate credentials:', error);
+      toast({
+        title: "Erro ao Salvar",
+        description: "Erro ao salvar credenciais BulkGate",
+        variant: "destructive"
+      });
+    } finally {
+      setBulkGateConfig(prev => ({ ...prev, saving: false }));
+    }
+  };
+
   const saveBulkSMSConfiguration = async () => {
     try {
       const { error } = await supabase
@@ -351,10 +459,11 @@ export default function AdminSMSConfiguration() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="bulksms">BulkSMS</TabsTrigger>
           <TabsTrigger value="bulkgate">BulkGate</TabsTrigger>
+          <TabsTrigger value="routing">Roteamento</TabsTrigger>
           <TabsTrigger value="testing">Testes</TabsTrigger>
           <TabsTrigger value="senderids">Sender IDs</TabsTrigger>
         </TabsList>
@@ -637,27 +746,138 @@ export default function AdminSMSConfiguration() {
                 Configuração BulkGate
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground p-4 bg-green-50 dark:bg-green-950/20 rounded-md">
-                <p><strong>BulkGate Configurado Automaticamente</strong></p>
-                <p className="mt-2">
-                  O BulkGate está configurado automaticamente via Supabase Secrets.
-                  As credenciais são gerenciadas de forma segura pelo sistema.
-                </p>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="bulkgate-api-key">API Key</Label>
+                <Input
+                  id="bulkgate-api-key"
+                  type="password"
+                  placeholder="Insira a API Key do BulkGate"
+                  value={bulkGateConfig.apiKey}
+                  onChange={(e) => setBulkGateConfig(prev => ({
+                    ...prev,
+                    apiKey: e.target.value
+                  }))}
+                />
               </div>
               
-              <div className="mt-4">
+              <div className="flex gap-4">
                 <Button
-                  onClick={() => handleTestGateway('bulkgate')}
-                  disabled={testingGateways['bulkgate']}
+                  onClick={saveBulkGateCredentials}
+                  disabled={bulkGateConfig.saving || !bulkGateConfig.apiKey}
+                  variant="outline"
                 >
-                  {testingGateways['bulkgate'] ? (
+                  {bulkGateConfig.saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Salvar Credenciais
+                </Button>
+                
+                <Button
+                  onClick={handleTestBulkGate}
+                  disabled={bulkGateConfig.testing || !bulkGateConfig.apiKey}
+                >
+                  {bulkGateConfig.testing ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : (
                     <TestTube className="h-4 w-4 mr-2" />
                   )}
-                  Testar Conexão BulkGate
+                  Testar Conexão
                 </Button>
+              </div>
+
+              <div className="text-sm text-muted-foreground p-4 bg-green-50 dark:bg-green-950/20 rounded-md">
+                <p><strong>Informações importantes:</strong></p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li><strong>Salvar Credenciais:</strong> Salva a API Key nos Supabase Secrets de forma segura</li>
+                  <li><strong>Testar Conexão:</strong> Testa as credenciais inseridas e verifica conectividade com BulkGate</li>
+                  <li>As credenciais são armazenadas de forma criptografada nos Supabase Secrets</li>
+                  <li>BulkGate é usado preferencialmente para países PALOP (Angola, Moçambique, etc.)</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Routing Tab */}
+        <TabsContent value="routing" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Regras de Roteamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground p-4 bg-blue-50 dark:bg-blue-950/20 rounded-md">
+                  <p><strong>Roteamento Automático Configurado:</strong></p>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex justify-between">
+                      <span>🇦🇴 Angola (+244):</span>
+                      <span className="font-medium">BulkGate → BulkSMS</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>🇵🇹 Portugal (+351):</span>
+                      <span className="font-medium">BulkSMS → BulkGate</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>🇲🇿 Moçambique (+258):</span>
+                      <span className="font-medium">BulkGate → BulkSMS</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>🇨🇻 Cabo Verde (+238):</span>
+                      <span className="font-medium">BulkGate → BulkSMS</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>🌍 Outros países:</span>
+                      <span className="font-medium">BulkSMS → BulkGate</span>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs">
+                    <strong>Formato:</strong> Gateway Primário → Gateway de Fallback
+                  </p>
+                </div>
+
+                {metrics && Object.keys(metrics.gatewayDistribution).length > 0 && (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <h4 className="font-medium mb-2">Distribuição por Gateway (24h)</h4>
+                      <div className="space-y-2">
+                        {Object.entries(metrics.gatewayDistribution).map(([gateway, count]) => (
+                          <div key={gateway} className="flex justify-between items-center p-2 bg-muted rounded">
+                            <span className="capitalize">{gateway}</span>
+                            <Badge variant="outline">{count} mensagens</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium mb-2">Métricas de Performance</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center p-2 bg-muted rounded">
+                          <span>Taxa de Sucesso</span>
+                          <Badge variant={metrics.successRate > 95 ? "default" : "destructive"}>
+                            {metrics.successRate.toFixed(1)}%
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-muted rounded">
+                          <span>Taxa de Fallback</span>
+                          <Badge variant={metrics.fallbackRate < 10 ? "default" : "destructive"}>
+                            {metrics.fallbackRate.toFixed(1)}%
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-muted rounded">
+                          <span>Latência Média</span>
+                          <Badge variant="outline">{metrics.averageLatency}ms</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

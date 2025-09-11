@@ -7,6 +7,29 @@ import { useToast } from "@/hooks/use-toast";
 import { Send } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { validateAngolanPhone, normalizeAngolanPhone, validateInternationalPhone, normalizeInternationalPhone, sanitizeInput } from '@/lib/validation';
+
+// Helper function to detect country from phone number
+const detectCountryFromPhone = (phoneNumber: string): string => {
+  const normalized = phoneNumber.replace(/[\s\-\(\)]/g, '');
+  
+  if (normalized.startsWith('+244') || normalized.startsWith('244')) {
+    return 'AO'; // Angola
+  }
+  
+  if (normalized.startsWith('+351') || normalized.startsWith('351')) {
+    return 'PT'; // Portugal
+  }
+
+  if (normalized.startsWith('+258') || normalized.startsWith('258')) {
+    return 'MZ'; // Mozambique
+  }
+
+  if (normalized.startsWith('+238') || normalized.startsWith('238')) {
+    return 'CV'; // Cape Verde
+  }
+
+  return 'UNKNOWN';
+};
 import CountryCodeSelector from './CountryCodeSelector';
 
 const SMSGatewayTester = () => {
@@ -76,38 +99,50 @@ const SMSGatewayTester = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Send test SMS using correct interface
-      const { data, error } = await supabase.functions.invoke('send-quick-sms', {
+      // Send test SMS using sms-gateway-dispatcher for intelligent routing
+      const { data, error } = await supabase.functions.invoke('sms-gateway-dispatcher', {
         body: {
-          recipients: [normalizeInternationalPhone(fullPhoneNumber)],
-          message: sanitizeInput(message),
-          sender_id: 'SMSAO'
+          message: {
+            to: normalizeInternationalPhone(fullPhoneNumber),
+            from: 'SMSAO',
+            text: sanitizeInput(message)
+          },
+          userId: user.data.user.id
         }
       });
 
       if (error) throw error;
 
-      // Update results based on new API response
-      const success = data.success && data.sent > 0;
+      // Update results based on gateway dispatcher response
+      const success = data.finalResult.success;
+      const gatewayUsed = data.finalResult.gateway;
+      const fallbackUsed = data.fallbackUsed;
+      
       setResults(prev => [{
         id: Date.now(),
-        gateway: 'BulkSMS',
+        gateway: `${gatewayUsed}${fallbackUsed ? ' (Fallback)' : ''}`,
         status: success ? 'success' : 'failed',
         timestamp: new Date().toISOString(),
         phone: normalizeInternationalPhone(fullPhoneNumber),
         message: sanitizeInput(message),
-        error: success ? null : (data.error || 'Unknown error'),
-        responseTime: 0, // API doesn't return this
-        sent: data.sent || 0,
-        failed: data.failed || 0,
-        credits: data.credits_debited || 0
+        error: success ? null : (data.finalResult.error || 'Unknown error'),
+        responseTime: 0,
+        sent: success ? 1 : 0,
+        failed: success ? 0 : 1,
+        credits: data.finalResult.cost || 1,
+        attempts: data.attempts.length,
+        routing: {
+          countryDetected: detectCountryFromPhone(fullPhoneNumber),
+          fallbackUsed: fallbackUsed,
+          attempts: data.attempts
+        }
       }, ...prev]);
 
       toast({
         title: success ? "SMS enviado com sucesso!" : "Falha no envio",
         description: success 
-          ? `Enviado via BulkSMS. ${data.sent} enviado(s), ${data.credits_debited} créditos gastos`
-          : `Erro: ${data.error || 'Falha na comunicação com gateway'}`,
+          ? `Enviado via ${gatewayUsed}. ${fallbackUsed ? 'Fallback usado. ' : ''}Créditos: ${data.finalResult.cost || 1}`
+          : `Erro: ${data.finalResult.error || 'Falha na comunicação com gateway'}`,
         variant: success ? "default" : "destructive",
       });
 
@@ -211,6 +246,9 @@ const SMSGatewayTester = () => {
                       Créditos
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Roteamento
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Erro
                     </th>
                   </tr>
@@ -231,6 +269,15 @@ const SMSGatewayTester = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(result.timestamp).toLocaleTimeString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.sent || 0}/{result.failed || 0}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.credits || 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {result.routing ? (
+                          <div className="text-xs">
+                            <div>País: {result.routing.countryDetected}</div>
+                            <div>Tentativas: {result.attempts}</div>
+                            {result.routing.fallbackUsed && <div className="text-orange-600">Fallback usado</div>}
+                          </div>
+                        ) : '-'}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.error || '-'}</td>
                     </tr>
                   ))}
