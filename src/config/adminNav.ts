@@ -81,6 +81,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Wifi,
     category: 'sms'
   },
+  {
+    key: 'gatewayControl',
+    label: 'Controle de Gateways',
+    href: '/admin/gateway-control',
+    icon: Settings,
+    category: 'sms'
+  },
   
   // Financeiro
   {

@@ -40,6 +40,7 @@ export const LazyAdminSMSMonitoring = lazy(() => import("@/pages/AdminSMSMonitor
 export const LazyAdminSMSTest = lazy(() => import("@/pages/AdminSMSTest"));
 export const LazyAdminSMSConfiguration = lazy(() => import("@/pages/AdminSMSConfiguration"));
 export const LazyAdminProductionMonitoring = lazy(() => import("@/pages/AdminProductionMonitoring"));
+export const LazyAdminGatewayControl = lazy(() => import("@/pages/AdminGatewayControl"));
 
 // Legal Pages
 export const LazyTerms = lazy(() => import("@/pages/legal/Terms"));

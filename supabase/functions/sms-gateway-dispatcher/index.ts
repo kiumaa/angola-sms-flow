@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface SMSMessage {
   to: string;
-  from: string;
+  from?: string;
   text: string;
   campaignId?: string;
 }
@@ -29,6 +29,8 @@ interface FallbackResult {
     timestamp: string;
   }[];
   fallbackUsed: boolean;
+  effectiveSenderId?: string;
+  overrideUsed?: string;
 }
 
 serve(async (req) => {
@@ -55,18 +57,57 @@ serve(async (req) => {
       );
     }
 
+    console.log('🚀 SMS Gateway Dispatcher called for user:', userId);
+
+    // Check for manual gateway override first
+    const { data: overrideType } = await supabase.rpc('get_active_gateway_override');
+    console.log('🎯 Active gateway override:', overrideType);
+
+    // Get effective sender ID for user
+    const { data: effectiveSenderId } = await supabase.rpc('get_effective_sender_id', {
+      _user_id: userId,
+      _requested_sender_id: message.from || null
+    });
+    console.log('📋 Effective sender ID:', effectiveSenderId);
+
+    // Update message with effective sender ID
+    const messageWithSender: SMSMessage = {
+      ...message,
+      from: effectiveSenderId || 'SMSAO'
+    };
+
     // Get gateway credentials from secrets
     const bulkSMSTokenId = Deno.env.get('BULKSMS_TOKEN_ID');
     const bulkSMSTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET');
     const bulkGateApiKey = Deno.env.get('BULKGATE_API_KEY');
 
     // Detect country from phone number
-    const countryCode = detectCountryFromPhone(message.to);
-    console.log(`📍 Country detected: ${countryCode} for number: ${message.to}`);
+    const countryCode = detectCountryFromPhone(messageWithSender.to);
+    console.log(`📍 Country detected: ${countryCode} for number: ${messageWithSender.to}`);
 
-    // Select gateway based on country
-    const selectedGateway = selectGatewayForCountry(countryCode);
-    const fallbackGateway = selectedGateway === 'bulkgate' ? 'bulksms' : 'bulkgate';
+    let selectedGateway: string;
+    let fallbackGateway: string;
+
+    // Apply manual override logic
+    if (overrideType && overrideType !== 'none') {
+      if (overrideType === 'force_bulksms') {
+        selectedGateway = 'bulksms';
+        fallbackGateway = 'bulkgate';
+        console.log('🔧 Manual override: Forcing BulkSMS');
+      } else if (overrideType === 'force_bulkgate') {
+        selectedGateway = 'bulkgate';
+        fallbackGateway = 'bulksms';
+        console.log('🔧 Manual override: Forcing BulkGate');
+      } else {
+        // Fallback to automatic routing
+        selectedGateway = selectGatewayForCountry(countryCode);
+        fallbackGateway = selectedGateway === 'bulkgate' ? 'bulksms' : 'bulkgate';
+      }
+    } else {
+      // Automatic routing
+      selectedGateway = selectGatewayForCountry(countryCode);
+      fallbackGateway = selectedGateway === 'bulkgate' ? 'bulksms' : 'bulkgate';
+    }
 
     console.log(`🎯 Selected gateway: ${selectedGateway}, Fallback: ${fallbackGateway}`);
 
@@ -77,7 +118,7 @@ serve(async (req) => {
     // Try primary gateway
     const primaryResult = await sendViaSingleGateway(
       selectedGateway,
-      message,
+      messageWithSender,
       { bulkSMSTokenId, bulkSMSTokenSecret, bulkGateApiKey }
     );
 
@@ -96,7 +137,7 @@ serve(async (req) => {
 
       const fallbackResult = await sendViaSingleGateway(
         fallbackGateway,
-        message,
+        messageWithSender,
         { bulkSMSTokenId, bulkSMSTokenSecret, bulkGateApiKey }
       );
 
@@ -109,11 +150,13 @@ serve(async (req) => {
       finalResult = fallbackResult;
     }
 
-    // Log the SMS attempt
-    await logSMSAttempt(supabase, userId, message, {
+    // Log the SMS attempt with enhanced details
+    await logSMSAttempt(supabase, userId, messageWithSender, {
       finalResult,
       attempts,
-      fallbackUsed
+      fallbackUsed,
+      effectiveSenderId: messageWithSender.from,
+      overrideUsed: overrideType && overrideType !== 'none' ? overrideType : undefined
     });
 
     // Update user credits if successful
@@ -124,7 +167,9 @@ serve(async (req) => {
     const response: FallbackResult = {
       finalResult,
       attempts,
-      fallbackUsed
+      fallbackUsed,
+      effectiveSenderId: messageWithSender.from,
+      overrideUsed: overrideType && overrideType !== 'none' ? overrideType : undefined
     };
 
     return new Response(
@@ -211,6 +256,8 @@ async function sendViaSingleGateway(
 
 async function sendViaBulkSMS(message: SMSMessage, tokenId: string, tokenSecret: string): Promise<SMSResult> {
   try {
+    console.log(`🚀 BulkSMS: Sending to ${message.to} with Sender ID: ${message.from}`);
+    
     const auth = btoa(`${tokenId}:${tokenSecret}`);
     
     const response = await fetch('https://api.bulksms.com/v1/messages', {
@@ -227,8 +274,10 @@ async function sendViaBulkSMS(message: SMSMessage, tokenId: string, tokenSecret:
     });
 
     const data = await response.json();
+    console.log(`📨 BulkSMS Response:`, { status: response.status, data });
 
     if (response.ok && data.length > 0) {
+      console.log(`✅ BulkSMS: Message sent successfully - ID: ${data[0].id}`);
       return {
         success: true,
         messageId: data[0].id,
@@ -236,6 +285,7 @@ async function sendViaBulkSMS(message: SMSMessage, tokenId: string, tokenSecret:
         cost: 1 // Default cost
       };
     } else {
+      console.error(`❌ BulkSMS: Send failed -`, data);
       return {
         success: false,
         error: data.detail || 'Failed to send via BulkSMS',
@@ -243,6 +293,7 @@ async function sendViaBulkSMS(message: SMSMessage, tokenId: string, tokenSecret:
       };
     }
   } catch (error) {
+    console.error(`💥 BulkSMS: Connection error -`, error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'BulkSMS connection error',
@@ -253,7 +304,7 @@ async function sendViaBulkSMS(message: SMSMessage, tokenId: string, tokenSecret:
 
 async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMSResult> {
   try {
-    console.log(`🚀 BulkGate: Sending to ${message.to} with Sender ID: SMSAO`);
+    console.log(`🚀 BulkGate: Sending to ${message.to} with Sender ID: ${message.from}`);
     
     const response = await fetch('https://portal.bulkgate.com/api/1.0/simple/transactional', {
       method: 'POST',
@@ -266,7 +317,7 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
         number: message.to,
         text: message.text,
         sender_id: "text", // BulkGate requires this field for text sender ID
-        sender_id_value: "SMSAO" // Always use our approved Sender ID
+        sender_id_value: message.from || "SMSAO" // Use dynamic sender ID
       })
     });
 
@@ -322,15 +373,24 @@ async function logSMSAttempt(
         attempts: result.attempts,
         countryDetected: detectCountryFromPhone(message.to),
         fallbackUsed: result.fallbackUsed,
-        senderIdUsed: result.finalResult.gateway === 'bulkgate' ? 'SMSAO' : message.from,
+        senderIdUsed: result.effectiveSenderId || 'SMSAO',
+        overrideUsed: result.overrideUsed || null,
         routingDecision: {
           countryCode: detectCountryFromPhone(message.to),
           selectedGateway: result.attempts[0]?.gateway,
           fallbackGateway: result.attempts[1]?.gateway,
+          overrideType: result.overrideUsed || 'automatic',
+          senderIdResolution: {
+            requested: message.from,
+            effective: result.effectiveSenderId,
+            source: result.effectiveSenderId === 'SMSAO' ? 'default' : 'user_approved'
+          },
           timestamp: new Date().toISOString()
         }
       }
     });
+
+    console.log('📝 SMS attempt logged with override and sender ID tracking');
   } catch (error) {
     console.error('Failed to log SMS attempt:', error);
   }
