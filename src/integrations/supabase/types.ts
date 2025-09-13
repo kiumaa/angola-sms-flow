@@ -704,6 +704,39 @@ export type Database = {
           },
         ]
       }
+      gateway_overrides: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          override_type: string
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          override_type?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          override_type?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gateway_routing_rules: {
         Row: {
           cost_threshold: number | null
@@ -1482,12 +1515,20 @@ export type Database = {
         Args: { password_text: string }
         Returns: string
       }
+      get_active_gateway_override: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_account_id: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
       get_default_sender_id: {
         Args: { account_user_id?: string }
+        Returns: string
+      }
+      get_effective_sender_id: {
+        Args: { _requested_sender_id?: string; _user_id: string }
         Returns: string
       }
       get_public_brand_settings: {
@@ -1531,6 +1572,10 @@ export type Database = {
       }
       sanitize_html_input: {
         Args: { input_text: string }
+        Returns: string
+      }
+      set_gateway_override: {
+        Args: { _expires_at?: string; _override_type: string; _reason?: string }
         Returns: string
       }
       system_health_check: {
