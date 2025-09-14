@@ -306,37 +306,66 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
   try {
     console.log(`🚀 BulkGate: Sending to ${message.to} with Sender ID: ${message.from}`);
     
+    // Parse credentials - support both formats
+    let applicationId = apiKey;
+    let applicationToken = apiKey;
+    
+    if (apiKey.includes(':')) {
+      const parts = apiKey.split(':');
+      applicationId = parts[0];
+      applicationToken = parts[1];
+      console.log(`🔑 BulkGate: Using split credentials: ${applicationId.substring(0, 4)}... / ${applicationToken.substring(0, 4)}...`);
+    } else {
+      console.log(`🔑 BulkGate: Using unified credential: ${apiKey.substring(0, 8)}...`);
+    }
+
+    // Ensure sender ID for Angola
+    const senderToUse = message.from || 'SMSAO';
+    console.log(`📤 BulkGate: Final sender ID: ${senderToUse}`);
+    
     const response = await fetch('https://portal.bulkgate.com/api/1.0/simple/transactional', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        application_id: apiKey,
-        application_token: apiKey,
-        number: message.to,
+        application_id: applicationId,
+        application_token: applicationToken,
+        number: message.to.replace('+', ''),
         text: message.text,
+        country: 'ao',
         sender_id: "text", // BulkGate requires this field for text sender ID
-        sender_id_value: message.from || "SMSAO" // Use dynamic sender ID
+        sender_id_value: senderToUse // Use dynamic sender ID
       })
     });
 
     const data = await response.json();
-    console.log(`📨 BulkGate Response:`, { status: response.status, data });
+    console.log(`📨 BulkGate Response: Status ${response.status}`);
+    console.log(`📨 BulkGate Response Data:`, JSON.stringify(data, null, 2));
 
-    if (response.ok && data.data && data.data.status === 'accepted') {
-      console.log(`✅ BulkGate: Message sent successfully - ID: ${data.data.sms_id}`);
-      return {
-        success: true,
-        messageId: data.data.sms_id,
-        gateway: 'bulkgate',
-        cost: 1 // Default cost
-      };
+    if (response.ok && data.data && Array.isArray(data.data) && data.data.length > 0) {
+      const result = data.data[0];
+      if (result.status === 'accepted') {
+        console.log(`✅ BulkGate: Message sent successfully - ID: ${result.sms_id}`);
+        return {
+          success: true,
+          messageId: result.sms_id?.toString(),
+          gateway: 'bulkgate',
+          cost: 1 // Default cost
+        };
+      } else {
+        console.error(`❌ BulkGate: Send failed -`, result);
+        return {
+          success: false,
+          error: result.error || 'Message not accepted by BulkGate',
+          gateway: 'bulkgate'
+        };
+      }
     } else {
-      console.error(`❌ BulkGate: Send failed -`, data);
+      console.error(`❌ BulkGate: API error -`, data);
       return {
         success: false,
-        error: data.error?.message || 'Failed to send via BulkGate',
+        error: data.error?.message || `BulkGate API error: ${response.status}`,
         gateway: 'bulkgate'
       };
     }

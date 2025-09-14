@@ -16,16 +16,19 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body
-    const { apiKey } = await req.json() as {
-      apiKey: string;
+    // Parse request body - support both single API key and separate credentials
+    const { apiKey, applicationId, apiToken } = await req.json() as {
+      apiKey?: string;
+      applicationId?: string;
+      apiToken?: string;
     };
 
-    if (!apiKey) {
+    // Validate input - either apiKey or both applicationId and apiToken
+    if (!apiKey && (!applicationId || !apiToken)) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'API Key é obrigatória' 
+          error: 'É necessário fornecer API Key ou applicationId + apiToken' 
         }),
         { 
           status: 400, 
@@ -34,7 +37,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('Received API Key for BulkGate configuration');
+    console.log('Received BulkGate credentials for configuration');
+    
+    // Format the credentials properly
+    const finalApiKey = apiKey || `${applicationId}:${apiToken}`;
+    console.log('Final API key format:', `${finalApiKey.substring(0, 8)}...`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
