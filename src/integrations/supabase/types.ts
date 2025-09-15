@@ -1546,11 +1546,6 @@ export type Database = {
           light_text: string
           logo_dark_url: string
           logo_light_url: string
-          og_image_url: string
-          seo_canonical: string
-          seo_description: string
-          seo_title: string
-          seo_twitter: string
           site_tagline: string
           site_title: string
         }[]
