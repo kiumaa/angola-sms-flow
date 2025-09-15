@@ -14,22 +14,49 @@ export class BulkGateGateway implements SMSGateway {
 
   async sendSingle(message: SMSMessage): Promise<SMSResult> {
     try {
-      const response = await fetch(`${this.baseUrl}/simple/transactional`, {
+      // Try v2 API first (Bearer token)
+      let response = await fetch('https://portal.bulkgate.com/api/2.0/sms/send', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          application_id: this.apiKey,
-          application_token: this.apiKey,
           number: message.to,
           text: message.text,
-          sender_id: message.from,
-          sender_id_value: message.from
+          sender_id: {
+            type: 'text',
+            value: message.from || 'SMSAO'
+          },
+          country: 'ao', // Específico para Angola
+          unicode: this.containsUnicode(message.text)
         })
       });
 
-      const data = await response.json();
+      let data = await response.json();
+
+      // Se v2 falhar, tenta v1 API como fallback
+      if (!response.ok && (response.status === 401 || response.status === 404)) {
+        const parts = this.apiKey.split(':');
+        if (parts.length === 2) {
+          response = await fetch(`${this.baseUrl}/simple/transactional`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              application_id: parts[0],
+              application_token: parts[1],
+              number: message.to,
+              text: message.text,
+              sender_id: message.from || 'SMSAO',
+              sender_id_value: message.from || 'SMSAO',
+              country: 'ao'
+            })
+          });
+          data = await response.json();
+        }
+      }
       
       if (response.ok && data.data && data.data.status === 'accepted') {
         return {
@@ -81,27 +108,51 @@ export class BulkGateGateway implements SMSGateway {
 
   async getBalance(): Promise<GatewayBalance> {
     try {
-      const response = await fetch(`${this.baseUrl}/info/user`, {
-        method: 'POST',
+      // Try v2 API first
+      let response = await fetch('https://portal.bulkgate.com/api/2.0/credit/balance', {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          application_id: this.apiKey,
-          application_token: this.apiKey
-        })
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        }
       });
 
-      const data = await response.json();
-      
-      if (response.ok && data.data) {
+      if (response.ok) {
+        const data = await response.json();
         return {
-          credits: data.data.credit || 0,
-          currency: 'EUR',
+          credits: data.balance || 0,
+          currency: data.currency || 'EUR',
           lastUpdated: new Date().toISOString()
         };
+      }
+
+      // Fallback to v1 API
+      const parts = this.apiKey.split(':');
+      if (parts.length === 2) {
+        response = await fetch(`${this.baseUrl}/info/user`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            application_id: parts[0],
+            application_token: parts[1]
+          })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.data) {
+          return {
+            credits: data.data.credit || 0,
+            currency: data.data.currency || 'EUR',
+            lastUpdated: new Date().toISOString()
+          };
+        } else {
+          throw new Error(data.error?.message || 'Failed to get balance');
+        }
       } else {
-        throw new Error(data.error?.message || 'Failed to get balance');
+        throw new Error('Invalid API key format');
       }
     } catch (error) {
       throw new Error(`Failed to get BulkGate balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -145,12 +196,27 @@ export class BulkGateGateway implements SMSGateway {
 
   async validateSenderID(senderId: string): Promise<boolean> {
     try {
-      // BulkGate allows custom sender IDs with validation
-      // For now, we'll allow alphanumeric sender IDs up to 11 characters
-      return /^[a-zA-Z0-9]{1,11}$/.test(senderId);
+      // Validação específica para Angola e BulkGate
+      // Permite sender IDs alfanuméricos até 11 caracteres
+      // Para Angola, aceita também números específicos
+      if (/^[a-zA-Z0-9]{1,11}$/.test(senderId)) {
+        return true;
+      }
+      
+      // Números específicos válidos para Angola
+      if (/^(\+244|244)?[9][0-9]{8}$/.test(senderId)) {
+        return true;
+      }
+
+      return false;
     } catch (error) {
       return false;
     }
+  }
+
+  private containsUnicode(text: string): boolean {
+    // Verifica se o texto contém caracteres especiais que requerem Unicode
+    return /[^\x00-\x7F]/.test(text);
   }
 
   async isConfigured(): Promise<boolean> {
