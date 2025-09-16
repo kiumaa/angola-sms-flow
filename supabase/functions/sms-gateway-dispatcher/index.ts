@@ -81,9 +81,14 @@ serve(async (req) => {
     const bulkSMSTokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET');
     const bulkGateApiKey = Deno.env.get('BULKGATE_API_KEY');
 
-    // Detect country from phone number
+    // Enhanced country detection with validation
     const countryCode = detectCountryFromPhone(messageWithSender.to);
-    console.log(`📍 Country detected: ${countryCode} for number: ${messageWithSender.to}`);
+    console.log(`🌍 Country detected: ${countryCode} for number: ${messageWithSender.to}`);
+    
+    // Special handling for Angola
+    if (countryCode === 'AO') {
+      console.log(`🇦🇴 Angola SMS - Enhanced BulkGate routing activated`);
+    }
 
     let selectedGateway: string;
     let fallbackGateway: string;
@@ -189,17 +194,17 @@ serve(async (req) => {
   }
 });
 
+// Enhanced country detection with better Angola support
 function detectCountryFromPhone(phoneNumber: string): string {
   const normalized = phoneNumber.replace(/[\s\-\(\)]/g, '');
   
-  if (normalized.startsWith('+244') || normalized.startsWith('244')) {
+  // Angola - Enhanced detection
+  if (normalized.startsWith('+244') || normalized.startsWith('244') || 
+      (normalized.length === 9 && normalized.startsWith('9'))) {
     return 'AO'; // Angola
   }
   
-  if (normalized.startsWith('+351') || normalized.startsWith('351')) {
-    return 'PT'; // Portugal
-  }
-
+  // Other PALOP countries
   if (normalized.startsWith('+258') || normalized.startsWith('258')) {
     return 'MZ'; // Mozambique
   }
@@ -208,7 +213,29 @@ function detectCountryFromPhone(phoneNumber: string): string {
     return 'CV'; // Cape Verde
   }
 
-  // Add more country codes as needed
+  if (normalized.startsWith('+245') || normalized.startsWith('245')) {
+    return 'GW'; // Guinea-Bissau
+  }
+
+  if (normalized.startsWith('+239') || normalized.startsWith('239')) {
+    return 'ST'; // São Tomé and Príncipe
+  }
+
+  if (normalized.startsWith('+670') || normalized.startsWith('670')) {
+    return 'TL'; // Timor-Leste
+  }
+
+  // Portugal
+  if (normalized.startsWith('+351') || normalized.startsWith('351')) {
+    return 'PT'; // Portugal
+  }
+
+  // Brazil
+  if (normalized.startsWith('+55') || normalized.startsWith('55')) {
+    return 'BR'; // Brazil
+  }
+
+  console.log(`⚠️ Unknown country for phone: ${phoneNumber}`);
   return 'UNKNOWN';
 }
 
@@ -302,59 +329,139 @@ async function sendViaBulkSMS(message: SMSMessage, tokenId: string, tokenSecret:
   }
 }
 
+// Enhanced Angola phone validation
+function validateAngolaPhone(phoneNumber: string): boolean {
+  const normalized = phoneNumber.replace(/[\s\-\(\)]/g, '');
+  
+  // Angola: +244 9XXXXXXXX (mobile) or +244 2XXXXXXXX (landline)
+  const angolaPatterns = [
+    /^\+244[9][0-9]{8}$/,     // +244 9XXXXXXXX (mobile)
+    /^244[9][0-9]{8}$/,       // 244 9XXXXXXXX (mobile)
+    /^[9][0-9]{8}$/,          // 9XXXXXXXX (local mobile)
+    /^\+244[2][0-9]{7}$/,     // +244 2XXXXXXX (landline)
+    /^244[2][0-9]{7}$/,       // 244 2XXXXXXX (landline)
+  ];
+  
+  return angolaPatterns.some(pattern => pattern.test(normalized));
+}
+
 async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMSResult> {
   try {
-    console.log(`🚀 BulkGate: Sending to ${message.to} with Sender ID: ${message.from}`);
+    console.log(`🚀 BulkGate Enhanced: Sending to ${message.to}`);
     
-    // Parse credentials - support both formats
-    let applicationId = apiKey;
-    let applicationToken = apiKey;
-    
-    if (apiKey.includes(':')) {
-      const parts = apiKey.split(':');
-      applicationId = parts[0];
-      applicationToken = parts[1];
-      console.log(`🔑 BulkGate: Using split credentials: ${applicationId.substring(0, 4)}... / ${applicationToken.substring(0, 4)}...`);
-    } else {
-      console.log(`🔑 BulkGate: Using unified credential: ${apiKey.substring(0, 8)}...`);
+    // Enhanced phone validation for Angola
+    const countryCode = detectCountryFromPhone(message.to);
+    if (countryCode === 'AO' && !validateAngolaPhone(message.to)) {
+      console.warn(`⚠️ BulkGate Angola: Invalid phone format: ${message.to}`);
+      return {
+        success: false,
+        error: 'Formato de número angolano inválido. Use +244 9XXXXXXXX para móvel',
+        gateway: 'bulkgate'
+      };
     }
 
-    // Ensure sender ID for Angola
+    // Determine API format and prioritize v2
+    let isV2Format = !apiKey.includes(':');
     const senderToUse = message.from || 'SMSAO';
-    console.log(`📤 BulkGate: Final sender ID: ${senderToUse}`);
     
-    const response = await fetch('https://portal.bulkgate.com/api/1.0/simple/transactional', {
+    console.log(`📱 Angola optimized - Sender: ${senderToUse}, Phone: ${message.to}`);
+
+    // PRIORITY: Try v2 API first if token format allows
+    if (isV2Format) {
+      console.log('🎯 BulkGate: Attempting v2 API...');
+      
+      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/sms/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'SMS-AO-Platform/2.0'
+        },
+        body: JSON.stringify({
+          number: message.to.replace('+', ''),
+          text: message.text,
+          sender_id: {
+            type: 'text',
+            value: senderToUse
+          },
+          country: 'ao',
+          unicode: /[^\x00-\x7F]/.test(message.text) // Auto-detect unicode
+        })
+      });
+
+      const v2Data = await v2Response.json();
+      console.log(`📨 BulkGate v2: Status ${v2Response.status}`, v2Data);
+
+      if (v2Response.ok && v2Data.data?.status === 'accepted') {
+        console.log(`✅ BulkGate v2: Success - ID: ${v2Data.data.sms_id}`);
+        return {
+          success: true,
+          messageId: v2Data.data.sms_id?.toString(),
+          gateway: 'bulkgate',
+          cost: calculateAngolaMessageCost(message.text)
+        };
+      } else if (v2Response.status === 401 || v2Response.status === 404) {
+        console.log('🔄 BulkGate v2 failed, falling back to v1...');
+        // Continue to v1 fallback
+      } else {
+        console.error(`❌ BulkGate v2 Error:`, v2Data);
+        return {
+          success: false,
+          error: v2Data.error?.message || `BulkGate v2 error: ${v2Response.status}`,
+          gateway: 'bulkgate'
+        };
+      }
+    }
+
+    // FALLBACK: v1 API with enhanced Angola support
+    console.log('📞 BulkGate: Using v1 API (Angola optimized)...');
+    
+    const parts = apiKey.split(':');
+    if (parts.length !== 2) {
+      console.error('❌ BulkGate: Invalid credentials format for v1');
+      return {
+        success: false,
+        error: 'Formato de credenciais inválido para BulkGate v1',
+        gateway: 'bulkgate'
+      };
+    }
+
+    const [applicationId, applicationToken] = parts;
+    console.log(`🔑 BulkGate v1: ${applicationId}:${'*'.repeat(applicationToken.length)}`);
+
+    const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/simple/transactional', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'SMS-AO-Platform/1.0'
       },
       body: JSON.stringify({
         application_id: applicationId,
         application_token: applicationToken,
         number: message.to.replace('+', ''),
         text: message.text,
-        country: 'ao',
-        sender_id: "text", // BulkGate requires this field for text sender ID
-        sender_id_value: senderToUse // Use dynamic sender ID
+        country: 'ao', // Specific for Angola
+        sender_id: 'text',
+        sender_id_value: senderToUse,
+        unicode: /[^\x00-\x7F]/.test(message.text) // Auto-detect unicode
       })
     });
 
-    const data = await response.json();
-    console.log(`📨 BulkGate Response: Status ${response.status}`);
-    console.log(`📨 BulkGate Response Data:`, JSON.stringify(data, null, 2));
+    const v1Data = await v1Response.json();
+    console.log(`📨 BulkGate v1: Status ${v1Response.status}`, JSON.stringify(v1Data, null, 2));
 
-    if (response.ok && data.data && Array.isArray(data.data) && data.data.length > 0) {
-      const result = data.data[0];
+    if (v1Response.ok && v1Data.data && Array.isArray(v1Data.data) && v1Data.data.length > 0) {
+      const result = v1Data.data[0];
       if (result.status === 'accepted') {
-        console.log(`✅ BulkGate: Message sent successfully - ID: ${result.sms_id}`);
+        console.log(`✅ BulkGate v1: Angola SMS sent - ID: ${result.sms_id}`);
         return {
           success: true,
           messageId: result.sms_id?.toString(),
           gateway: 'bulkgate',
-          cost: 1 // Default cost
+          cost: calculateAngolaMessageCost(message.text)
         };
       } else {
-        console.error(`❌ BulkGate: Send failed -`, result);
+        console.error(`❌ BulkGate v1: Send failed -`, result);
         return {
           success: false,
           error: result.error || 'Message not accepted by BulkGate',
@@ -362,10 +469,10 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
         };
       }
     } else {
-      console.error(`❌ BulkGate: API error -`, data);
+      console.error(`❌ BulkGate v1: API error -`, v1Data);
       return {
         success: false,
-        error: data.error?.message || `BulkGate API error: ${response.status}`,
+        error: v1Data.error?.message || `BulkGate v1 error: ${v1Response.status}`,
         gateway: 'bulkgate'
       };
     }
@@ -376,6 +483,21 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
       error: error instanceof Error ? error.message : 'BulkGate connection error',
       gateway: 'bulkgate'
     };
+  }
+}
+
+// Enhanced cost calculation for Angola
+function calculateAngolaMessageCost(text: string): number {
+  const length = text.length;
+  const isUnicode = /[^\x00-\x7F]/.test(text);
+  
+  // SMS pricing for Angola (BulkGate specific)
+  if (isUnicode) {
+    // Unicode messages have lower character limit
+    return Math.ceil(length / 70);
+  } else {
+    // Standard SMS
+    return Math.ceil(length / 160);
   }
 }
 

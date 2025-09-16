@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('=== BulkGate Balance Function Started ===');
-  console.log('Request method:', req.method);
+  console.log('🚀 BulkGate Balance Function - Enhanced v2.0');
+  console.log(`📋 Request method: ${req.method}`);
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -15,28 +15,28 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body - BulkGate uses API key from body for testing
+    // Parse request body - supports both formats
     const { apiKey: requestApiKey, applicationId, apiToken } = await req.json() as {
       apiKey?: string;
       applicationId?: string;
       apiToken?: string;
     };
 
-    // Use API key from request body (for testing) or from environment
+    // Determine API key format
     let apiKey = requestApiKey || Deno.env.get('BULKGATE_API_KEY');
-    let appId = applicationId;
-    let appToken = apiToken;
-
-    // If we have separate credentials, use them
-    if (appId && appToken) {
-      apiKey = `${appId}:${appToken}`;
+    
+    if (applicationId && apiToken) {
+      apiKey = `${applicationId}:${apiToken}`;
+      console.log('🔑 Using split credentials format');
     }
 
     if (!apiKey) {
+      console.error('❌ No API key provided');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'API Key não configurada' 
+          error: 'BulkGate API Key não configurada',
+          details: 'Configure BULKGATE_API_KEY no formato applicationId:applicationToken ou Bearer token'
         }),
         { 
           status: 400, 
@@ -45,125 +45,136 @@ serve(async (req) => {
       );
     }
 
-    console.log('Using API key format:', `${apiKey.substring(0, 8)}...`);
+    console.log(`🔐 API key format: ${apiKey.substring(0, 8)}...`);
 
-    // Try v2 API first (Bearer token)
-    let response = await fetch('https://portal.bulkgate.com/api/2.0/credit/balance', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+    // PRIORITY: Try v2 API first (Bearer token approach)
+    let isV2Format = !apiKey.includes(':');
+    if (isV2Format) {
+      console.log('🎯 Attempting v2 API (Bearer token)...');
+      
+      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/credit/balance', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'SMS-AO-Platform/2.0'
+        }
+      });
+
+      console.log(`📊 v2 API Status: ${v2Response.status}`);
+
+      if (v2Response.ok) {
+        const v2Data = await v2Response.json();
+        console.log('✅ v2 API Success:', JSON.stringify(v2Data, null, 2));
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            balance: parseFloat(v2Data.balance || 0),
+            currency: v2Data.currency || 'EUR',
+            api_version: 'v2',
+            provider: 'bulkgate',
+            timestamp: new Date().toISOString()
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      } else {
+        const v2Error = await v2Response.text();
+        console.log(`⚠️ v2 API failed: ${v2Response.status} - ${v2Error}`);
+        // Continue to v1 fallback
       }
+    }
+
+    // FALLBACK: v1 API with applicationId:applicationToken format
+    console.log('🔄 Falling back to v1 API...');
+    
+    const parts = apiKey.split(':');
+    if (parts.length !== 2) {
+      console.error('❌ Invalid credentials format for v1 fallback');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Formato de credenciais inválido',
+          details: 'Use formato: applicationId:applicationToken'
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const [applicationId, applicationToken] = parts;
+    console.log(`🔑 v1 Credentials: ${applicationId}:${'*'.repeat(applicationToken.length)}`);
+
+    const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/info/user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'SMS-AO-Platform/1.0'
+      },
+      body: JSON.stringify({
+        application_id: applicationId,
+        application_token: applicationToken
+      })
     });
 
-    console.log('BulkGate v2 API response status:', response.status);
+    console.log(`📊 v1 API Status: ${v1Response.status}`);
+    const v1Data = await v1Response.json();
+    console.log('📋 v1 Response:', JSON.stringify(v1Data, null, 2));
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log('BulkGate v2 balance response:', JSON.stringify(data, null, 2));
+    if (v1Response.ok && v1Data.data) {
+      const userInfo = v1Data.data;
+      console.log('✅ v1 API Success - Balance retrieved');
       
       return new Response(
         JSON.stringify({ 
           success: true,
-          balance: data.balance || 0,
-          currency: data.currency || 'USD',
-          api_version: 'v2'
+          balance: parseFloat(userInfo.credit || 0),
+          currency: userInfo.currency || 'EUR',
+          user: {
+            id: userInfo.id,
+            name: userInfo.name,
+            email: userInfo.email
+          },
+          api_version: 'v1',
+          provider: 'bulkgate',
+          timestamp: new Date().toISOString()
         }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
-    } else if (response.status === 401 || response.status === 404) {
-      // Fallback to v1 API
-      console.log('BulkGate v2 failed, trying v1 fallback');
-      const parts = apiKey.split(':');
-      
-      if (parts.length === 2) {
-        response = await fetch('https://portal.bulkgate.com/api/1.0/info/user', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            application_id: parts[0],
-            application_token: parts[1]
-          })
-        });
-
-        console.log('BulkGate v1 API response status:', response.status);
-        const data = await response.json();
-        console.log('BulkGate v1 user info response:', JSON.stringify(data, null, 2));
-
-        if (response.ok && data.data) {
-          const userInfo = data.data;
-          
-          return new Response(
-            JSON.stringify({ 
-              success: true,
-              balance: userInfo.credit || 0,
-              currency: userInfo.currency || 'USD',
-              user: {
-                id: userInfo.id,
-                name: userInfo.name,
-                email: userInfo.email
-              },
-              api_version: 'v1'
-            }),
-            { 
-              status: 200, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          );
-        } else {
-          console.error('BulkGate v1 API error:', data);
-          
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: data.error?.message || 'Erro na API do BulkGate v1' 
-            }),
-            { 
-              status: response.status, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          );
-        }
-      } else {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Formato de credenciais inválido. Use applicationId:apiToken' 
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
     } else {
-      const errorData = await response.text();
-      console.error('BulkGate v2 API error:', errorData);
+      console.error('❌ v1 API Error:', v1Data);
       
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Erro na API do BulkGate v2: ${response.status}` 
+          error: v1Data.error?.message || 'Erro na API do BulkGate',
+          details: `Status: ${v1Response.status}`,
+          api_version: 'v1'
         }),
         { 
-          status: response.status, 
+          status: v1Response.status, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
   } catch (error) {
-    console.error('Error checking BulkGate balance:', error);
+    console.error('💥 BulkGate Balance Error:', error);
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: 'Erro interno do servidor' 
+        error: 'Erro interno do servidor',
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500, 
