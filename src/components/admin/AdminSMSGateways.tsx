@@ -3,17 +3,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Settings, TestTube, Globe, Shield, Zap } from 'lucide-react';
+import { Loader2, Settings, TestTube, Globe, Shield, Zap, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useMultiGatewayService } from '@/hooks/useMultiGatewayService';
-// import { BulkSMSConfigModal } from './BulkSMSConfigModal';
 import { BulkGateConfigModal } from './BulkGateConfigModal';
+import { supabase } from '@/integrations/supabase/client';
+
+interface GatewayStatus {
+  name: string;
+  status: 'online' | 'offline' | 'error';
+  balance?: number;
+  currency?: string;
+  responseTime?: number;
+  error?: string;
+  is_active?: boolean;
+  is_primary?: boolean;
+}
 
 interface GatewayCardProps {
-  id: string;
-  name: 'bulksms' | 'bulkgate';
+  name: string;
   displayName: string;
-  status: 'connected' | 'disconnected' | 'error';
+  status: 'online' | 'offline' | 'error';
   isPrimary: boolean;
   isActive: boolean;
   balance?: number;
@@ -22,40 +31,36 @@ interface GatewayCardProps {
   error?: string;
   onConfigure: () => void;
   onTest: () => void;
-  onTogglePrimary: () => void;
-  onToggleActive: () => void;
 }
 
 function GatewayCard({
-  id,
   name,
   displayName,
   status,
   isPrimary,
   isActive,
   balance,
-  currency,
+  currency = 'EUR',
   responseTime,
   error,
   onConfigure,
-  onTest,
-  onTogglePrimary,
-  onToggleActive
+  onTest
 }: GatewayCardProps) {
-  const getStatusColor = () => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'connected': return 'bg-green-500';
-      case 'disconnected': return 'bg-gray-400';
-      case 'error': return 'bg-red-500';
-      default: return 'bg-gray-400';
+      case 'online': return 'bg-green-100 text-green-800 border-green-200';
+      case 'offline': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'error': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     }
   };
 
-  const getStatusIcon = () => {
-    switch (name) {
-      case 'bulksms': return <Globe className="h-4 w-4" />;
-      case 'bulkgate': return <Zap className="h-4 w-4" />;
-      default: return <Shield className="h-4 w-4" />;
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'online': return <Globe className="h-4 w-4" />;
+      case 'offline': return <Zap className="h-4 w-4" />;
+      case 'error': return <Shield className="h-4 w-4" />;
+      default: return <TestTube className="h-4 w-4" />;
     }
   };
 
@@ -63,17 +68,22 @@ function GatewayCard({
     <Card className="relative">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {getStatusIcon()}
-            <CardTitle className="text-lg">{displayName}</CardTitle>
-          </div>
-          <div className="flex items-center space-x-2">
+          <CardTitle className="text-lg">{displayName}</CardTitle>
+          <div className="flex gap-2">
             {isPrimary && (
               <Badge variant="default" className="text-xs">
                 Primário
               </Badge>
             )}
-            <div className={`w-3 h-3 rounded-full ${getStatusColor()}`} />
+            <Badge 
+              variant="outline" 
+              className={`text-xs ${getStatusColor(status)}`}
+            >
+              {getStatusIcon(status)}
+              <span className="ml-1 capitalize">
+                {status === 'online' ? 'Online' : status === 'offline' ? 'Offline' : 'Erro'}
+              </span>
+            </Badge>
           </div>
         </div>
       </CardHeader>
@@ -82,10 +92,10 @@ function GatewayCard({
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground">Status</p>
-            <p className="font-medium capitalize">{status}</p>
+            <p className="font-medium capitalize">{status === 'online' ? 'Ativo' : 'Inativo'}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Ativo</p>
+            <p className="text-muted-foreground">Configurado</p>
             <p className="font-medium">{isActive ? 'Sim' : 'Não'}</p>
           </div>
         </div>
@@ -93,7 +103,7 @@ function GatewayCard({
         {balance !== undefined && (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground">Balance</p>
+              <p className="text-muted-foreground">Saldo</p>
               <p className="font-medium">{balance} {currency}</p>
             </div>
             {responseTime && (
@@ -118,36 +128,18 @@ function GatewayCard({
             onClick={onConfigure}
             className="flex-1"
           >
-            <Settings className="mr-1 h-3 w-3" />
+            <Settings className="h-4 w-4 mr-2" />
             Configurar
           </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={onTest}
-            disabled={status !== 'connected'}
-          >
-            <TestTube className="mr-1 h-3 w-3" />
-            Testar
-          </Button>
-        </div>
-
-        <div className="flex space-x-2">
-          <Button
-            size="sm"
-            variant={isPrimary ? "default" : "outline"}
-            onClick={onTogglePrimary}
-            disabled={!isActive}
+            disabled={status !== 'online'}
             className="flex-1"
           >
-            {isPrimary ? 'Primário' : 'Definir como Primário'}
-          </Button>
-          <Button
-            size="sm"
-            variant={isActive ? "destructive" : "default"}
-            onClick={onToggleActive}
-          >
-            {isActive ? 'Desativar' : 'Ativar'}
+            <TestTube className="h-4 w-4 mr-2" />
+            Testar
           </Button>
         </div>
       </CardContent>
@@ -156,82 +148,82 @@ function GatewayCard({
 }
 
 export function AdminSMSGateways() {
-  const [showBulkSMSConfig, setShowBulkSMSConfig] = useState(false);
-  const [showBulkGateConfig, setShowBulkGateConfig] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [bulkSMSStatus, setBulkSMSStatus] = useState<GatewayStatus | null>(null);
+  const [bulkGateStatus, setBulkGateStatus] = useState<GatewayStatus | null>(null);
+  const [showBulkGateConfig, setShowBulkGateConfig] = useState(false);
 
-  const {
-    gateways,
-    loading,
-    sendSMS,
-    testGateway,
-    updateGatewayPriority,
-    toggleGatewayActive,
-    refreshStatuses
-  } = useMultiGatewayService();
+  useEffect(() => {
+    loadGatewayStatuses();
+  }, []);
 
-  const handleTest = async (gatewayName: string) => {
-    setIsLoading(true);
+  const loadGatewayStatuses = async () => {
     try {
-      const result = await testGateway(gatewayName);
-      if (result) {
-        toast({
-          title: "Teste bem-sucedido",
-          description: `Gateway ${gatewayName} está funcionando corretamente`,
-        });
-      } else {
-        toast({
-          title: "Teste falhou",
-          description: `Erro ao testar ${gatewayName}`,
-          variant: "destructive",
-        });
-      }
+      setLoading(true);
+      
+      // Get gateway configurations from database
+      const { data: gatewayConfigs } = await supabase
+        .from('sms_gateways')
+        .select('*');
+
+      // Test each gateway status
+      await Promise.all([
+        testGatewayStatus('bulksms'),
+        testGatewayStatus('bulkgate')
+      ]);
+
     } catch (error) {
+      console.error('Error loading gateway statuses:', error);
       toast({
-        title: "Erro no teste",
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        title: "Erro",
+        description: "Erro ao carregar status dos gateways",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleTogglePrimary = async (gatewayName: string, isPrimary: boolean) => {
+  const testGatewayStatus = async (gatewayName: string) => {
     try {
-      await updateGatewayPriority(gatewayName, !isPrimary);
-      toast({
-        title: "Sucesso",
-        description: `Gateway ${gatewayName} ${!isPrimary ? 'definido como primário' : 'removido como primário'}`,
+      const response = await supabase.functions.invoke('gateway-status', {
+        body: { gateway_name: gatewayName, test_mode: true }
       });
+
+      if (response.data) {
+        const status: GatewayStatus = {
+          name: gatewayName,
+          status: response.data.status === 'online' ? 'online' : response.data.status === 'error' ? 'error' : 'offline',
+          balance: response.data.balance,
+          currency: gatewayName === 'bulksms' ? 'USD' : 'EUR',
+          responseTime: response.data.response_time,
+          error: response.data.error,
+          is_active: true,
+          is_primary: gatewayName === 'bulkgate'
+        };
+
+        if (gatewayName === 'bulksms') {
+          setBulkSMSStatus(status);
+        } else {
+          setBulkGateStatus(status);
+        }
+      }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : 'Erro ao alterar prioridade',
-        variant: "destructive",
-      });
+      console.error(`Error testing ${gatewayName}:`, error);
     }
   };
 
-  const handleToggleActive = async (gatewayName: string, isActive: boolean) => {
-    try {
-      await toggleGatewayActive(gatewayName, !isActive);
-      toast({
-        title: "Sucesso",
-        description: `Gateway ${gatewayName} ${!isActive ? 'ativado' : 'desativado'}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : 'Erro ao alterar status',
-        variant: "destructive",
-      });
-    }
+  const handleTest = async (gatewayName: string) => {
+    await testGatewayStatus(gatewayName);
+    toast({
+      title: "Teste realizado",
+      description: `Status do ${gatewayName} atualizado`,
+    });
   };
 
   const handleConfigSaved = () => {
-    refreshStatuses();
+    loadGatewayStatuses();
   };
 
   if (loading) {
@@ -243,9 +235,6 @@ export function AdminSMSGateways() {
     );
   }
 
-  const bulkSMSGateway = gateways.find(g => g.name === 'bulksms');
-  const bulkGateGateway = gateways.find(g => g.name === 'bulkgate');
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -255,64 +244,81 @@ export function AdminSMSGateways() {
             Configure e gerencie os provedores de SMS
           </p>
         </div>
-        <Button onClick={refreshStatuses} variant="outline">
+        <Button onClick={loadGatewayStatuses} variant="outline">
+          <TestTube className="h-4 w-4 mr-2" />
           Atualizar Status
         </Button>
       </div>
 
-      <Alert>
-        <Shield className="h-4 w-4" />
-        <AlertDescription>
-          Configure pelo menos um gateway para enviar SMS. O BulkGate é recomendado para Angola,
-          enquanto o BulkSMS é ideal para mensagens internacionais.
-        </AlertDescription>
-      </Alert>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {bulkSMSGateway && (
+        {/* BulkGate Gateway */}
+        {bulkGateStatus && (
           <GatewayCard
-            id={bulkSMSGateway.name}
-            name="bulksms"
-            displayName="BulkSMS"
-            status={bulkSMSGateway.available ? 'connected' : 'disconnected'}
-            isPrimary={bulkSMSGateway.is_primary || false}
-            isActive={bulkSMSGateway.is_active || false}
-            balance={bulkSMSGateway.balance}
-            currency="USD"
-            responseTime={bulkSMSGateway.responseTime}
-            error={bulkSMSGateway.error}
-            onConfigure={() => setShowBulkSMSConfig(true)}
-            onTest={() => handleTest('bulksms')}
-            onTogglePrimary={() => handleTogglePrimary('bulksms', bulkSMSGateway.is_primary || false)}
-            onToggleActive={() => handleToggleActive('bulksms', bulkSMSGateway.is_active || false)}
+            name="bulkgate"
+            displayName="BulkGate"
+            status={bulkGateStatus.status}
+            isPrimary={bulkGateStatus.is_primary || false}
+            isActive={bulkGateStatus.is_active || false}
+            balance={bulkGateStatus.balance}
+            currency={bulkGateStatus.currency}
+            responseTime={bulkGateStatus.responseTime}
+            error={bulkGateStatus.error}
+            onConfigure={() => setShowBulkGateConfig(true)}
+            onTest={() => handleTest('bulkgate')}
           />
         )}
 
-        {bulkGateGateway && (
+        {/* BulkSMS Gateway */}
+        {bulkSMSStatus && (
           <GatewayCard
-            id={bulkGateGateway.name}
-            name="bulkgate"
-            displayName="BulkGate"
-            status={bulkGateGateway.available ? 'connected' : 'disconnected'}
-            isPrimary={bulkGateGateway.is_primary || false}
-            isActive={bulkGateGateway.is_active || false}
-            balance={bulkGateGateway.balance}
-            currency="EUR"
-            responseTime={bulkGateGateway.responseTime}
-            error={bulkGateGateway.error}
-            onConfigure={() => setShowBulkGateConfig(true)}
-            onTest={() => handleTest('bulkgate')}
-            onTogglePrimary={() => handleTogglePrimary('bulkgate', bulkGateGateway.is_primary || false)}
-            onToggleActive={() => handleToggleActive('bulkgate', bulkGateGateway.is_active || false)}
+            name="bulksms"
+            displayName="BulkSMS"
+            status={bulkSMSStatus.status}
+            isPrimary={bulkSMSStatus.is_primary || false}
+            isActive={bulkSMSStatus.is_active || false}
+            balance={bulkSMSStatus.balance}
+            currency={bulkSMSStatus.currency}
+            responseTime={bulkSMSStatus.responseTime}
+            error={bulkSMSStatus.error}
+            onConfigure={() => {
+              toast({
+                title: "Em desenvolvimento",
+                description: "Configuração BulkSMS em breve",
+              });
+            }}
+            onTest={() => handleTest('bulksms')}
           />
         )}
       </div>
-
-      {/* <BulkSMSConfigModal
-        open={showBulkSMSConfig}
-        onOpenChange={setShowBulkSMSConfig}
-        onConfigSaved={handleConfigSaved}
-      /> */}
+      
+      {/* Alerta específico para BulkGate com problemas */}
+      {bulkGateStatus && bulkGateStatus.error && (
+        <Alert variant="destructive" className="mt-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-3">
+              <p><strong>BulkGate com erro:</strong> {bulkGateStatus.error}</p>
+              <div className="bg-destructive/10 p-3 rounded text-sm">
+                <p className="font-medium mb-2">💡 Soluções possíveis:</p>
+                <ul className="space-y-1 list-disc list-inside text-xs">
+                  <li>Verificar formato das credenciais: <code>applicationId:applicationToken</code></li>
+                  <li>Ou verificar token Bearer (v2 API) se aplicável</li>
+                  <li>Confirmar conta BulkGate ativa com créditos</li>
+                  <li>Testar credenciais no painel BulkGate</li>
+                </ul>
+              </div>
+              <Button 
+                onClick={() => setShowBulkGateConfig(true)}
+                size="sm" 
+                className="w-full sm:w-auto"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Reconfigurar BulkGate
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <BulkGateConfigModal
         open={showBulkGateConfig}
@@ -322,3 +328,5 @@ export function AdminSMSGateways() {
     </div>
   );
 }
+
+export default AdminSMSGateways;
