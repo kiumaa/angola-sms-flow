@@ -370,7 +370,7 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
     if (isV2Format) {
       console.log('🎯 BulkGate: Attempting v2 API...');
       
-      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/sms/send', {
+      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/application/sms/send', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -378,28 +378,38 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
           'User-Agent': 'SMS-AO-Platform/2.0'
         },
         body: JSON.stringify({
-          number: message.to.replace('+', ''),
+          recipients: [{
+            number: message.to.replace('+', ''),
+            country: 'ao'
+          }],
           text: message.text,
-          sender_id: {
-            type: 'text',
-            value: senderToUse
-          },
-          country: 'ao',
-          unicode: /[^\x00-\x7F]/.test(message.text) // Auto-detect unicode
+          sender_id: senderToUse,
+          sender_type: 'text',
+          unicode: /[^\x00-\x7F]/.test(message.text)
         })
       });
 
       const v2Data = await v2Response.json();
       console.log(`📨 BulkGate v2: Status ${v2Response.status}`, v2Data);
 
-      if (v2Response.ok && v2Data.data?.status === 'accepted') {
-        console.log(`✅ BulkGate v2: Success - ID: ${v2Data.data.sms_id}`);
-        return {
-          success: true,
-          messageId: v2Data.data.sms_id?.toString(),
-          gateway: 'bulkgate',
-          cost: calculateAngolaMessageCost(message.text)
-        };
+      if (v2Response.ok && v2Data.data && Array.isArray(v2Data.data) && v2Data.data.length > 0) {
+        const result = v2Data.data[0];
+        if (result.status === 'accepted') {
+          console.log(`✅ BulkGate v2: Success - ID: ${result.sms_id}`);
+          return {
+            success: true,
+            messageId: result.sms_id?.toString(),
+            gateway: 'bulkgate',
+            cost: calculateAngolaMessageCost(message.text)
+          };
+        } else {
+          console.error(`❌ BulkGate v2: Message not accepted -`, result);
+          return {
+            success: false,
+            error: result.error || 'Message not accepted by BulkGate v2',
+            gateway: 'bulkgate'
+          };
+        }
       } else if (v2Response.status === 401 || v2Response.status === 404) {
         console.log('🔄 BulkGate v2 failed, falling back to v1...');
         // Continue to v1 fallback

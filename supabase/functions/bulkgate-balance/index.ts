@@ -52,13 +52,14 @@ serve(async (req) => {
     if (isV2Format) {
       console.log('🎯 Attempting v2 API (Bearer token)...');
       
-      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/credit/balance', {
-        method: 'GET',
+      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/application/balance', {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'User-Agent': 'SMS-AO-Platform/2.0'
-        }
+        },
+        body: JSON.stringify({})
       });
 
       console.log(`📊 v2 API Status: ${v2Response.status}`);
