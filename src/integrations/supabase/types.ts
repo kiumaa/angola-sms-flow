@@ -1482,6 +1482,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_session_security: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       clean_expired_otps: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1556,6 +1560,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: { details?: Json; event_type: string; user_identifier: string }
+        Returns: undefined
       }
       migrate_sms_credentials_to_secrets: {
         Args: Record<PropertyKey, never>
