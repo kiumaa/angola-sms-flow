@@ -27,6 +27,12 @@ verify_jwt = false
 [functions.bulksms-balance]
 verify_jwt = true
 
+[functions.bulkgate-balance]
+verify_jwt = true
+
+[functions.save-bulkgate-credentials]
+verify_jwt = true
+
 [functions.confirm-email]
 verify_jwt = false
 

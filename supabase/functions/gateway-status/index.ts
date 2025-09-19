@@ -122,8 +122,8 @@ serve(async (req) => {
             throw new Error('Formato de credenciais inválido. Use: applicationId:applicationToken');
           }
 
-          const [applicationId, applicationToken] = parts;
-          console.log(`🔑 v1 Credentials: ${applicationId}:${'*'.repeat(applicationToken.length)}`);
+          const [v1ApplicationId, v1ApplicationToken] = parts;
+          console.log(`🔑 v1 Credentials: ${v1ApplicationId}:${'*'.repeat(v1ApplicationToken.length)}`);
 
           const response = await fetch('https://portal.bulkgate.com/api/1.0/info/user', {
             method: 'POST',
@@ -132,8 +132,8 @@ serve(async (req) => {
               'User-Agent': 'SMS-AO-Platform/1.0'
             },
             body: JSON.stringify({
-              application_id: applicationId,
-              application_token: applicationToken
+              application_id: v1ApplicationId,
+              application_token: v1ApplicationToken
             }),
             signal: AbortSignal.timeout(8000)
           });
