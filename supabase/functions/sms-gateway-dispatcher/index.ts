@@ -360,31 +360,53 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
       };
     }
 
-    // Determine API format and prioritize v2
-    let isV2Format = !apiKey.includes(':');
+    // Determine API format and prioritize v2 (applicationId:applicationToken format)
+    let isV2Format = apiKey.includes(':');
     const senderToUse = message.from || 'SMSAO';
     
     console.log(`📱 Angola optimized - Sender: ${senderToUse}, Phone: ${message.to}`);
 
     // PRIORITY: Try v2 API first if token format allows
     if (isV2Format) {
-      console.log('🎯 BulkGate: Attempting v2 API...');
+      console.log('🎯 BulkGate: Attempting v2 API (applicationId:applicationToken format)...');
+      
+      // Validate Angolan phone number
+      const phoneForBulkGate = message.to.replace('+', '');
+      if (!phoneForBulkGate.startsWith('244')) {
+        console.error(`❌ BulkGate v2: Invalid Angolan number format: ${message.to}`);
+        return {
+          success: false,
+          error: 'Invalid Angolan phone number format for BulkGate',
+          gateway: 'bulkgate'
+        };
+      }
+      
+      // Extract applicationId and applicationToken from apiKey format
+      const [applicationId, applicationToken] = apiKey.split(':');
+      
+      if (!applicationId || !applicationToken) {
+        console.error('❌ Invalid v2 credential format. Expected: applicationId:applicationToken');
+        return {
+          success: false,
+          error: 'Invalid BulkGate v2 credential format',
+          gateway: 'bulkgate'
+        };
+      }
       
       const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/application/sms/send', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'User-Agent': 'SMS-AO-Platform/2.0'
         },
         body: JSON.stringify({
-          recipients: [{
-            number: message.to.replace('+', ''),
-            country: 'ao'
-          }],
+          application_id: applicationId,
+          application_token: applicationToken,
+          number: phoneForBulkGate,
           text: message.text,
           sender_id: senderToUse,
           sender_type: 'text',
+          country: 'ao',
           unicode: /[^\x00-\x7F]/.test(message.text)
         })
       });

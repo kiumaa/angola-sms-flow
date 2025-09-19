@@ -28,7 +28,7 @@ export const AnimatedPalopText = ({ className }: AnimatedPalopTextProps) => {
 
   return (
     <div className={`relative inline-flex items-center justify-center min-w-[64px] h-[48px] ${className}`}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.span
           key={currentIndex}
           initial={{ opacity: 0, y: 10, scale: 0.9 }}
@@ -43,11 +43,11 @@ export const AnimatedPalopText = ({ className }: AnimatedPalopTextProps) => {
         >
           {PALOP_COUNTRIES[currentIndex]}
         </motion.span>
-        {/* Invisible placeholder to maintain consistent height */}
-        <span className="invisible text-4xl leading-none" style={{ lineHeight: 1 }}>
-          🇸🇹
-        </span>
       </AnimatePresence>
+      {/* Invisible placeholder to maintain consistent height */}
+      <span className="invisible text-4xl leading-none" style={{ lineHeight: 1 }}>
+        🇸🇹
+      </span>
     </div>
   );
 };

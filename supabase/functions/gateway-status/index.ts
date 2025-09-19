@@ -60,20 +60,30 @@ serve(async (req) => {
 
         console.log(`🔐 BulkGate API Key format: ${apiKey.substring(0, 8)}... (length: ${apiKey.length})`);
 
-        // Check if it's v2 format (single token) or v1 format (application_id:application_token)
-        const isV2Format = !apiKey.includes(':');
+        // Check if it's v2 format (applicationId:applicationToken) or v1 format 
+        const isV2Format = apiKey.includes(':');
         
         if (isV2Format) {
-          console.log('🎯 Attempting v2 API (Bearer token)...');
+          console.log('🎯 Attempting v2 API (applicationId:applicationToken format)...');
           
-          const response = await fetch('https://portal.bulkgate.com/api/2.0/application/balance', {
+          // Extract applicationId and applicationToken from apiKey format
+          const [applicationId, applicationToken] = apiKey.split(':');
+          
+          if (!applicationId || !applicationToken) {
+            console.error('❌ Invalid v2 credential format. Expected: applicationId:applicationToken');
+            throw new Error('Invalid BulkGate v2 credential format');
+          }
+          
+          const response = await fetch('https://portal.bulkgate.com/api/2.0/application/info', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${apiKey}`,
               'Content-Type': 'application/json',
               'User-Agent': 'SMS-AO-Platform/2.0'
             },
-            body: JSON.stringify({}),
+            body: JSON.stringify({
+              application_id: applicationId,
+              application_token: applicationToken
+            }),
             signal: AbortSignal.timeout(8000)
           });
 
