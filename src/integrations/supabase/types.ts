@@ -1519,6 +1519,10 @@ export type Database = {
         Args: { password_text: string }
         Returns: string
       }
+      enhanced_sanitize_input: {
+        Args: { input_text: string }
+        Returns: string
+      }
       get_active_gateway_override: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1604,6 +1608,10 @@ export type Database = {
       validate_sms_configuration: {
         Args: { config_id: string }
         Returns: Json
+      }
+      validate_user_session: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
