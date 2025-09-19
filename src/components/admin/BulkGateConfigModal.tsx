@@ -151,6 +151,12 @@ export function BulkGateConfigModal({ open, onOpenChange, onConfigSaved }: BulkG
             <Info className="h-4 w-4" />
             <AlertDescription>
               Configure suas credenciais BulkGate para envio de SMS para Angola e outros países PALOP.
+              <br />
+              <strong>Formatos suportados:</strong>
+              <br />
+              • Application ID + Token (formato: applicationId:applicationToken)
+              <br />
+              • Bearer Token único (para API v2)
             </AlertDescription>
           </Alert>
 
@@ -163,18 +169,18 @@ export function BulkGateConfigModal({ open, onOpenChange, onConfigSaved }: BulkG
                 onChange={(e) => setUseV2Api(e.target.checked)}
                 className="rounded border-gray-300"
               />
-              <Label htmlFor="useV2Api">Usar API v2 (Bearer Token)</Label>
+              <Label htmlFor="useV2Api">Usar Bearer Token único (experimental)</Label>
             </div>
 
             {useV2Api ? (
               <div className="space-y-2">
-                <Label htmlFor="v2ApiKey">API Key v2</Label>
+                <Label htmlFor="v2ApiKey">Bearer Token</Label>
                 <Input
                   id="v2ApiKey"
                   type="password"
                   value={v2ApiKey}
                   onChange={(e) => setV2ApiKey(e.target.value)}
-                  placeholder="Bearer token da API v2"
+                  placeholder="Bearer token único (sem dois pontos)"
                 />
               </div>
             ) : (

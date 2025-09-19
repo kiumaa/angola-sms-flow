@@ -60,8 +60,8 @@ serve(async (req) => {
 
         console.log(`🔐 BulkGate API Key format: ${apiKey.substring(0, 8)}... (length: ${apiKey.length})`);
 
-        // Check if it's v2 format (applicationId:applicationToken) or v1 format 
-        const isV2Format = apiKey.includes(':');
+        // PRIORITY: Try v2 API first if token format allows
+        let isV2Format = apiKey.includes(':');
         
         if (isV2Format) {
           console.log('🎯 Attempting v2 API (applicationId:applicationToken format)...');
@@ -94,11 +94,25 @@ serve(async (req) => {
             console.log('✅ BulkGate v2 API success:', data);
             status = 'online';
             balance = parseFloat(data.balance || 0);
+          } else if (response.status === 401 || response.status === 404) {
+            const errorText = await response.text();
+            console.log(`🔄 v2 API failed (${response.status}), falling back to v1: ${errorText}`);
+            // Continue to v1 fallback
           } else {
             const errorText = await response.text();
             console.log(`❌ v2 API failed: ${response.status} - ${errorText}`);
             throw new Error(`BulkGate v2 API error: ${response.status} - Token inválido ou expirado`);
           }
+        }
+        
+        // FALLBACK: Try v1 API or handle single Bearer token
+        console.log('🔄 Falling back to v1 API or Bearer token format...');
+        
+        // Check if it's a single Bearer token (no colon)
+        if (!apiKey.includes(':')) {
+          console.log('🔑 Single Bearer token detected, treating as v1 format');
+          // For single token, we can't use v1 API, return error
+          throw new Error('Single Bearer token format not supported for v1 API. Use applicationId:applicationToken format.');
         } else {
           // v1 API with application_id:application_token format
           console.log('🔄 Using v1 API (application_id:application_token)...');

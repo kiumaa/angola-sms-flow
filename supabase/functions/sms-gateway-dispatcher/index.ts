@@ -433,7 +433,7 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
           };
         }
       } else if (v2Response.status === 401 || v2Response.status === 404) {
-        console.log('🔄 BulkGate v2 failed, falling back to v1...');
+        console.log(`🔄 BulkGate v2 failed (${v2Response.status}), falling back to v1...`);
         // Continue to v1 fallback
       } else {
         console.error(`❌ BulkGate v2 Error:`, v2Data);
@@ -445,7 +445,20 @@ async function sendViaBulkGate(message: SMSMessage, apiKey: string): Promise<SMS
       }
     }
 
-    // FALLBACK: v1 API with enhanced Angola support
+    // FALLBACK: Try v1 API or handle single Bearer token
+    console.log('🔄 Falling back to v1 API or Bearer token format...');
+    
+    // Check if it's a single Bearer token (no colon)
+    if (!apiKey.includes(':')) {
+      console.log('🔑 Single Bearer token detected');
+      return {
+        success: false,
+        error: 'Single Bearer token format not supported for SMS sending. Use applicationId:applicationToken format.',
+        gateway: 'bulkgate'
+      };
+    }
+    
+    // v1 API with enhanced Angola support
     console.log('📞 BulkGate: Using v1 API (Angola optimized)...');
     
     const parts = apiKey.split(':');

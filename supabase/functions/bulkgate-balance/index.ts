@@ -47,7 +47,7 @@ serve(async (req) => {
 
     console.log(`🔐 API key format: ${apiKey.substring(0, 8)}...`);
 
-    // PRIORITY: Try v2 API first (applicationId:applicationToken format)
+    // PRIORITY: Try v2 API first if token format allows
     let isV2Format = apiKey.includes(':');
     if (isV2Format) {
       console.log('🎯 Attempting v2 API (applicationId:applicationToken format)...');
@@ -92,6 +92,10 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           }
         );
+      } else if (v2Response.status === 401 || v2Response.status === 404) {
+        const v2Error = await v2Response.text();
+        console.log(`🔄 v2 API failed (${v2Response.status}), falling back to v1: ${v2Error}`);
+        // Continue to v1 fallback
       } else {
         const v2Error = await v2Response.text();
         console.log(`⚠️ v2 API failed: ${v2Response.status} - ${v2Error}`);
@@ -99,8 +103,27 @@ serve(async (req) => {
       }
     }
 
-    // FALLBACK: v1 API with applicationId:applicationToken format
-    console.log('🔄 Falling back to v1 API...');
+    // FALLBACK: Try v1 API or handle single Bearer token
+    console.log('🔄 Falling back to v1 API or Bearer token format...');
+    
+    // Check if it's a single Bearer token (no colon)
+    if (!apiKey.includes(':')) {
+      console.log('🔑 Single Bearer token detected');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Single Bearer token format not supported for balance check',
+          details: 'Use applicationId:applicationToken format for balance checking'
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    // v1 API with applicationId:applicationToken format
+    console.log('🔄 Using v1 API...');
     
     const parts = apiKey.split(':');
     if (parts.length !== 2) {
