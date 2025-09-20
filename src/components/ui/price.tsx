@@ -48,7 +48,6 @@ export interface PricingCardProps extends VariantProps<typeof cardVariants> {
   buttonText: string;
   isCurrentPlan?: boolean;
   icon?: React.ReactNode;
-  onPurchase?: () => void;
 }
 
 // --- COMPONENT DEFINITION ---
@@ -65,7 +64,6 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
       buttonText,
       isCurrentPlan = false,
       icon,
-      onPurchase,
       ...props
     },
     ref
@@ -99,7 +97,7 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
 
         {/* Price */}
         <div className="my-6">
-          <span className="text-5xl font-bold">{price.toLocaleString()}</span>
+          <span className="text-5xl font-bold">${price}</span>
           <span className="text-muted-foreground">{billingCycle}</span>
         </div>
 
@@ -109,7 +107,6 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
           size="lg"
           variant={isCurrentPlan ? 'secondary' : variant === 'popular' ? 'default' : 'outline'}
           disabled={isCurrentPlan}
-          onClick={onPurchase}
         >
           {isCurrentPlan ? 'Current plan' : buttonText}
         </Button>
