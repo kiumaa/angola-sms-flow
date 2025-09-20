@@ -33,6 +33,11 @@ const Credits = () => {
   const { credits, loading: creditsLoading, refetch: refetchCredits } = useUserCredits();
   const { user } = useAuth();
 
+  // Calculate statistics
+  const completedTransactions = transactions.filter(t => t.status === 'completed');
+  const totalSpent = completedTransactions.reduce((sum, t) => sum + t.amount_kwanza, 0);
+  const totalCredits = completedTransactions.reduce((sum, t) => sum + t.credits_purchased, 0);
+
   const fetchTransactions = async () => {
     if (!user) return;
     
@@ -102,115 +107,86 @@ const Credits = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-10">
-        {/* Header Section with Stats */}
-        <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden rounded-3xl">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-          <div className="relative">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-5xl font-light gradient-text tracking-tight">Créditos SMS</h1>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRefresh}
-                    className="text-primary hover:bg-primary/10"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-muted-foreground text-xl max-w-lg">
-                  Gerencie seus créditos e compre novos pacotes de SMS com total transparência
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <Badge variant="secondary" className="px-4 py-2 text-sm">
-                    <Zap className="h-4 w-4 mr-2" />
-                    Sem mensalidade
-                  </Badge>
-                  <Badge variant="secondary" className="px-4 py-2 text-sm">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Preços transparentes
-                  </Badge>
-                </div>
-              </div>
-              <CreditBalance credits={credits} loading={creditsLoading} />
-            </div>
+      <div className="max-w-7xl mx-auto space-y-12 px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-4">
+            <h1 className="text-4xl md:text-5xl font-light gradient-text">Créditos SMS</h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              className="text-primary hover:bg-primary/10"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="glass-card">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <CreditCard className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Transações</p>
-                  <p className="text-2xl font-bold">{transactions.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Escolha o pacote ideal para suas necessidades. Preços transparentes, sem taxas ocultas.
+          </p>
           
-          <Card className="glass-card">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-full bg-green-500/10">
-                  <TrendingUp className="h-6 w-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Gasto</p>
-                  <p className="text-2xl font-bold">
-                    {transactions
-                      .filter(t => t.status === 'completed')
-                      .reduce((sum, t) => sum + t.amount_kwanza, 0)
-                      .toLocaleString()} Kz
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-full bg-blue-500/10">
-                  <Zap className="h-6 w-6 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Créditos Comprados</p>
-                  <p className="text-2xl font-bold">
-                    {transactions
-                      .filter(t => t.status === 'completed')
-                      .reduce((sum, t) => sum + t.credits_purchased, 0)
-                      .toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Current Balance */}
+          <CreditBalance credits={credits} loading={creditsLoading} />
         </div>
 
         {/* Credit Packages */}
         <div className="space-y-8">
           <div className="text-center space-y-4">
-            <h2 className="text-4xl font-light gradient-text tracking-tight">Escolha seu Pacote</h2>
-            <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">
-              Pacotes atualizados com os melhores preços. Ideal para todos os tipos de uso.
+            <h2 className="text-3xl font-light gradient-text">Pacotes Disponíveis</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Pacotes com preços atualizados e transparentes. Escolha o que melhor se adapta ao seu uso.
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {packages.map((pkg, index) => (
-              <PricingCard
-                key={pkg.id}
-                pkg={pkg}
-                index={index}
-                onPurchase={handlePurchase}
-              />
+              <div key={pkg.id} className="group">
+                <Card className="glass-card h-full border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-glow">
+                  <CardHeader className="text-center pb-4">
+                    <CardTitle className="text-xl font-medium">{pkg.name}</CardTitle>
+                    <div className="space-y-2">
+                      <div className="text-3xl font-bold gradient-text">
+                        {pkg.price_kwanza.toLocaleString()} Kz
+                      </div>
+                      <p className="text-muted-foreground">{pkg.credits.toLocaleString()} SMS</p>
+                      <div className="text-sm text-muted-foreground">
+                        ~{(pkg.price_kwanza / pkg.credits).toFixed(2)} Kz por SMS
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground text-center">
+                        {pkg.description}
+                      </p>
+                      
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-primary" />
+                          {pkg.credits.toLocaleString()} SMS inclusos
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                          Dashboard completo
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-primary" />
+                          Suporte prioritário
+                        </li>
+                      </ul>
+                      
+                      <Button
+                        onClick={() => handlePurchase(pkg.id)}
+                        className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
+                        size="lg"
+                      >
+                        Escolher Pacote
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
 
@@ -223,74 +199,87 @@ const Credits = () => {
           )}
         </div>
 
+        {/* Quick Stats */}
+        {transactions.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="glass-card">
+              <CardContent className="p-6 text-center">
+                <div className="space-y-2">
+                  <CreditCard className="h-8 w-8 text-primary mx-auto" />
+                  <p className="text-sm text-muted-foreground">Total Transações</p>
+                  <p className="text-2xl font-bold">{transactions.length}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="glass-card">
+              <CardContent className="p-6 text-center">
+                <div className="space-y-2">
+                  <TrendingUp className="h-8 w-8 text-green-500 mx-auto" />
+                  <p className="text-sm text-muted-foreground">Total Investido</p>
+                  <p className="text-2xl font-bold">{totalSpent.toLocaleString()} Kz</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardContent className="p-6 text-center">
+                <div className="space-y-2">
+                  <Zap className="h-8 w-8 text-blue-500 mx-auto" />
+                  <p className="text-sm text-muted-foreground">SMS Adquiridos</p>
+                  <p className="text-2xl font-bold">{totalCredits.toLocaleString()}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Transaction History */}
-        <Card className="glass-card rounded-3xl">
-          <CardHeader className="pb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-3 gradient-text text-2xl">
-                  <History className="h-6 w-6" />
-                  Histórico de Transações
-                </CardTitle>
-                <CardDescription className="text-lg mt-2">
-                  Suas últimas {transactions.length > 0 ? transactions.length : ''} movimentações de créditos
-                </CardDescription>
-              </div>
-              {transactions.length > 0 && (
+        {transactions.length > 0 && (
+          <Card className="glass-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <History className="h-5 w-5" />
+                    Histórico Recente
+                  </CardTitle>
+                  <CardDescription>
+                    Suas últimas movimentações de créditos
+                  </CardDescription>
+                </div>
                 <Button 
                   variant="outline" 
+                  size="sm"
                   onClick={() => navigate('/transactions')}
-                  className="hidden sm:flex"
                 >
                   Ver Todos
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {transactions.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="p-8 rounded-full bg-gradient-primary/10 w-fit mx-auto mb-6 shadow-glow">
-                  <History className="h-16 w-16 text-primary mx-auto" />
-                </div>
-                <h3 className="text-2xl font-light mb-4 gradient-text">Nenhuma transação ainda</h3>
-                <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-                  Suas compras e movimentações de créditos aparecerão aqui assim que forem realizadas.
-                </p>
-                <Button 
-                  onClick={() => {
-                    const firstPackage = packages[0];
-                    if (firstPackage) handlePurchase(firstPackage.id);
-                  }}
-                  disabled={packages.length === 0}
-                  className="bg-gradient-primary hover:shadow-glow"
-                >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Comprar Primeiro Pacote
-                </Button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {transactions.slice(0, 5).map((transaction) => (
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {transactions.slice(0, 3).map((transaction) => (
                   <TransactionCard key={transaction.id} transaction={transaction} />
                 ))}
-                {transactions.length > 5 && (
-                  <div className="text-center pt-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => navigate('/transactions')}
-                      className="w-full sm:w-auto"
-                    >
-                      Ver Todas as Transações ({transactions.length})
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
-                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Empty State */}
+        {transactions.length === 0 && (
+          <div className="text-center py-16">
+            <div className="p-8 rounded-full bg-gradient-primary/10 w-fit mx-auto mb-6">
+              <CreditCard className="h-16 w-16 text-primary mx-auto" />
+            </div>
+            <h3 className="text-2xl font-light mb-4 gradient-text">Comece Agora</h3>
+            <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
+              Escolha um pacote acima para começar a enviar SMS e acompanhar suas campanhas.
+            </p>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
