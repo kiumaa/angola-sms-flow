@@ -76,7 +76,7 @@ serve(async (req) => {
             };
             console.log('📤 v2 Request body:', JSON.stringify(v2RequestBody, null, 2));
             
-            const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/application/info', {
+            const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/advanced/info', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ serve(async (req) => {
               };
               console.log('📤 v1 Request body:', JSON.stringify(v1RequestBody, null, 2));
               
-              const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/info/user', {
+              const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/advanced/info', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -165,34 +165,9 @@ serve(async (req) => {
             }
           }
         } else {
-          // Try as Bearer token
-          console.log('🔄 Testing as Bearer token...');
-          try {
-            const bearerResponse = await fetch('https://portal.bulkgate.com/api/2.0/application/info', {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache'
-              },
-              signal: AbortSignal.timeout(15000)
-            });
-            
-            console.log(`📊 Bearer API Status: ${bearerResponse.status}`);
-            const bearerData = await bearerResponse.text();
-            console.log(`📊 Bearer API Raw Response: ${bearerData}`);
-            
-            if (bearerResponse.ok) {
-              const data = JSON.parse(bearerData);
-              status = 'online';
-              balance = data.data?.credit || null;
-            } else {
-              throw new Error(`Bearer token failed: ${bearerResponse.status} - ${bearerData}`);
-            }
-          } catch (bearerError) {
-            console.error('❌ Bearer API Error:', bearerError.message);
-            throw new Error(`Invalid API key format. Use: applicationId:applicationToken`);
-          }
+          // Credentials without colon are not supported for BulkGate Advanced API
+          console.log('❌ Invalid BulkGate API key format (missing ":"). Expected applicationId:applicationToken');
+          throw new Error('Formato inválido da chave BulkGate. Use applicationId:applicationToken');
         }
       } else {
         throw new Error(`Unknown gateway: ${gateway_name}`);

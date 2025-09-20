@@ -45,7 +45,7 @@ serve(async (req) => {
       // Test v2 API
       console.log('🎯 Testing v2 API...')
       try {
-        const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/application/info', {
+        const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/advanced/info', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ serve(async (req) => {
             api_version: 'v2',
             status: v2Response.status,
             data: v2Json,
-            test_type: 'application_info'
+            test_type: 'advanced_info'
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
@@ -82,7 +82,7 @@ serve(async (req) => {
       // Test v1 API
       console.log('🔄 Testing v1 API...')
       try {
-        const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/info/user', {
+        const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/advanced/info', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -100,24 +100,24 @@ serve(async (req) => {
         const v1Data = await v1Response.text()
         console.log(`📊 v1 API Raw Response: ${v1Data}`)
         
-        if (v1Response.ok) {
-          const v1Json = JSON.parse(v1Data)
-          return new Response(JSON.stringify({
-            success: true,
-            api_version: 'v1',
-            status: v1Response.status,
-            data: v1Json,
-            test_type: 'user_info'
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          })
-        } else {
+          if (v1Response.ok) {
+            const v1Json = JSON.parse(v1Data)
+            return new Response(JSON.stringify({
+              success: true,
+              api_version: 'v1',
+              status: v1Response.status,
+              data: v1Json,
+              test_type: 'advanced_info'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            })
+          } else {
           return new Response(JSON.stringify({
             success: false,
             api_version: 'v1',
             status: v1Response.status,
             error: v1Data,
-            test_type: 'user_info'
+            test_type: 'advanced_info'
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
@@ -134,42 +134,18 @@ serve(async (req) => {
         })
       }
     } else {
-      // Test as Bearer token
-      console.log('🔄 Testing as Bearer token...')
-      try {
-        const bearerResponse = await fetch('https://portal.bulkgate.com/api/2.0/application/info', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${bulkgateApiKey}`,
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        })
-        
-        console.log(`📊 Bearer API Status: ${bearerResponse.status}`)
-        const bearerData = await bearerResponse.text()
-        console.log(`📊 Bearer API Raw Response: ${bearerData}`)
-        
-        return new Response(JSON.stringify({
-          success: bearerResponse.ok,
-          api_version: 'v2_bearer',
-          status: bearerResponse.status,
-          data: bearerResponse.ok ? JSON.parse(bearerData) : bearerData,
-          test_type: 'bearer_token'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
-      } catch (bearerError) {
-        console.error('❌ Bearer API Error:', bearerError.message)
-        return new Response(JSON.stringify({
-          success: false,
-          error: bearerError.message,
-          test_type: 'bearer_error'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        })
-      }
+      // Bearer token format is not supported for Advanced Info
+      console.log('❌ Invalid BulkGate API key format (expected applicationId:applicationToken).');
+      return new Response(JSON.stringify({
+        success: false,
+        api_version: 'v2',
+        status: 400,
+        error: 'Formato inválido da chave BulkGate. Use applicationId:applicationToken',
+        test_type: 'advanced_info'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      })
     }
 
   } catch (error) {

@@ -60,7 +60,7 @@ serve(async (req) => {
         throw new Error('Invalid BulkGate v2 credential format');
       }
       
-      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/application/info', {
+      const v2Response = await fetch('https://portal.bulkgate.com/api/2.0/advanced/info', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,8 +81,8 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             success: true,
-            balance: parseFloat(v2Data.balance || 0),
-            currency: v2Data.currency || 'EUR',
+            balance: Number(v2Data?.data?.credit ?? 0),
+            currency: v2Data?.data?.currency || 'credits',
             api_version: 'v2',
             provider: 'bulkgate',
             timestamp: new Date().toISOString()
@@ -144,7 +144,7 @@ serve(async (req) => {
     const [v1ApplicationId, v1ApplicationToken] = parts;
     console.log(`🔑 v1 Credentials: ${v1ApplicationId}:${'*'.repeat(v1ApplicationToken.length)}`);
 
-    const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/info/user', {
+    const v1Response = await fetch('https://portal.bulkgate.com/api/1.0/advanced/info', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
