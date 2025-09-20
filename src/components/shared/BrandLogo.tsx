@@ -36,7 +36,7 @@ export const BrandLogo = ({
   const finalLogo = isDark ? logoDark : logoLight;
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center justify-center">
       {finalLogo ? (
         <img 
           src={finalLogo} 
