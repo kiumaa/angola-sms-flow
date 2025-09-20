@@ -1,5 +1,5 @@
 import React from "react";
-import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter, FaWhatsapp } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 
@@ -58,9 +58,9 @@ const defaultSections = [
 ];
 
 const defaultSocialLinks = [
+  { icon: <FaWhatsapp className="size-5" />, href: "https://wa.me/244933493788", label: "WhatsApp" },
   { icon: <FaInstagram className="size-5" />, href: "#", label: "Instagram" },
   { icon: <FaFacebook className="size-5" />, href: "#", label: "Facebook" },
-  { icon: <FaTwitter className="size-5" />, href: "#", label: "Twitter" },
   { icon: <FaLinkedin className="size-5" />, href: "#", label: "LinkedIn" },
 ];
 
