@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, Bell, Search } from "lucide-react";
+import { LogOut, Menu, Search } from "lucide-react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,9 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
+import { GlobalSearch } from "@/components/admin/GlobalSearch";
+import { QuickActionsPanel } from "@/components/admin/QuickActionsPanel";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { Badge } from "@/components/ui/badge";
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -16,6 +19,7 @@ const AdminLayout = ({
   children
 }: AdminLayoutProps = {}) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -65,15 +69,20 @@ const AdminLayout = ({
 
             <div className="flex items-center space-x-3">
               {/* Quick Search */}
-              <Button variant="ghost" size="sm" className="rounded-xl hover-lift">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="rounded-xl hover-lift"
+                onClick={() => setShowGlobalSearch(true)}
+              >
                 <Search className="h-4 w-4" />
               </Button>
 
+              {/* Quick Actions */}
+              <QuickActionsPanel />
+
               {/* Notifications */}
-              <Button variant="ghost" size="sm" className="rounded-xl hover-lift relative">
-                <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </Button>
+              <NotificationCenter />
 
               <ThemeToggle />
               
@@ -121,6 +130,12 @@ const AdminLayout = ({
           </div>
         </main>
       </div>
+
+      {/* Global Search Modal */}
+      <GlobalSearch 
+        open={showGlobalSearch} 
+        onOpenChange={setShowGlobalSearch}
+      />
     </div>
   );
 };

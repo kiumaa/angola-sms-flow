@@ -37,27 +37,48 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   // Dashboard
   {
     key: 'home',
-    label: 'Dashboard',
+    label: 'Visão Geral',
     href: '/admin',
     icon: Home,
     category: 'dashboard'
   },
+  {
+    key: 'analytics',
+    label: 'Analytics',
+    href: '/admin/analytics',
+    icon: BarChart3,
+    category: 'dashboard'
+  },
   
-  // Gestão de Usuários
+  // Usuários & Contas
   {
     key: 'users',
-    label: 'Usuários',
+    label: 'Gestão de Usuários',
     href: '/admin/users',
     icon: Users,
     category: 'users'
   },
-  
-  // SMS & Comunicação
   {
-    key: 'smsConfiguration',
-    label: 'Configurações SMS',
-    href: '/admin/sms-configuration',
-    icon: Settings,
+    key: 'roles',
+    label: 'Roles & Permissões',
+    href: '/admin/roles',
+    icon: UserCheck,
+    category: 'users'
+  },
+  
+  // SMS & Campanhas  
+  {
+    key: 'campaigns',
+    label: 'Campanhas',
+    href: '/admin/campaigns',
+    icon: Send,
+    category: 'sms'
+  },
+  {
+    key: 'templates',
+    label: 'Templates',
+    href: '/admin/templates',
+    icon: FileText,
     category: 'sms'
   },
   {
@@ -68,42 +89,21 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     category: 'sms'
   },
   {
-    key: 'smsTest',
-    label: 'Teste SMS',
-    href: '/admin/sms-test',
-    icon: TestTube,
-    category: 'sms'
-  },
-  {
-    key: 'smsMonitoring',
-    label: 'Monitoramento SMS',
-    href: '/admin/sms-monitoring',
+    key: 'gateways',
+    label: 'Gateways',
+    href: '/admin/sms-configuration',
     icon: Wifi,
     category: 'sms'
   },
   {
-    key: 'gatewayControl',
-    label: 'Controle de Gateways',
-    href: '/admin/gateway-control',
-    icon: Settings,
+    key: 'smsMonitoring',
+    label: 'Monitoramento',
+    href: '/admin/sms-monitoring',
+    icon: MonitorSpeaker,
     category: 'sms'
   },
   
   // Financeiro
-  {
-    key: 'financeiro',
-    label: 'Painel Financeiro',
-    href: '/admin/financeiro',
-    icon: DollarSign,
-    category: 'financial'
-  },
-  {
-    key: 'packages',
-    label: 'Pacotes de Créditos',
-    href: '/admin/packages',
-    icon: Package,
-    category: 'financial'
-  },
   {
     key: 'transactions',
     label: 'Transações',
@@ -112,23 +112,49 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     category: 'financial'
   },
   {
+    key: 'packages',
+    label: 'Pacotes',
+    href: '/admin/packages',
+    icon: Package,
+    category: 'financial'
+  },
+  {
     key: 'creditRequests',
-    label: 'Pedidos de Créditos',
+    label: 'Pedidos de Crédito',
     href: '/admin/credit-requests',
     icon: DollarSign,
     category: 'financial'
   },
-  
-  // Relatórios & Analytics
   {
     key: 'reports',
     label: 'Relatórios',
     href: '/admin/reports',
     icon: BarChart3,
-    category: 'reports'
+    category: 'financial'
   },
   
   // Sistema
+  {
+    key: 'settings',
+    label: 'Configurações',
+    href: '/admin/settings',
+    icon: Settings,
+    category: 'system'
+  },
+  {
+    key: 'security',
+    label: 'Segurança',
+    href: '/admin/security',
+    icon: Shield,
+    category: 'system'
+  },
+  {
+    key: 'compliance',
+    label: 'Compliance',
+    href: '/admin/compliance',
+    icon: Archive,
+    category: 'system'
+  },
   {
     key: 'branding',
     label: 'Personalização',
@@ -136,44 +162,32 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Palette,
     category: 'system'
   },
-  {
-    key: 'production',
-    label: 'Produção',
-    href: '/admin/production',
-    icon: Shield,
-    category: 'system'
-  },
 ];
 
 export const ADMIN_NAV_CATEGORIES: AdminNavCategory[] = [
   {
     key: 'dashboard',
-    label: 'Principal',
+    label: '📊 Dashboard',
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'dashboard')
   },
   {
     key: 'users',
-    label: 'Usuários',
+    label: '👥 Usuários & Contas',
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'users')
   },
   {
     key: 'sms',
-    label: 'SMS & Comunicação',
+    label: '📱 SMS & Campanhas',
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'sms')
   },
   {
     key: 'financial',
-    label: 'Financeiro',
+    label: '💰 Financeiro',
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'financial')
   },
   {
-    key: 'reports',
-    label: 'Relatórios',
-    items: ADMIN_NAV_ITEMS.filter(item => item.category === 'reports')
-  },
-  {
     key: 'system',
-    label: 'Sistema',
+    label: '⚙️ Sistema',
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'system')
   }
 ];
