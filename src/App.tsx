@@ -53,6 +53,11 @@ import {
   LazyPrivacy
 } from "./components/shared/LazyComponents";
 
+// Import new admin pages
+import AdminCampaigns from "./pages/AdminCampaigns";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminCompliance from "./pages/AdminCompliance";
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -184,6 +189,9 @@ function App() {
                 }
               >
                 <Route index element={<LazyAdminDashboard />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="campaigns" element={<AdminCampaigns />} />
+                <Route path="compliance" element={<AdminCompliance />} />
                 <Route path="financeiro" element={<LazyAdminFinanceiro />} />
                 <Route path="users" element={<LazyAdminUsers />} />
                 <Route path="packages" element={<LazyAdminPackages />} />
