@@ -82,24 +82,24 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       {/* Left column: sign-in form */}
       <section className="w-full md:flex-1 flex items-center justify-center p-4 md:p-8 min-h-screen md:min-h-0">
         <div className="w-full max-w-md">
-          <div className="flex flex-col gap-6 items-center text-center">
-            <div className="animate-element animate-delay-100 flex justify-center">
+          <div className="flex flex-col gap-6">
+            <div className="animate-element animate-delay-100 text-center">
               <BrandLogo size="lg" showText={true} />
             </div>
-            <div className="animate-element animate-delay-200">
+            <div className="animate-element animate-delay-200 text-center">
               <AnimatedPhrases />
             </div>
 
-            <form className="space-y-5" onSubmit={onSignIn}>
-              <div className="animate-element animate-delay-300">
-                <label className="text-sm font-medium text-muted-foreground">Endereço de Email</label>
+            <form className="space-y-5 w-full" onSubmit={onSignIn}>
+              <div className="animate-element animate-delay-300 space-y-2">
+                <label className="block text-sm font-medium text-muted-foreground text-left">Endereço de Email</label>
                 <GlassInputWrapper>
                   <input name="email" type="email" placeholder="Digite o seu endereço de email" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
                 </GlassInputWrapper>
               </div>
 
-              <div className="animate-element animate-delay-400">
-                <label className="text-sm font-medium text-muted-foreground">Palavra-passe</label>
+              <div className="animate-element animate-delay-400 space-y-2">
+                <label className="block text-sm font-medium text-muted-foreground text-left">Palavra-passe</label>
                 <GlassInputWrapper>
                   <div className="relative">
                     <input name="password" type={showPassword ? 'text' : 'password'} placeholder="Digite a sua palavra-passe" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
