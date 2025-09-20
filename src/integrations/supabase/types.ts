@@ -1650,7 +1650,7 @@ export type Database = {
         Returns: boolean
       }
       log_security_event: {
-        Args: { details?: Json; event_type: string; user_identifier: string }
+        Args: { details?: Json; event_type: string; user_identifier?: string }
         Returns: undefined
       }
       migrate_sms_credentials_to_secrets: {
