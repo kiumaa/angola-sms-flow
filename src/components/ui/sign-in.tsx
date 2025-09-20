@@ -153,9 +153,5 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         </div>
       </section>
 
-      {/* Right column: hero image */}
-      {heroImageSrc && <section className="hidden md:block flex-1 relative p-4">
-          
-        </section>}
     </div>;
 };
