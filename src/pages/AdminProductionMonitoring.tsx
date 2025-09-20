@@ -1,15 +1,10 @@
 import React from 'react';
-import ProductionReadinessChecklist from '@/components/admin/ProductionReadinessChecklist';
-import { usePageMeta } from '@/hooks/useDynamicMetaTags';
+import { ProductionReadinessChecklist } from '@/components/admin/ProductionReadinessChecklist';
 
-const AdminProductionMonitoring = () => {
-  // Set page meta tags
-  usePageMeta({
-    title: 'Monitorização de Produção',
-    description: 'Dashboard de segurança, performance e integridade do sistema SMS AO'
-  });
-
-  return <ProductionReadinessChecklist />;
-};
-
-export default AdminProductionMonitoring;
+export default function AdminProductionMonitoring() {
+  return (
+    <div className="space-y-6">
+      <ProductionReadinessChecklist />
+    </div>
+  );
+}

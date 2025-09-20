@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Settings, HeartHandshake } from "lucide-react";
 import SMSGatewayMonitoring from "@/components/admin/SMSGatewayMonitoring";
-import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
+import { SystemHealthDashboard } from "@/components/admin/SystemHealthDashboard";
 
 const AdminSystemMonitoring = () => {
   return (
