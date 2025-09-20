@@ -82,7 +82,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       {/* Left column: sign-in form */}
       <section className="w-full md:flex-1 flex items-center justify-center p-4 md:p-8 min-h-screen md:min-h-0">
         <div className="w-full max-w-md">
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 items-center text-center">
             <div className="animate-element animate-delay-100 flex justify-center">
               <BrandLogo size="lg" showText={true} />
             </div>
