@@ -12,7 +12,7 @@ interface Footer7Props {
   };
   sections?: Array<{
     title: string;
-    links: Array<{ name: string; href: string }>;
+    links: Array<{ name: React.ReactNode; href: string }>;
   }>;
   description?: string;
   socialLinks?: Array<{

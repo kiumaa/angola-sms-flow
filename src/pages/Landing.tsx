@@ -156,7 +156,7 @@ const Landing = () => {
     }, {
       title: "Suporte",
       links: [{
-        name: "WhatsApp: +244 933 493 788",
+        name: <span className="inline-flex items-center gap-2"><FaWhatsapp className="size-4" /> +244 933 493 788</span>,
         href: "https://wa.me/244933493788"
       }, {
         name: "Email: suporte@sms.ao",
