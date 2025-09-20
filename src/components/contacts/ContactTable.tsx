@@ -25,18 +25,23 @@ import {
   Tag,
   Search,
   Shield,
-  ShieldOff
+  ShieldOff,
+  MessageSquare,
+  Phone,
+  Users
 } from "lucide-react";
 import { format } from 'date-fns';
 
 interface Contact {
   id: string;
   name: string;
-  phone_e164: string;
+  phone: string;
+  phone_e164?: string;
+  email?: string;
   attributes: Record<string, any>;
   is_blocked: boolean;
   created_at: string;
-  tags?: { id: string; name: string; color: string }[];
+  tags?: string[];
 }
 
 interface ContactTableProps {
@@ -133,28 +138,39 @@ export default function ContactTable({
                       onCheckedChange={(checked) => onSelectContact(contact.id, !!checked)}
                     />
                   </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{contact.name}</div>
-                    {contact.attributes.company && (
-                      <div className="text-sm text-muted-foreground">
-                        {contact.attributes.company}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-mono">
-                    {formatPhoneForDisplay(contact.phone_e164)}
-                  </TableCell>
+                   <TableCell>
+                     <div className="flex items-center gap-3">
+                       <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
+                         <Users className="h-4 w-4 text-white" />
+                       </div>
+                       <div>
+                         <div className="font-medium">{contact.name}</div>
+                         {contact.attributes?.company && (
+                           <div className="text-sm text-muted-foreground">
+                             {contact.attributes.company}
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </TableCell>
+                   <TableCell>
+                     <div className="flex items-center gap-2">
+                       <Phone className="h-4 w-4 text-muted-foreground" />
+                       <span className="font-mono text-sm">
+                         {contact.phone_e164 ? formatPhoneForDisplay(contact.phone_e164) : contact.phone}
+                       </span>
+                     </div>
+                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {contact.tags?.map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          variant="secondary"
-                          style={{ backgroundColor: `${tag.color}20`, color: tag.color, borderColor: tag.color }}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
+                       {contact.tags?.map((tag, index) => (
+                         <Badge
+                           key={index}
+                           variant="secondary"
+                         >
+                           {tag}
+                         </Badge>
+                       ))}
                     </div>
                   </TableCell>
                   <TableCell>

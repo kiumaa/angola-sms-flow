@@ -4,16 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Upload, Download, CheckCircle } from "lucide-react";
 
 interface CSVImportProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onImportComplete: () => void;
 }
 
-const CSVImport = ({ onImportComplete }: CSVImportProps) => {
+const CSVImport = ({ open, onOpenChange, onImportComplete }: CSVImportProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [columns, setColumns] = useState<string[]>([]);
@@ -255,6 +258,8 @@ const CSVImport = ({ onImportComplete }: CSVImportProps) => {
         )}
       </CardContent>
     </Card>
+      </DialogContent>
+    </Dialog>
   );
 };
 

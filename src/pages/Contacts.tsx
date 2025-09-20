@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Upload, Download, Search, Users, FileText, Phone, MessageSquare } from "lucide-react";
+import { Plus, Upload, Download, Search, Users, FileText, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -13,9 +11,11 @@ import CSVImport from "@/components/contacts/CSVImport";
 import ContactForm from "@/components/contacts/ContactForm";
 import ContactViewModal from "@/components/contacts/ContactViewModal";
 import ContactListForm from "@/components/contacts/ContactListForm";
+import ContactTable from "@/components/contacts/ContactTable";
+import { ContactBulkActions } from "@/components/contacts/ContactBulkActions";
+import { ContactAdvancedFilters } from "@/components/contacts/ContactAdvancedFilters";
 import { useContacts } from "@/hooks/useContacts";
 import { ContactStats } from "@/components/contacts/ContactStats";
-import { ContactActions } from "@/components/contacts/ContactActions";
 import { EmptyState } from "@/components/shared/EmptyState";
 
 const Contacts = () => {
@@ -24,8 +24,11 @@ const Contacts = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [showContactView, setShowContactView] = useState(false);
   const [showListForm, setShowListForm] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [editingContact, setEditingContact] = useState<any>(null);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [filters, setFilters] = useState<any>({});
   const navigate = useNavigate();
   const { toast } = useToast();
   const { 
@@ -91,13 +94,6 @@ const Contacts = () => {
 
   const handleSendSMS = (contact: any) => {
     navigate(`/quick-send?phone=${encodeURIComponent(contact.phone_e164 || contact.phone)}`);
-  };
-
-  const handleSendEmail = (contact: any) => {
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "O envio de emails será implementado em breve.",
-    });
   };
 
   const handleSaveContact = async (contactData: any) => {
@@ -174,11 +170,144 @@ const Contacts = () => {
 
   const handleImportSuccess = (importedContacts: any[]) => {
     setShowImport(false);
-    refetch(); // Refresh the contacts list
+    refetch();
     toast({
       title: "Importação concluída",
       description: `${importedContacts.length} contatos foram importados com sucesso.`,
     });
+  };
+
+  // Bulk Actions
+  const handleSelectContact = (contactId: string, selected: boolean) => {
+    setSelectedContacts(prev => 
+      selected 
+        ? [...prev, contactId]
+        : prev.filter(id => id !== contactId)
+    );
+  };
+
+  const handleSelectAll = (selected: boolean) => {
+    setSelectedContacts(selected ? contacts.map(c => c.id) : []);
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      for (const contactId of selectedContacts) {
+        await deleteContact(contactId);
+      }
+      setSelectedContacts([]);
+      toast({
+        title: "Contatos excluídos",
+        description: `${selectedContacts.length} contatos foram excluídos com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir contatos selecionados.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkSMS = () => {
+    const phones = selectedContacts
+      .map(id => contacts.find(c => c.id === id))
+      .filter(c => c)
+      .map(c => c.phone_e164 || c.phone)
+      .join(',');
+    
+    navigate(`/quick-send?phones=${encodeURIComponent(phones)}`);
+  };
+
+  const handleBulkBlock = async () => {
+    try {
+      for (const contactId of selectedContacts) {
+        await supabase
+          .from('contacts')
+          .update({ is_blocked: true })
+          .eq('id', contactId);
+      }
+      setSelectedContacts([]);
+      refetch();
+      toast({
+        title: "Contatos bloqueados",
+        description: `${selectedContacts.length} contatos foram bloqueados.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao bloquear contatos.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkUnblock = async () => {
+    try {
+      for (const contactId of selectedContacts) {
+        await supabase
+          .from('contacts')
+          .update({ is_blocked: false })
+          .eq('id', contactId);
+      }
+      setSelectedContacts([]);
+      refetch();
+      toast({
+        title: "Contatos desbloqueados",
+        description: `${selectedContacts.length} contatos foram desbloqueados.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao desbloquear contatos.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkTag = () => {
+    toast({
+      title: "Em desenvolvimento",
+      description: "Funcionalidade de tags em lote será implementada em breve.",
+    });
+  };
+
+  const handleBulkExport = () => {
+    const selectedContactsData = contacts.filter(c => selectedContacts.includes(c.id));
+    
+    const headers = ['Nome', 'Telefone', 'Email', 'Empresa', 'Status', 'Tags', 'Data de Criação'];
+    const csvContent = [
+      headers.join(','),
+      ...selectedContactsData.map(contact => [
+        `"${contact.name || ''}"`,
+        `"${contact.phone_e164 || contact.phone || ''}"`,
+        `"${contact.email || ''}"`,
+        `"${contact.attributes?.company || ''}"`,
+        `"${contact.is_blocked ? 'Bloqueado' : 'Ativo'}"`,
+        `"${contact.tags ? contact.tags.join('; ') : ''}"`,
+        `"${new Date(contact.created_at).toLocaleDateString('pt-BR')}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `contatos_selecionados_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Exportação concluída",
+      description: `${selectedContactsData.length} contatos foram exportados.`,
+    });
+  };
+
+  const handleFiltersReset = () => {
+    setFilters({});
+    refetch();
   };
 
   if (isLoading) {
@@ -237,9 +366,66 @@ const Contacts = () => {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Quick Stats */}
+            <ContactStats 
+              contacts={contacts} 
+              contactListsCount={contactLists.length} 
+            />
+
+            {/* Advanced Filters */}
+            {showFilters && (
+              <ContactAdvancedFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                onReset={handleFiltersReset}
+              />
+            )}
+
+            {/* Contact Lists */}
+            <Card className="card-futuristic">
+              <CardHeader>
+                <CardTitle className="gradient-text">Listas de Contatos</CardTitle>
+                <CardDescription>Organize seus contatos em listas</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {contactLists.map((list) => (
+                  <Card 
+                    key={list.id} 
+                    className="p-4 cursor-pointer hover-lift glass-card border-glass-border"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
+                          <FileText className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{list.name}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {list.description || "Sem descrição"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                
+                <Button
+                  variant="outline"
+                  className="w-full glass-card border-glass-border"
+                  onClick={() => setShowListForm(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Lista
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-3 space-y-6">
             {/* Search and Actions */}
             <Card className="card-futuristic">
               <CardContent className="p-6">
@@ -256,6 +442,14 @@ const Contacts = () => {
                   <Button 
                     variant="outline" 
                     className="glass-card border-glass-border"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="glass-card border-glass-border"
                     onClick={handleExportContacts}
                   >
                     <Download className="h-4 w-4 mr-2" />
@@ -265,12 +459,24 @@ const Contacts = () => {
               </CardContent>
             </Card>
 
+            {/* Bulk Actions */}
+            <ContactBulkActions
+              selectedContacts={selectedContacts}
+              onBulkDelete={handleBulkDelete}
+              onBulkSMS={handleBulkSMS}
+              onBulkBlock={handleBulkBlock}
+              onBulkUnblock={handleBulkUnblock}
+              onBulkTag={handleBulkTag}
+              onBulkExport={handleBulkExport}
+            />
+
             {/* Contacts Table */}
             <Card className="card-futuristic">
               <CardHeader>
                 <CardTitle className="gradient-text">Lista de Contatos</CardTitle>
                 <CardDescription>
                   {contacts.length} contatos encontrados
+                  {selectedContacts.length > 0 && ` • ${selectedContacts.length} selecionados`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -306,191 +512,39 @@ const Contacts = () => {
                     ) : undefined}
                   />
                 ) : (
-                  <div className="rounded-2xl border border-glass-border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/20 hover:bg-muted/20">
-                          <TableHead className="font-medium">Nome</TableHead>
-                          <TableHead className="font-medium">Telefone</TableHead>
-                          <TableHead className="font-medium">Email</TableHead>
-                          <TableHead className="font-medium">Status</TableHead>
-                          <TableHead className="font-medium">Tags</TableHead>
-                          <TableHead className="font-medium text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {contacts.map((contact) => (
-                          <TableRow key={contact.id} className="hover:bg-muted/10 group">
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
-                                  <Users className="h-4 w-4 text-white" />
-                                </div>
-                                <div>
-                                  <div className="font-medium">{contact.name || 'Sem nome'}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    Criado em {new Date(contact.created_at).toLocaleDateString('pt-BR')}
-                                  </div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-mono text-sm">
-                                  {contact.phone_e164 || contact.phone}
-                                </span>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleSendSMS(contact)}
-                                  title="Enviar SMS"
-                                >
-                                  <MessageSquare className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {contact.email ? (
-                                <span className="text-sm">{contact.email}</span>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">Não informado</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={contact.is_blocked ? "destructive" : "default"}
-                                className="text-xs"
-                              >
-                                {contact.is_blocked ? 'Bloqueado' : 'Ativo'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-1 flex-wrap max-w-32">
-                                {contact.tags && contact.tags.length > 0 ? (
-                                  contact.tags.slice(0, 2).map((tag, index) => (
-                                    <Badge key={index} variant="secondary" className="text-xs">
-                                      {tag}
-                                    </Badge>
-                                  ))
-                                ) : (
-                                  <span className="text-muted-foreground text-xs">Sem tags</span>
-                                )}
-                                {contact.tags && contact.tags.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{contact.tags.length - 2}
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <ContactActions
-                                contact={contact}
-                                onView={handleViewContact}
-                                onEdit={handleEditContact}
-                                onDelete={handleDeleteContact}
-                                onToggleBlock={handleToggleBlock}
-                                onSendSMS={handleSendSMS}
-                                onSendEmail={handleSendEmail}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <ContactTable
+                    contacts={contacts}
+                    selectedContacts={selectedContacts}
+                    onSelectContact={handleSelectContact}
+                    onSelectAll={handleSelectAll}
+                    onEditContact={handleEditContact}
+                    onDeleteContact={handleDeleteContact}
+                    onToggleBlock={handleToggleBlock}
+                    loading={isLoading}
+                  />
                 )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Stats */}
-            <ContactStats 
-              contacts={contacts} 
-              contactListsCount={contactLists.length} 
-            />
-
-            {/* Contact Lists */}
-            <Card className="card-futuristic">
-              <CardHeader>
-                <CardTitle className="gradient-text">Listas de Contatos</CardTitle>
-                <CardDescription>Organize seus contatos em listas</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {contactLists.map((list) => (
-                  <Card 
-                    key={list.id} 
-                    className="p-4 cursor-pointer hover-lift glass-card border-glass-border"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
-                          <FileText className="h-4 w-4 text-white" />
-                        </div>
-                          <div>
-                            <h4 className="font-medium">{list.name}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              {list.description}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          Lista
-                        </Badge>
-                    </div>
-                  </Card>
-                ))}
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full glass-card border-glass-border border-dashed hover:border-primary"
-                  onClick={() => setShowListForm(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Lista
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Import Tips */}
-            <Card className="card-futuristic border-blue-500/30 bg-blue-500/5">
-              <CardHeader>
-                <CardTitle className="text-blue-400 text-lg">💡 Dicas de Importação</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p>• Use formato CSV com colunas: nome, telefone, email</p>
-                <p>• Telefones devem incluir código do país (+244)</p>
-                <p>• Máximo de 10.000 contatos por importação</p>
-                <p>• Remova duplicatas antes de importar</p>
-                <p>• Respeite as leis de proteção de dados</p>
               </CardContent>
             </Card>
           </div>
         </div>
 
         {/* Modals */}
-        {showImport && (
-          <CSVImport 
-            onImportComplete={() => {
-              setShowImport(false);
-              refetch();
-              toast({
-                title: "Importação concluída",
-                description: "Contatos importados com sucesso.",
-              });
-            }}
-          />
-        )}
+        <CSVImport
+          open={showImport}
+          onOpenChange={setShowImport}
+          onImportComplete={() => {
+            setShowImport(false);
+            refetch();
+            toast({
+              title: "Importação concluída",
+              description: "Contatos importados com sucesso.",
+            });
+          }}
+        />
 
         <ContactForm
           open={showContactForm}
-          onOpenChange={(open) => {
-            setShowContactForm(open);
-            if (!open) setEditingContact(null);
-          }}
+          onOpenChange={setShowContactForm}
           contact={editingContact}
           onSave={handleSaveContact}
         />
@@ -502,22 +556,15 @@ const Contacts = () => {
           onEdit={handleEditContact}
           onToggleBlock={handleToggleBlock}
           onSendSMS={handleSendSMS}
-          onSendEmail={handleSendEmail}
         />
 
         <ContactListForm
           open={showListForm}
           onOpenChange={setShowListForm}
-          onSave={() => {
-            refetch();
-            toast({
-              title: "Lista criada",
-              description: "Nova lista de contatos criada com sucesso.",
-            });
-          }}
         />
       </div>
     </DashboardLayout>
   );
 };
+
 export default Contacts;

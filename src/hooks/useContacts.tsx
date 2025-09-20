@@ -93,12 +93,13 @@ export const useContacts = () => {
 
   const createContact = async (contactData: any) => {
     try {
+      const session = await supabase.auth.getSession();
       const response = await fetch(
         `https://hwxxcprqxqznselwzghi.supabase.co/functions/v1/contacts-api`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Authorization': `Bearer ${session.data.session?.access_token}`,
             'Content-Type': 'application/json',
             'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3eHhjcHJxeHF6bnNlbHd6Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDA5NDUsImV4cCI6MjA2NzExNjk0NX0.mjm1kF6gI55F9DLYfueAVOKokvTY8_nv0sFvvG_ReQs'
           },

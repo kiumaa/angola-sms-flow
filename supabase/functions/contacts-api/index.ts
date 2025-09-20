@@ -88,10 +88,7 @@ Deno.serve(async (req) => {
       let query = supabase
         .from('contacts')
         .select(`
-          id, phone_e164, name, attributes, is_blocked, created_at, updated_at,
-          contact_tag_pivot!inner(
-            contact_tags!inner(id, name, color)
-          )
+          id, phone_e164, name, attributes, is_blocked, created_at, updated_at, phone, email
         `)
         .eq('account_id', accountId)
         .range(offset, offset + size - 1)
