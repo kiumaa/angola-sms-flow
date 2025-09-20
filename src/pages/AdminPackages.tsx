@@ -231,6 +231,9 @@ const AdminPackages = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Preço fixo por crédito (definido globalmente)
+  const PRICE_PER_CREDIT = 50; // AOA por crédito
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-AO', {
       style: 'currency',
@@ -320,6 +323,10 @@ const AdminPackages = () => {
             <Package className="h-5 w-5 mr-2" />
             Pacotes de Créditos ({packages.length})
           </CardTitle>
+          <div className="text-sm text-muted-foreground mt-2">
+            <DollarSign className="h-4 w-4 inline mr-1" />
+            Preço geral: {formatCurrency(PRICE_PER_CREDIT)} por crédito
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -360,7 +367,7 @@ const AdminPackages = () => {
                       {formatCurrency(pkg.price_kwanza)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatCurrency(pkg.price_kwanza / pkg.credits)} / crédito
+                      {formatCurrency(PRICE_PER_CREDIT)} / crédito
                     </TableCell>
                     <TableCell>
                       <Badge variant={pkg.is_active ? "default" : "secondary"}>
