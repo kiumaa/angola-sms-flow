@@ -15,7 +15,11 @@ import {
   MonitorSpeaker,
   UserCheck,
   Archive,
-  TestTube
+  TestTube,
+  Mail,
+  Activity,
+  Globe,
+  Eye
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -102,6 +106,20 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: MonitorSpeaker,
     category: 'sms'
   },
+  {
+    key: 'smsTest',
+    label: 'Teste SMS',
+    href: '/admin/sms-test',
+    icon: TestTube,
+    category: 'sms'
+  },
+  {
+    key: 'gatewaySettings',
+    label: 'Config. Gateways',
+    href: '/admin/sms-gateway-settings',
+    icon: Settings,
+    category: 'sms'
+  },
   
   // Financeiro
   {
@@ -130,6 +148,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Relatórios',
     href: '/admin/reports',
     icon: BarChart3,
+    category: 'financial'
+  },
+  {
+    key: 'financeiro',
+    label: 'Dashboard Financeiro',
+    href: '/admin/financeiro',
+    icon: DollarSign,
     category: 'financial'
   },
   
@@ -167,6 +192,27 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Personalização',
     href: '/admin/brand',
     icon: Palette,
+    category: 'system'
+  },
+  {
+    key: 'settings',
+    label: 'Configurações',
+    href: '/admin/settings',
+    icon: Settings,
+    category: 'system'
+  },
+  {
+    key: 'gatewayControl',
+    label: 'Controle Gateway',
+    href: '/admin/gateway-control',
+    icon: Globe,
+    category: 'system'
+  },
+  {
+    key: 'production',
+    label: 'Monit. Produção',
+    href: '/admin/production',
+    icon: Eye,
     category: 'system'
   },
 ];
