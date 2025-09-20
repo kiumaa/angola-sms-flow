@@ -58,11 +58,11 @@ const Register = () => {
               </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <CheckCircle className="w-4 h-4 text-emerald-500" />
-                <span className="font-medium">GDPR Compliant</span>
+                <span className="font-medium">Conformidade GDPR</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <CheckCircle className="w-4 h-4 text-emerald-500" />
-                <span className="font-medium">99.9% Uptime</span>
+                <span className="font-medium">99,9% Disponibilidade</span>
               </div>
             </div>
           </div>
