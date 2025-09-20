@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Send, TestTube, CheckCircle, XCircle, Clock, Zap } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +32,7 @@ const AdminSMSTest = () => {
   const [countryCode, setCountryCode] = useState('+244');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedGateway, setSelectedGateway] = useState<string>('auto');
   const [results, setResults] = useState<TestResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -97,12 +99,13 @@ const AdminSMSTest = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Send test SMS using new interface
+      // Send test SMS using selected gateway or auto-selection
       const { data, error } = await supabase.functions.invoke('send-quick-sms', {
         body: {
           recipients: [fullPhoneNumber],
           message: message.trim(),
-          sender_id: 'SMSAO'
+          sender_id: 'SMSAO',
+          gateway: selectedGateway === 'auto' ? undefined : selectedGateway
         }
       });
 
@@ -120,7 +123,7 @@ const AdminSMSTest = () => {
         phone: fullPhoneNumber,
         message: message.trim(),
         status: success ? 'success' : 'failed',
-        gateway: 'BulkSMS',
+        gateway: data.gateway_used || selectedGateway,
         credits_used: data.credits_debited || 0,
         response_time: responseTime,
         error: success ? undefined : (data.error || 'Unknown error'),
@@ -141,6 +144,7 @@ const AdminSMSTest = () => {
       if (success) {
         setPhoneNumber('');
         setMessage('');
+        setSelectedGateway('auto');
       }
 
     } catch (error: any) {
@@ -234,7 +238,7 @@ const AdminSMSTest = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="country">Código do País</Label>
                 <CountryCodeSelector
@@ -260,6 +264,19 @@ const AdminSMSTest = () => {
                     className="flex-1"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gateway">Gateway SMS</Label>
+                <Select value={selectedGateway} onValueChange={setSelectedGateway}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar gateway" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">🤖 Automático</SelectItem>
+                    <SelectItem value="bulksms">📱 BulkSMS</SelectItem>
+                    <SelectItem value="bulkgate">🚀 BulkGate</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
