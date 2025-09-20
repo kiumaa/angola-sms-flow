@@ -1523,6 +1523,14 @@ export type Database = {
         Args: { input_text: string }
         Returns: string
       }
+      enhanced_security_rate_limit: {
+        Args: {
+          max_attempts?: number
+          operation_type: string
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
       get_active_gateway_override: {
         Args: Record<PropertyKey, never>
         Returns: string
