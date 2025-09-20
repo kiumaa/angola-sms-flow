@@ -1578,6 +1578,16 @@ export type Database = {
           site_title: string
         }[]
       }
+      get_security_monitoring_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          action: string
+          affected_tables: string[]
+          event_count: number
+          hour: string
+          unique_users: number
+        }[]
+      }
       get_user_transaction_summary: {
         Args: { _user_id?: string }
         Returns: Json
