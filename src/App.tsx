@@ -57,6 +57,8 @@ import {
 import AdminCampaigns from "./pages/AdminCampaigns";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCompliance from "./pages/AdminCompliance";
+import AdminAutomations from "./pages/AdminAutomations";
+import AdminWorkflows from "./pages/AdminWorkflows";
 
 const queryClient = new QueryClient();
 
@@ -191,6 +193,8 @@ function App() {
                 <Route index element={<LazyAdminDashboard />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="campaigns" element={<AdminCampaigns />} />
+                <Route path="automations" element={<AdminAutomations />} />
+                <Route path="workflows" element={<AdminWorkflows />} />
                 <Route path="compliance" element={<AdminCompliance />} />
                 <Route path="financeiro" element={<LazyAdminFinanceiro />} />
                 <Route path="users" element={<LazyAdminUsers />} />

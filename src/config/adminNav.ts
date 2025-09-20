@@ -135,10 +135,17 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   
   // Sistema
   {
-    key: 'settings',
-    label: 'Configurações',
-    href: '/admin/settings',
+    key: 'automations',
+    label: 'Automações',
+    href: '/admin/automations',
     icon: Settings,
+    category: 'system'
+  },
+  {
+    key: 'workflows',
+    label: 'Workflows',
+    href: '/admin/workflows',
+    icon: Archive,
     category: 'system'
   },
   {
