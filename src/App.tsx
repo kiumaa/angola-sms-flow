@@ -14,6 +14,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useThemeAwareFavicon } from "./hooks/useThemeAwareFavicon";
 import { MetaTagsProvider } from "./components/shared/MetaTagsProvider";
+import { SecurityHeaders } from "./components/security/SecurityHeaders";
 
 // Import lazy components from the centralized file
 import {
@@ -68,6 +69,7 @@ function App() {
   
   return (
     <ErrorBoundary>
+      <SecurityHeaders />
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ThemeProvider 

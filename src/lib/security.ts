@@ -49,7 +49,7 @@ export const containsXSS = (text: string): boolean => {
 };
 
 /**
- * Rate limiting helper for client-side
+ * Enhanced rate limiting helper for client-side with security logging
  */
 export class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
@@ -67,6 +67,12 @@ export class RateLimiter {
     const validAttempts = attempts.filter(time => now - time < this.windowMs);
     
     if (validAttempts.length >= this.maxAttempts) {
+      // Security: Log rate limit violations
+      console.warn(`Rate limit exceeded for key: ${key.substring(0, 8)}...`, {
+        attempts: validAttempts.length,
+        maxAttempts: this.maxAttempts,
+        timestamp: new Date().toISOString()
+      });
       return false;
     }
     
@@ -79,6 +85,24 @@ export class RateLimiter {
   
   reset(key: string): void {
     this.attempts.delete(key);
+  }
+
+  // Security: Get remaining attempts for user feedback
+  getRemainingAttempts(key: string): number {
+    const now = Date.now();
+    const attempts = this.attempts.get(key) || [];
+    const validAttempts = attempts.filter(time => now - time < this.windowMs);
+    return Math.max(0, this.maxAttempts - validAttempts.length);
+  }
+
+  // Security: Get time until reset
+  getTimeUntilReset(key: string): number {
+    const attempts = this.attempts.get(key);
+    if (!attempts || attempts.length === 0) return 0;
+    
+    const oldestAttempt = Math.min(...attempts);
+    const resetTime = oldestAttempt + this.windowMs;
+    return Math.max(0, resetTime - Date.now());
   }
 }
 

@@ -4,15 +4,18 @@ project_id = "hwxxcprqxqznselwzghi"
 verify_jwt = true
 
 [functions.send-sms]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-sms-bulksms]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-quick-sms]
 verify_jwt = true
 
 [functions.send-otp]
+verify_jwt = false
+
+[functions.security-enhanced-otp]
 verify_jwt = false
 
 [functions.verify-otp]

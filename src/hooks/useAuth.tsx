@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { RateLimiter } from '@/lib/security';
 
 interface AuthContextType {
   user: User | null;
@@ -97,11 +98,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
+    // Security: Rate limiting for sign-in attempts
+    const rateLimiter = new RateLimiter(5, 15 * 60 * 1000); // 5 attempts per 15 minutes
+    const clientKey = `signin_${email.split('@')[0]}`;
+    
+    if (!rateLimiter.isAllowed(clientKey)) {
+      const remainingTime = Math.ceil(rateLimiter.getTimeUntilReset(clientKey) / 60000);
+      return { 
+        error: { 
+          message: `Too many sign-in attempts. Please try again in ${remainingTime} minutes.` 
+        } 
+      };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-    
+
+    // Security: Log failed sign-in attempts (but not successful ones for privacy)
+    if (error) {
+      console.warn('Sign-in attempt failed:', { 
+        email: email.replace(/(.{2}).*@/, '$1***@'), 
+        timestamp: new Date().toISOString(),
+        remaining: rateLimiter.getRemainingAttempts(clientKey)
+      });
+    } else {
+      // Reset rate limiter on successful login
+      rateLimiter.reset(clientKey);
+    }
+
     return { error };
   };
 
