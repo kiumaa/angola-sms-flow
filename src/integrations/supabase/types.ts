@@ -1515,8 +1515,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      decrypt_payment_reference: {
+        Args: { encrypted_ref: string }
+        Returns: string
+      }
       decrypt_smtp_password: {
         Args: { encrypted_password: string }
+        Returns: string
+      }
+      encrypt_payment_reference: {
+        Args: { ref_text: string }
         Returns: string
       }
       encrypt_smtp_password: {
@@ -1569,6 +1577,10 @@ export type Database = {
           site_tagline: string
           site_title: string
         }[]
+      }
+      get_user_transaction_summary: {
+        Args: { _user_id?: string }
+        Returns: Json
       }
       has_role: {
         Args: {
