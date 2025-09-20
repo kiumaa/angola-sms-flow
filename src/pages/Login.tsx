@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { SignInPage, Testimonial } from "@/components/ui/sign-in";
 import OTPLoginModal from "@/components/auth/OTPLoginModal";
+import loginHeroImage from "@/assets/login-hero.jpg";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -81,7 +82,7 @@ const Login = () => {
       <SignInPage
         title="Seja Bem-vindo(a) ao SMS AO"
         description="Acesse sua conta e continue sua jornada conosco"
-        heroImageSrc="/src/img/main.png"
+        heroImageSrc={loginHeroImage}
         onSignIn={handleSignIn}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
