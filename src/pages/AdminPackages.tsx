@@ -231,8 +231,8 @@ const AdminPackages = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Preço fixo por crédito (definido globalmente)
-  const PRICE_PER_CREDIT = 50; // AOA por crédito
+  // Preço por crédito considerando taxa de serviço de 12%
+  const PRICE_PER_CREDIT = 89.6; // AOA por crédito (80 Kz base + 12% taxa)
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-AO', {
