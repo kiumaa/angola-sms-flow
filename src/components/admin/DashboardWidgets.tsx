@@ -23,22 +23,9 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', '#8884d8', '#82ca9d', '#ffc658'];
 
-// Mock data for widgets
-const smsVolumeData = [
-  { date: '2024-01-15', sent: 1200, delivered: 1150, failed: 50 },
-  { date: '2024-01-16', sent: 1400, delivered: 1340, failed: 60 },
-  { date: '2024-01-17', sent: 1100, delivered: 1050, failed: 50 },
-  { date: '2024-01-18', sent: 1600, delivered: 1520, failed: 80 },
-  { date: '2024-01-19', sent: 1800, delivered: 1710, failed: 90 },
-  { date: '2024-01-20', sent: 2000, delivered: 1900, failed: 100 },
-  { date: '2024-01-21', sent: 1900, delivered: 1820, failed: 80 },
-];
+// Data will be loaded from useDashboardStats hook
 
-const gatewayDistribution = [
-  { name: 'BulkSMS', value: 60, color: COLORS[0] },
-  { name: 'BulkGate', value: 35, color: COLORS[1] },
-  { name: 'Outros', value: 5, color: COLORS[2] }
-];
+// Gateway distribution will be calculated from real SMS logs
 
 const userGrowthData = [
   { month: 'Jan', users: 150 },
@@ -285,7 +272,7 @@ export const DashboardWidgets = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={smsVolumeData}>
+              <AreaChart data={[]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 
@@ -329,7 +316,7 @@ export const DashboardWidgets = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={gatewayDistribution}
+                    data={[]}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -337,7 +324,7 @@ export const DashboardWidgets = () => {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {gatewayDistribution.map((entry, index) => (
+                    {[].map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -346,7 +333,7 @@ export const DashboardWidgets = () => {
               </ResponsiveContainer>
             </div>
             <div className="flex justify-center space-x-4 mt-4">
-              {gatewayDistribution.map((item, index) => (
+              {[].map((item: any, index: number) => (
                 <div key={item.name} className="flex items-center space-x-2">
                   <div 
                     className="w-3 h-3 rounded-full" 

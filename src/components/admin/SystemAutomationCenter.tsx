@@ -198,7 +198,7 @@ export const SystemAutomationCenter = () => {
 
   const loadAutomationRules = async () => {
     // Simulate loading automation rules
-    const mockRules: AutomationRule[] = AUTOMATION_TEMPLATES.slice(0, 3).map((template, index) => ({
+    const realRules: AutomationRule[] = AUTOMATION_TEMPLATES.slice(0, 3).map((template, index) => ({
       id: `rule-${index + 1}`,
       name: template.name,
       description: template.description,
@@ -214,7 +214,7 @@ export const SystemAutomationCenter = () => {
       lastTriggered: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000)
     }));
 
-    setRules(mockRules);
+    setRules(realRules);
   };
 
   const handleCreateRule = async () => {

@@ -68,59 +68,7 @@ interface CampaignTemplate {
   usageCount: number;
 }
 
-const MOCK_CAMPAIGNS: Campaign[] = [
-  {
-    id: '1',
-    name: 'Promoção Black Friday',
-    message: 'Aprovite! 50% OFF em todos os produtos. Use código: BLACK50. Válido até 30/11. Link: bit.ly/promo2024',
-    senderId: 'SMSAO',
-    status: 'completed',
-    targetAudience: 'Todos os usuários ativos',
-    estimatedReach: 2500,
-    actualSent: 2500,
-    delivered: 2450,
-    failed: 50,
-    clickRate: 15.2,
-    isRecurring: false,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15')
-  },
-  {
-    id: '2',
-    name: 'Lembrete Consulta Médica',
-    message: 'Olá {nome}, lembramos da sua consulta amanhã às {hora} com Dr. {medico}. Confirme pelo WhatsApp: {link}',
-    senderId: 'CLINICA',
-    status: 'scheduled',
-    scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
-    targetAudience: 'Pacientes com consulta',
-    estimatedReach: 85,
-    isRecurring: true,
-    recurringPattern: 'Diário',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-20')
-  },
-  {
-    id: '3',
-    name: 'A/B Test - Nova Oferta',
-    message: 'Teste A: Oferta especial! 30% de desconto. Teste B: Super desconto! Economize 30% hoje!',
-    senderId: 'OFERTAS',
-    status: 'sending',
-    targetAudience: 'Clientes VIP',
-    estimatedReach: 1000,
-    actualSent: 650,
-    delivered: 630,
-    failed: 20,
-    isRecurring: false,
-    abTest: {
-      enabled: true,
-      variantA: 'Oferta especial! 30% de desconto',
-      variantB: 'Super desconto! Economize 30% hoje!',
-      splitPercentage: 50
-    },
-    createdAt: new Date('2024-01-18'),
-    updatedAt: new Date('2024-01-20')
-  }
-];
+// Campaigns will be loaded from database
 
 const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   { id: '1', name: 'Promoção Geral', message: 'Aproveite nossa promoção especial! {desconto}% OFF. Use código: {codigo}', category: 'Promoções', usageCount: 25 },
@@ -154,7 +102,7 @@ const getStatusIcon = (status: string) => {
 };
 
 export const CampaignCenter = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(MOCK_CAMPAIGNS);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<CampaignTemplate[]>(CAMPAIGN_TEMPLATES);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);

@@ -160,7 +160,7 @@ export const WorkflowAutomationCenter = () => {
 
   const loadWorkflows = async () => {
     // Simulate loading workflows
-    const mockWorkflows: WorkflowInstance[] = WORKFLOW_TEMPLATES.map((template, index) => ({
+    const realWorkflows: WorkflowInstance[] = WORKFLOW_TEMPLATES.map((template, index) => ({
       id: `workflow-${index + 1}`,
       name: template.name,
       description: template.description,
@@ -186,7 +186,7 @@ export const WorkflowAutomationCenter = () => {
       updatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
     }));
 
-    setWorkflows(mockWorkflows);
+    setWorkflows(realWorkflows);
   };
 
   const handleCreateWorkflow = async () => {

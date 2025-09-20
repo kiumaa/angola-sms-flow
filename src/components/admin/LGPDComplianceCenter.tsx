@@ -114,59 +114,7 @@ const COMPLIANCE_RULES: ComplianceRule[] = [
   }
 ];
 
-const MOCK_DATA_REQUESTS: DataRequest[] = [
-  {
-    id: '1',
-    userId: 'user-123',
-    userEmail: 'joao.silva@email.com',
-    type: 'export',
-    status: 'pending',
-    requestDate: new Date('2024-01-20'),
-    reason: 'Solicitação de portabilidade de dados'
-  },
-  {
-    id: '2',
-    userId: 'user-456',
-    userEmail: 'maria.santos@email.com',
-    type: 'deletion',
-    status: 'processing',
-    requestDate: new Date('2024-01-18'),
-    reason: 'Não deseja mais receber comunicações'
-  },
-  {
-    id: '3',
-    userId: 'user-789',
-    userEmail: 'carlos.neto@email.com',
-    type: 'rectification',
-    status: 'completed',
-    requestDate: new Date('2024-01-15'),
-    completionDate: new Date('2024-01-17'),
-    reason: 'Correção de dados pessoais'
-  }
-];
-
-const MOCK_CONSENT_RECORDS: ConsentRecord[] = [
-  {
-    id: '1',
-    userId: 'user-123',
-    userEmail: 'joao.silva@email.com',
-    consentType: 'marketing',
-    granted: true,
-    timestamp: new Date('2024-01-15'),
-    method: 'explicit',
-    ipAddress: '192.168.1.100'
-  },
-  {
-    id: '2',
-    userId: 'user-456',
-    userEmail: 'maria.santos@email.com',
-    consentType: 'analytics',
-    granted: false,
-    timestamp: new Date('2024-01-18'),
-    method: 'explicit',
-    ipAddress: '192.168.1.101'
-  }
-];
+// Load real compliance data from database
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -198,8 +146,8 @@ const getTypeIcon = (type: string) => {
 
 export const LGPDComplianceCenter = () => {
   const [rules, setRules] = useState<ComplianceRule[]>(COMPLIANCE_RULES);
-  const [dataRequests, setDataRequests] = useState<DataRequest[]>(MOCK_DATA_REQUESTS);
-  const [consentRecords, setConsentRecords] = useState<ConsentRecord[]>(MOCK_CONSENT_RECORDS);
+  const [dataRequests, setDataRequests] = useState<DataRequest[]>([]);
+  const [consentRecords, setConsentRecords] = useState<ConsentRecord[]>([]);
   const [showNewRequestModal, setShowNewRequestModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState('overview');
   const { toast } = useToast();

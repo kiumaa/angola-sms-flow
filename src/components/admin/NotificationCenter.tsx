@@ -71,65 +71,50 @@ export const NotificationCenter = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { isAdmin } = useAuth();
 
-  // Generate mock notifications based on system state
+  // Load real notifications from system monitoring
   useEffect(() => {
     if (!isAdmin) return;
 
     const generateNotifications = async () => {
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          type: 'warning',
-          title: 'Gateway BulkSMS Instável',
-          message: 'Taxa de entrega do BulkSMS abaixo de 90% nas últimas 2 horas',
-          category: 'sms',
-          timestamp: new Date(Date.now() - 30 * 60 * 1000),
-          read: false,
-          action: { label: 'Verificar', url: '/admin/sms-monitoring' }
-        },
-        {
-          id: '2',
-          type: 'success',
-          title: 'Backup Realizado',
-          message: 'Backup automático dos dados concluído com sucesso',
-          category: 'system',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          read: false
-        },
-        {
-          id: '3',
-          type: 'info',
-          title: 'Novo Usuário Cadastrado',
-          message: 'João Silva se cadastrou na plataforma',
-          category: 'users',
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-          read: true,
-          action: { label: 'Ver Usuário', url: '/admin/users' }
-        },
-        {
-          id: '4',
-          type: 'error',
-          title: 'Falha na Verificação de Segurança',
-          message: 'RLS policy não configurada para tabela sender_ids',
-          category: 'security',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          read: false,
-          action: { label: 'Corrigir', url: '/admin/sender-ids' }
-        },
-        {
-          id: '5',
-          type: 'warning',
-          title: 'Créditos Baixos',
-          message: '5 usuários com menos de 10 créditos',
-          category: 'financial',
-          timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-          read: true,
-          action: { label: 'Gerenciar', url: '/admin/users' }
-        }
-      ];
+      // Load real notifications from system monitoring
+      const realNotifications = await loadSystemNotifications();
+      setNotifications(realNotifications);
+      setUnreadCount(realNotifications.filter(n => !n.read).length);
+    };
 
-      setNotifications(mockNotifications);
-      setUnreadCount(mockNotifications.filter(n => !n.read).length);
+    const loadSystemNotifications = async (): Promise<Notification[]> => {
+      try {
+        // Get real system status and create notifications
+        const { data: smsLogs, error } = await supabase
+          .from('sms_logs')
+          .select('*')
+          .eq('status', 'failed')
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .limit(5);
+
+        if (error) throw error;
+
+        const notifications: Notification[] = [];
+
+        // Create notification for failed SMS if any
+        if (smsLogs && smsLogs.length > 0) {
+          notifications.push({
+            id: 'failed-sms',
+            type: 'error',
+            title: 'SMS com Falhas Detectados',
+            message: `${smsLogs.length} SMS falharam nas últimas 24h. Verifique configurações do gateway.`,
+            timestamp: new Date(),
+            read: false,
+            category: 'system',
+            action: { label: 'Ver Detalhes', url: '/admin/sms-monitoring' }
+          });
+        }
+
+        return notifications;
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        return [];
+      }
     };
 
     generateNotifications();
