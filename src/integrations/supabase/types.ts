@@ -841,6 +841,56 @@ export type Database = {
           },
         ]
       }
+      package_discounts: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_percentage: number | null
+          discount_type: string
+          discount_value: number | null
+          id: string
+          is_active: boolean
+          package_id: string
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          discount_type?: string
+          discount_value?: number | null
+          id?: string
+          is_active?: boolean
+          package_id: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          discount_type?: string
+          discount_value?: number | null
+          id?: string
+          is_active?: boolean
+          package_id?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_discounts_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null

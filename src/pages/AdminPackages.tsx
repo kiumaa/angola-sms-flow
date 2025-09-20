@@ -7,11 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Package, Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import { Package, Plus, Edit, Trash2, DollarSign, Percent } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { DiscountModal } from "@/components/admin/DiscountModal";
+import { usePackageDiscounts } from "@/hooks/usePackageDiscounts";
 
 interface CreditPackage {
   id: string;
@@ -32,6 +34,7 @@ const AdminPackages = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
   const { toast } = useToast();
+  const { getActiveDiscountForPackage, calculateDiscountedPrice } = usePackageDiscounts();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -341,65 +344,116 @@ const AdminPackages = () => {
                   <TableHead>Pacote</TableHead>
                   <TableHead>Créditos</TableHead>
                   <TableHead>Preço</TableHead>
-                  <TableHead>Preço por Crédito</TableHead>
+                  <TableHead>Desconto</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {packages.map((pkg) => (
-                  <TableRow key={pkg.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{pkg.name}</div>
-                        {pkg.description && (
-                          <div className="text-sm text-muted-foreground">{pkg.description}</div>
+                {packages.map((pkg) => {
+                  const activeDiscount = getActiveDiscountForPackage(pkg.id);
+                  const discountedPrice = calculateDiscountedPrice(pkg.price_kwanza, activeDiscount);
+                  
+                  return (
+                    <TableRow key={pkg.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{pkg.name}</div>
+                          {pkg.description && (
+                            <div className="text-sm text-muted-foreground">{pkg.description}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {pkg.credits.toLocaleString()} créditos
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          {activeDiscount ? (
+                            <>
+                              <span className="line-through text-muted-foreground text-sm">
+                                {formatCurrency(pkg.price_kwanza)}
+                              </span>
+                              <span className="text-primary font-semibold">
+                                {formatCurrency(discountedPrice)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-medium">{formatCurrency(pkg.price_kwanza)}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {activeDiscount ? (
+                          <div className="flex flex-col space-y-1">
+                            <Badge variant="default" className="w-fit">
+                              <Percent className="h-3 w-3 mr-1" />
+                              {activeDiscount.discount_type === 'percentage' 
+                                ? `${activeDiscount.discount_percentage}%`
+                                : `${formatCurrency(activeDiscount.discount_value)}`
+                              }
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {activeDiscount.description}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col space-y-1">
+                            <span className="text-muted-foreground text-sm">Sem desconto</span>
+                            <DiscountModal 
+                              packageId={pkg.id} 
+                              packageName={pkg.name}
+                              trigger={
+                                <Button variant="ghost" size="sm" className="p-0 h-auto text-xs">
+                                  + Criar desconto
+                                </Button>
+                              }
+                            />
+                          </div>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {pkg.credits.toLocaleString()} créditos
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(pkg.price_kwanza)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatCurrency(pkg.price_kwanza / pkg.credits)} / crédito
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={pkg.is_active ? "default" : "secondary"}>
-                        {pkg.is_active ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => togglePackageStatus(pkg.id, pkg.is_active)}
-                        >
-                          {pkg.is_active ? "Desativar" : "Ativar"}
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => openEditDialog(pkg)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => openDeleteDialog(pkg)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={pkg.is_active ? "default" : "secondary"}>
+                          {pkg.is_active ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => togglePackageStatus(pkg.id, pkg.is_active)}
+                          >
+                            {pkg.is_active ? "Desativar" : "Ativar"}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => openEditDialog(pkg)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {activeDiscount && (
+                            <DiscountModal 
+                              packageId={pkg.id} 
+                              packageName={pkg.name}
+                              existingDiscount={activeDiscount}
+                            />
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => openDeleteDialog(pkg)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {packages.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
