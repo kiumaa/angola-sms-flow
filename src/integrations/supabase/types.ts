@@ -1502,6 +1502,10 @@ export type Database = {
         Args: { list_id: string }
         Returns: number
       }
+      count_user_contacts: {
+        Args: { _user_id?: string }
+        Returns: number
+      }
       debit_user_credits: {
         Args: {
           _account_id: string
