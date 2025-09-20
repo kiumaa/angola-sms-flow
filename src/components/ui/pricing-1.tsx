@@ -48,7 +48,7 @@ const Pricing1 = () => {
         </div>
       </section>;
   }
-  return <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
+  return <section id="pricing" className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
       <div className="flex flex-col items-center gap-7 w-full">
         <h2 className="text-2xl leading-6 text-center font-bold">
           Pacotes de Créditos SMS
@@ -61,7 +61,7 @@ const Pricing1 = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
         {sortedPackages.map((pkg, index) => {
         const isPopular = index === middleIndex;
-        const pricePerSMS = pkg.credits > 0 && pkg.price_kwanza > 0 ? (pkg.price_kwanza / pkg.credits).toFixed(2) : "0.00";
+        const pricePerSMS = pkg.credits > 0 && Number(pkg.price_kwanza) > 0 ? (Number(pkg.price_kwanza) / pkg.credits).toFixed(2) : "0.00";
         return <Card key={pkg.id} className={`glass-card relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-glow ${isPopular ? 'border-primary ring-2 ring-primary/20 shadow-glow' : 'border-border hover:border-primary/30'}`}>
               {isPopular && <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
                   <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-medium flex items-center gap-1">
@@ -80,12 +80,12 @@ const Pricing1 = () => {
                   </div>
 
                   <div className="text-center">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-3xl font-semibold">
-                        {pkg.price_kwanza.toLocaleString('pt-AO')}
-                      </span>
-                      <span className="text-muted-foreground text-sm">Kz</span>
-                    </div>
+                     <div className="flex items-baseline justify-center gap-1">
+                       <span className="text-3xl font-semibold">
+                         {Number(pkg.price_kwanza).toLocaleString('pt-AO')}
+                       </span>
+                       <span className="text-muted-foreground text-sm">Kz</span>
+                     </div>
                     <p className="text-muted-foreground text-xs mt-1">
                       {pkg.credits.toLocaleString()} créditos SMS
                     </p>

@@ -27,7 +27,8 @@ export const usePackages = () => {
         .from('credit_packages')
         .select('*')
         .eq('is_active', true)
-        .order('credits', { ascending: true });
+        .order('credits', { ascending: true })
+        .limit(3);
 
       if (error) throw error;
 
