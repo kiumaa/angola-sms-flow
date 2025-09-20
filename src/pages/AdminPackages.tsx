@@ -231,8 +231,7 @@ const AdminPackages = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Preço por crédito considerando taxa de serviço de 12%
-  const PRICE_PER_CREDIT = 89.6; // AOA por crédito (80 Kz base + 12% taxa)
+  // Calcular preço por crédito baseado no pacote individual
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-AO', {
@@ -325,7 +324,7 @@ const AdminPackages = () => {
           </CardTitle>
           <div className="text-sm text-muted-foreground mt-2">
             <DollarSign className="h-4 w-4 inline mr-1" />
-            Preço geral: {formatCurrency(PRICE_PER_CREDIT)} por crédito
+            Preços variam de acordo com cada pacote
           </div>
         </CardHeader>
         <CardContent>
@@ -367,7 +366,7 @@ const AdminPackages = () => {
                       {formatCurrency(pkg.price_kwanza)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatCurrency(PRICE_PER_CREDIT)} / crédito
+                      {formatCurrency(pkg.price_kwanza / pkg.credits)} / crédito
                     </TableCell>
                     <TableCell>
                       <Badge variant={pkg.is_active ? "default" : "secondary"}>

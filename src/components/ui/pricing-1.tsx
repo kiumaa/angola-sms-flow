@@ -85,6 +85,9 @@ const Pricing1 = () => {
                     <p className="text-muted-foreground text-xs mt-1">
                       {pkg.credits.toLocaleString()} créditos SMS
                     </p>
+                    <p className="text-muted-foreground text-xs">
+                      {pricePerSMS} Kz por SMS
+                    </p>
                   </div>
 
                   <div className="border-t border-border pt-6">
