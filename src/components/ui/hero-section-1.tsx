@@ -139,10 +139,10 @@ A SMS AO ajuda empresas em Angola a vender mais, engajar clientes e comunicar em
                             <div className="relative mt-6 sm:mt-8 md:mt-12 lg:mt-16 xl:mt-20 px-2">
                                 
                                  <div className="bg-background relative mx-auto max-w-[90rem] rounded-xl sm:rounded-2xl p-1 sm:p-2 pb-4 sm:pb-8 md:pb-16">
-                                     <img className="bg-background w-full h-auto relative hidden rounded-xl sm:rounded-2xl dark:block shadow-2xl" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&auto=format" alt="SMS Dashboard" width="2700" height="1440" />
+                                     <img className="bg-background w-full h-auto relative hidden rounded-xl sm:rounded-2xl dark:block shadow-2xl" src="/src/assets/home-hero.png" alt="SMS Dashboard" width="2700" height="1440" />
                                      <img className="z-2 w-full h-auto relative rounded-lg sm:rounded-xl md:rounded-2xl dark:hidden scroll-zoom transition-transform duration-300 ease-out origin-center shadow-lg sm:shadow-xl md:shadow-2xl min-h-[150px] sm:min-h-[200px] md:min-h-[300px] lg:min-h-[400px]" style={{
                   transform: `scale(${Math.min(scale, 1.08)})`
-                }} src="/PC.png" alt="SMS Dashboard" width="2700" height="1440" />
+                }} src="/src/assets/home-hero.png" alt="SMS Dashboard" width="2700" height="1440" />
                                  </div>
                             </div>
                         </AnimatedGroup>
