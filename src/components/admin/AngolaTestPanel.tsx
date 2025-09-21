@@ -59,7 +59,7 @@ export default function AngolaTestPanel() {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log('🧪 Iniciando teste específico para Angola...');
+      // Starting Angola specific test
       
       const { data, error } = await supabase.functions.invoke('sms-gateway-dispatcher', {
         body: {

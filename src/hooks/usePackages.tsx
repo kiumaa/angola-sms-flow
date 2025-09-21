@@ -21,7 +21,7 @@ export const usePackages = () => {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      console.debug('[Pricing][usePackages] fetchPackages:start', new Date().toISOString());
+      // Fetching packages from database
 
       const { data, error } = await supabase
         .from('credit_packages')
@@ -32,14 +32,14 @@ export const usePackages = () => {
 
       if (error) throw error;
 
-      console.debug('[Pricing][usePackages] fetchPackages:response', { rawCount: data?.length ?? 0, data });
+      // Packages fetched successfully
 
       // Filter out packages with invalid data (0 credits or 0 price)
       const validPackages = (data || []).filter((pkg) =>
         pkg.credits > 0 && pkg.price_kwanza > 0
       );
 
-      console.debug('[Pricing][usePackages] fetchPackages:valid', { validCount: validPackages.length, validPackages });
+      // Packages validated and filtered
       if (typeof window !== 'undefined') {
         (window as any).__PKG_DEBUG__ = { data, validPackages, ts: Date.now() };
       }
@@ -53,18 +53,18 @@ export const usePackages = () => {
         variant: "destructive",
       });
     } finally {
-      console.debug('[Pricing][usePackages] fetchPackages:finally -> setLoading(false)');
+      // Package loading completed
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.debug('[Pricing][usePackages] useEffect:mount -> fetchPackages()');
+    // Initialize package loading on mount
     fetchPackages();
   }, []);
 
   useEffect(() => {
-    console.debug('[Pricing][usePackages] state-changed', { loading, packagesCount: packages.length });
+    // Package state updated
   }, [loading, packages]);
 
   return {

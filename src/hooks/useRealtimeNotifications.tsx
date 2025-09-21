@@ -137,7 +137,7 @@ export const useRealtimeNotifications = () => {
   useEffect(() => {
     if (!user) return;
 
-    console.log('Setting up realtime notifications...');
+    // Setting up realtime notifications
     let channels: any[] = [];
 
     try {
@@ -167,7 +167,7 @@ export const useRealtimeNotifications = () => {
           }
         )
         .subscribe((status) => {
-          console.log('Credit notifications status:', status);
+          // Credit notifications status updated
         });
 
       channels.push(creditsChannel);
@@ -196,7 +196,7 @@ export const useRealtimeNotifications = () => {
           }
         )
         .subscribe((status) => {
-          console.log('SMS notifications status:', status);
+          // SMS notifications status updated
         });
 
       channels.push(smsChannel);
@@ -227,7 +227,7 @@ export const useRealtimeNotifications = () => {
             }
           )
           .subscribe((status) => {
-            console.log('Gateway notifications status:', status);
+            // Gateway notifications status updated
           });
 
         channels.push(gatewayChannel);
@@ -242,10 +242,10 @@ export const useRealtimeNotifications = () => {
 
     // Cleanup function
     return () => {
-      console.log('Cleaning up realtime subscriptions...');
+      // Cleaning up realtime subscriptions
       channels.forEach(channel => {
         if (channel) {
-          console.log(`${channel.topic} notifications status: CLOSED`);
+          // Notifications channel closed
           supabase.removeChannel(channel);
         }
       });

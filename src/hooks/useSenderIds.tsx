@@ -59,7 +59,7 @@ export const useSenderIds = (userId?: string) => {
           : item.sender_id
       }));
 
-      console.log(`Carregados ${processedSenderIds.length} sender IDs (incluindo global) para usuário ${targetUserId}`);
+      // Sender IDs loaded successfully
       
       setSenderIds(processedSenderIds);
 
@@ -129,7 +129,7 @@ export const useSenderIds = (userId?: string) => {
 
       if (error) throw error;
 
-      console.log(`Sender ID criado: ${normalizedSenderId}`);
+      // Sender ID created successfully
       await fetchSenderIds(); // Recarregar lista
       return true;
 
@@ -154,7 +154,7 @@ export const useSenderIds = (userId?: string) => {
 
       if (error) throw error;
 
-      console.log(`Sender ID atualizado: ${id}`);
+      // Sender ID updated successfully
       await fetchSenderIds(); // Recarregar lista
       return true;
 
@@ -186,7 +186,7 @@ export const useSenderIds = (userId?: string) => {
 
       if (error) throw error;
 
-      console.log(`Sender ID arquivado: ${id}`);
+      // Sender ID archived successfully
       await fetchSenderIds(); // Recarregar lista
       return true;
 
@@ -216,7 +216,7 @@ export const useSenderIds = (userId?: string) => {
 
       if (setError) throw setError;
 
-      console.log(`Novo default sender ID: ${id}`);
+      // Default sender ID updated
       await fetchSenderIds(); // Recarregar lista
       return true;
 

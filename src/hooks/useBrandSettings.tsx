@@ -206,7 +206,7 @@ export const useBrandSettings = () => {
       if (uploadError) {
         // If bucket doesn't exist, create it first
         if (uploadError.message.includes('Bucket not found')) {
-          console.log('Creating brand-assets bucket...');
+          // Creating brand-assets bucket
           // For now, we'll store in a generic public folder or handle this in the backend
           // Using a data URL as fallback for immediate preview
           return new Promise<string>((resolve) => {

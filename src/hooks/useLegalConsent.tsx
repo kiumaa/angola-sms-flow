@@ -33,7 +33,7 @@ export function useLegalConsent() {
         const data = await response.json();
         setUserIp(data.ip);
       } catch (error) {
-        console.log('Could not get IP address:', error);
+        // IP address retrieval failed
         // IP is optional, don't block the flow
       }
     };

@@ -71,7 +71,7 @@ export class SMSGatewayService {
     const countryCode = this.routingService.detectCountryFromPhone(message.to);
     const recommendedGateway = this.selectGatewayForCountry(countryCode);
     
-    console.log(`📍 Country detected: ${countryCode}, Using gateway: ${recommendedGateway}`);
+    // Gateway selected based on country
 
     // Try primary (recommended) gateway
     const primaryGateway = this.gateways.get(recommendedGateway);
@@ -91,7 +91,7 @@ export class SMSGatewayService {
         const fallbackGateway = this.gateways.get(fallbackGatewayName);
         
         if (fallbackGateway) {
-          console.log(`🔄 Primary gateway failed, trying fallback: ${fallbackGatewayName}`);
+          // Attempting fallback gateway
           fallbackUsed = true;
           
           const fallbackResult = await this.attemptSend(fallbackGateway, message);

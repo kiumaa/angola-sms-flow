@@ -22,7 +22,7 @@ export const useOTP = () => {
       }
 
       // Use Supabase native phone auth with Twilio Verify
-      console.log('Sending OTP via Supabase Phone Auth for:', phone);
+      // Sending OTP via Supabase Phone Auth
       const { error } = await supabase.auth.signInWithOtp({
         phone: phone.trim(),
         options: {
@@ -37,7 +37,7 @@ export const useOTP = () => {
         return { success: false, error: errorMessage };
       }
       
-      console.log('OTP sent successfully via Supabase Phone Auth');
+      // OTP sent successfully
       return { success: true };
     } catch (err) {
       console.error('OTP request exception:', err);
@@ -58,7 +58,7 @@ export const useOTP = () => {
 
     try {
       // Verify OTP via Supabase Phone Auth
-      console.log('Verifying OTP via Supabase Phone Auth for:', phone, 'with code:', code);
+      // Verifying OTP via Supabase Phone Auth
       
       const { data, error } = await supabase.auth.verifyOtp({
         phone: phone.trim(),
@@ -79,7 +79,7 @@ export const useOTP = () => {
         return { success: false, error: errorMessage };
       }
 
-      console.log('OTP verified successfully via Supabase Phone Auth');
+      // OTP verified successfully
 
       // Check if user profile exists to determine if new user
       const { data: profile, error: profileError } = await supabase
@@ -148,7 +148,7 @@ export const useOTP = () => {
    */
   const cleanExpiredOTPs = async (): Promise<{ success: boolean; deletedCount?: number }> => {
     // With Supabase Phone Auth + Twilio Verify, cleanup is handled automatically
-    console.log('Cleanup handled automatically by Supabase Phone Auth');
+    // Cleanup handled automatically
     return { success: true, deletedCount: 0 };
   };
 
@@ -157,7 +157,7 @@ export const useOTP = () => {
    */
   const adminCleanExpiredOTPs = async (): Promise<{ success: boolean; deletedCount?: number; error?: string }> => {
     // With Supabase Phone Auth + Twilio Verify, cleanup is handled automatically
-    console.log('Cleanup handled automatically by Supabase Phone Auth');
+    // Cleanup handled automatically
     return { success: true, deletedCount: 0 };
   };
 

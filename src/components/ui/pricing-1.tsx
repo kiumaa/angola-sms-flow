@@ -11,11 +11,10 @@ const Pricing1 = () => {
   } = usePackages();
   const navigate = useNavigate();
   const handlePurchase = (packageId: string) => {
-    console.debug('[Pricing][Pricing1] handlePurchase', { packageId });
     navigate(`/checkout/${packageId}`);
   };
   if (loading) {
-    console.debug('[Pricing][Pricing1] loading=true, awaiting packages...');
+    // Loading packages
     return <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
         <div className="flex flex-col items-center gap-7 w-full">
           <h2 className="font-medium text-2xl leading-6 text-center">
@@ -31,12 +30,11 @@ const Pricing1 = () => {
   // Sort packages by credits and mark middle one as popular (hook already filters valid packages)
   const sortedPackages = [...packages].sort((a, b) => a.credits - b.credits);
   const middleIndex = Math.floor(sortedPackages.length / 2);
-  console.debug('[Pricing][Pricing1] hook data', { loading, packagesCount: packages.length, packages });
-  console.debug('[Pricing][Pricing1] computed', { sortedCount: sortedPackages.length, middleIndex });
+  // Package data loaded and sorted
 
   // Show empty state if no packages after hook filtering
   if (!loading && packages.length === 0) {
-    console.warn('[Pricing][Pricing1] Empty state reached: no valid packages after filtering');
+    // No valid packages available
     return <section className="flex flex-col items-center justify-center gap-20 w-[95%] mx-auto py-20 bg-background text-foreground">
         <div className="flex flex-col items-center gap-7 w-full">
           <h2 className="font-medium text-2xl leading-6 text-center">

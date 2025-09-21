@@ -78,7 +78,7 @@ export default function AdminSMSGateways() {
 
     for (const gateway of gatewayList) {
       try {
-        console.log(`Checking status for gateway: ${gateway.name}`);
+        // Checking gateway status
         
         const { data, error } = await supabase.functions.invoke('gateway-status', {
           body: { gateway: gateway.name }
@@ -93,7 +93,7 @@ export default function AdminSMSGateways() {
             lastChecked: new Date().toISOString()
           };
         } else if (data) {
-          console.log(`Gateway ${gateway.name} response:`, data);
+          // Gateway status retrieved
           statuses[gateway.name] = data;
         } else {
           statuses[gateway.name] = {
@@ -114,7 +114,7 @@ export default function AdminSMSGateways() {
       }
     }
 
-    console.log('Final gateway statuses:', statuses);
+    // Gateway status check completed
     setGatewayStatuses(statuses);
   };
 

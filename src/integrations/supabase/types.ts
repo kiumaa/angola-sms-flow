@@ -1657,6 +1657,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      production_data_cleanup: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      production_system_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       reject_credit_request: {
         Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean

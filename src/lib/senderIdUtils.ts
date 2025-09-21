@@ -115,7 +115,7 @@ export function getEffectiveSenderId(userSenderIds: any[] = [], requestedSender?
  */
 export function logSenderIdResolution(original: string | null | undefined, resolved: string, context?: string) {
   if (original !== resolved) {
-    console.log(`[SenderID] ${context || 'Unknown'}: "${original}" → "${resolved}"`);
+    // Sender ID resolved
   }
 }
 

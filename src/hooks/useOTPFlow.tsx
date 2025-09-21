@@ -50,7 +50,7 @@ export const useOTPFlow = (config: UseOTPFlowConfig = {}) => {
     }
 
     if (isSending) {
-      console.log("Send OTP already in progress, ignoring duplicate call");
+      // OTP send already in progress
       return { success: false, error: "Envio em progresso" };
     }
 
@@ -77,7 +77,7 @@ export const useOTPFlow = (config: UseOTPFlowConfig = {}) => {
         setStep('sending');
         
         try {
-          console.log('Sending OTP via useOTPFlow for:', targetPhone);
+          // Sending OTP via useOTPFlow
           const result = await requestOTP(targetPhone);
           
           if (result.success) {
@@ -127,14 +127,14 @@ export const useOTPFlow = (config: UseOTPFlowConfig = {}) => {
     }
 
     if (isVerifying) {
-      console.log("Verify OTP already in progress, ignoring duplicate call");
+      // OTP verification already in progress
       return { success: false, error: "Verificação em progresso" };
     }
 
     setIsVerifying(true);
     
     try {
-      console.log('Verifying OTP via useOTPFlow for:', phone);
+      // Verifying OTP via useOTPFlow
       const result = await verifyOTP(phone, code, registrationData);
       
       if (result.success) {

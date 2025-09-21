@@ -310,7 +310,7 @@ const AdminUsers = () => {
           onOpenChange={setCreateModalOpen}
           onCreateUser={async (userData) => {
             // For now, just show a message - we'll implement createUser later
-            console.log('Create user:', userData);
+            // Creating new user
             await refetch();
           }}
         />
