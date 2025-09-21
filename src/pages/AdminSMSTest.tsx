@@ -215,18 +215,19 @@ const AdminSMSTest = () => {
 
       {/* Tabs for different test types */}
       <Tabs defaultValue="comprehensive" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="comprehensive">Teste Completo</TabsTrigger>
+          <TabsTrigger value="diagnostics">Diagnósticos</TabsTrigger>
           <TabsTrigger value="manual">Teste Manual</TabsTrigger>
         </TabsList>
-        
-            <TabsContent value="diagnostics" className="space-y-6">
-              <SMSDiagnosticsPanel />
-            </TabsContent>
 
-            <TabsContent value="comprehensive" className="space-y-6">
-              <SMSFunctionalityTest />
-            </TabsContent>
+        <TabsContent value="comprehensive" className="space-y-6">
+          <SMSFunctionalityTest />
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="space-y-6">
+          <SMSDiagnosticsPanel />
+        </TabsContent>
         
         <TabsContent value="manual" className="space-y-6">
 
