@@ -460,6 +460,9 @@ serve(async (req) => {
     console.log('Quick send job created:', job.id);
 
     // Debit credits BEFORE sending (atomic transaction)
+    console.log(`🏦 Attempting to debit ${totalCreditsRequired} credits from account ${profile.id}`);
+    console.log(`💰 User has ${profile.credits} credits available`);
+    
     const { error: debitError } = await supabase.rpc('debit_user_credits', {
       _account_id: profile.id,
       _amount: totalCreditsRequired,
@@ -468,7 +471,8 @@ serve(async (req) => {
     });
 
     if (debitError) {
-      console.error('Error debiting credits:', debitError);
+      console.error('❌ Error debiting credits:', debitError);
+      console.error('❌ Full error details:', JSON.stringify(debitError, null, 2));
       
       // Mark job as failed
       await supabase
@@ -477,9 +481,17 @@ serve(async (req) => {
         .eq('id', job.id);
 
       return new Response(JSON.stringify({
-        error: 'INSUFFICIENT_CREDITS',
+        error: 'CREDIT_DEBIT_FAILED',
         message: 'Failed to reserve credits for sending',
-        details: debitError.message
+        details: debitError.message,
+        debug: {
+          user_id: user.id,
+          profile_id: profile.id,
+          credits_available: profile.credits,
+          credits_required: totalCreditsRequired,
+          error_code: debitError.code,
+          error_hint: debitError.hint
+        }
       }), {
         status: 402,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

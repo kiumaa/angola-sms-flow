@@ -11,6 +11,7 @@ import { Send, TestTube, CheckCircle, XCircle, Clock, Zap } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import CountryCodeSelector from '@/components/admin/CountryCodeSelector';
 import SMSFunctionalityTest from '@/components/admin/SMSFunctionalityTest';
+import { SMSDiagnosticsPanel } from '@/components/admin/SMSDiagnosticsPanel';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -219,9 +220,13 @@ const AdminSMSTest = () => {
           <TabsTrigger value="manual">Teste Manual</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="comprehensive" className="space-y-6">
-          <SMSFunctionalityTest />
-        </TabsContent>
+            <TabsContent value="diagnostics" className="space-y-6">
+              <SMSDiagnosticsPanel />
+            </TabsContent>
+
+            <TabsContent value="comprehensive" className="space-y-6">
+              <SMSFunctionalityTest />
+            </TabsContent>
         
         <TabsContent value="manual" className="space-y-6">
 
