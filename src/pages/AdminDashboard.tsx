@@ -22,6 +22,7 @@ import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useGatewayMonitoring } from "@/hooks/useGatewayMonitoring";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { DashboardWidgets } from "@/components/admin/DashboardWidgets";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
 const AdminDashboard = () => {
@@ -65,6 +66,9 @@ const AdminDashboard = () => {
           </p>
         </div>
       </div>
+
+      {/* Notification Center */}
+      <NotificationCenter />
 
       {/* Modern Dashboard Widgets */}
       <DashboardWidgets />
