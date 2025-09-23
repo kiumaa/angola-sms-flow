@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -173,179 +173,168 @@ export const NotificationCenter = () => {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span
+              aria-label={`${unreadCount} novas notificações`}
+              className="absolute -top-1 -right-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground"
+            >
+              {unreadCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="w-[420px] p-0 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b p-3">
+          <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-gradient-primary">
-              <Bell className="h-5 w-5 text-white" />
+              <Bell className="h-4 w-4 text-white" />
             </div>
             <div>
-              <CardTitle className="flex items-center gap-2">
-                Central de Notificações
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold">Central de Notificações</span>
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="text-xs">
+                  <Badge variant="destructive" className="text-[10px]">
                     {unreadCount} nova{unreadCount !== 1 ? 's' : ''}
                   </Badge>
                 )}
-              </CardTitle>
-              <CardDescription>
-                Acompanhe alertas e atualizações do sistema em tempo real
-              </CardDescription>
+              </div>
+              <p className="text-xs text-muted-foreground">Alertas e atualizações do sistema</p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-1">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4" />
+                <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                  <Filter className="mr-1 h-3 w-3" />
                   Filtrar
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setFilter('all')}>
-                  Todas as notificações
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('unread')}>
-                  Não lidas ({unreadCount})
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('all')}>Todas</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('unread')}>Não lidas ({unreadCount})</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setFilter('error')}>
-                  Apenas erros
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('warning')}>
-                  Apenas avisos
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('error')}>Erros</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('warning')}>Avisos</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                <Check className="h-4 w-4" />
-                Marcar todas como lidas
+              <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-7 px-2 text-xs">
+                <Check className="mr-1 h-3 w-3" />
+                Marcar todas
               </Button>
             )}
-            
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
-              Configurações
+
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+              <Settings className="mr-1 h-3 w-3" />
+              Config
             </Button>
           </div>
         </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {filteredNotifications.length === 0 ? (
-          <div className="text-center py-12">
-            <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Nenhuma notificação</h3>
-            <p className="text-muted-foreground">
-              {filter === 'unread' 
-                ? 'Todas as notificações foram lidas' 
-                : 'Não há notificações para exibir'}
-            </p>
-          </div>
-        ) : (
-          filteredNotifications.map((notification) => {
-            const NotificationIcon = getNotificationIcon(notification.type);
-            
-            return (
-              <div
-                key={notification.id}
-                className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-md ${
-                  notification.read 
-                    ? 'bg-muted/30 border-border' 
-                    : 'bg-background border-primary/20 shadow-sm'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${getNotificationColor(notification.type)}`}>
-                    <NotificationIcon className="h-4 w-4" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className={`font-medium ${notification.read ? 'text-muted-foreground' : 'text-foreground'}`}>
-                        {notification.title}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={getBadgeVariant(notification.type)} className="text-xs">
-                          {notification.type}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {notification.source}
-                        </Badge>
-                      </div>
+
+        {/* List */}
+        <div className="max-h-96 overflow-auto p-3 space-y-3">
+          {filteredNotifications.length === 0 ? (
+            <div className="text-center py-10">
+              <Bell className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+              <h3 className="text-sm font-medium mb-1">Nenhuma notificação</h3>
+              <p className="text-xs text-muted-foreground">
+                {filter === 'unread' ? 'Todas as notificações foram lidas' : 'Não há notificações para exibir'}
+              </p>
+            </div>
+          ) : (
+            filteredNotifications.map((notification) => {
+              const NotificationIcon = getNotificationIcon(notification.type);
+              return (
+                <div
+                  key={notification.id}
+                  className={`rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
+                    notification.read ? 'bg-muted/30 border-border' : 'bg-background border-primary/20'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${getNotificationColor(notification.type)}`}>
+                      <NotificationIcon className="h-4 w-4" />
                     </div>
-                    
-                    <p className={`text-sm mb-2 ${notification.read ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-                      {notification.message}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {formatTimestamp(notification.timestamp)}
+
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center justify-between">
+                        <h4 className={`truncate text-sm font-medium ${notification.read ? 'text-muted-foreground' : 'text-foreground'}`}>
+                          {notification.title}
+                        </h4>
+                        <div className="ml-2 flex shrink-0 items-center gap-2">
+                          <Badge variant={getBadgeVariant(notification.type)} className="text-[10px]">
+                            {notification.type}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px]">
+                            {notification.source}
+                          </Badge>
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {notification.action && (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={notification.action.onClick}
-                            className="text-xs"
-                          >
-                            {notification.action.label}
-                          </Button>
-                        )}
-                        
-                        {!notification.read && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => markAsRead(notification.id)}
-                            className="text-xs"
-                          >
-                            <Check className="h-3 w-3" />
-                            Marcar como lida
-                          </Button>
-                        )}
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-3 w-3" />
+
+                      <p className="mb-2 text-xs text-muted-foreground">{notification.message}</p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {formatTimestamp(notification.timestamp)}
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          {notification.action && (
+                            <Button size="sm" variant="outline" onClick={notification.action.onClick} className="h-7 px-2 text-xs">
+                              {notification.action.label}
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {!notification.read && (
-                              <DropdownMenuItem onClick={() => markAsRead(notification.id)}>
-                                <Check className="h-4 w-4 mr-2" />
-                                Marcar como lida
+                          )}
+
+                          {!notification.read && (
+                            <Button size="sm" variant="ghost" onClick={() => markAsRead(notification.id)} className="h-7 px-2 text-xs">
+                              <Check className="h-3 w-3" />
+                              Marcar como lida
+                            </Button>
+                          )}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                <MoreHorizontal className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {!notification.read && (
+                                <DropdownMenuItem onClick={() => markAsRead(notification.id)}>
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Marcar como lida
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => deleteNotification(notification.id)} className="text-destructive">
+                                <X className="h-4 w-4 mr-2" />
+                                Remover
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem 
-                              onClick={() => deleteNotification(notification.id)}
-                              className="text-destructive"
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Remover
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-      </CardContent>
-    </Card>
+              );
+            })
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t p-2 text-center text-[10px] text-muted-foreground">Atualizado agora</div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
