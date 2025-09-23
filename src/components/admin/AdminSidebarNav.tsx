@@ -43,7 +43,10 @@ export const AdminSidebarNav = ({ isSidebarOpen }: AdminSidebarNavProps) => {
             >
               {isSidebarOpen ? (
                 <>
-                  <span>{category.label}</span>
+                  <div className="flex items-center gap-2">
+                    <category.icon className="h-3 w-3" />
+                    <span>{category.label}</span>
+                  </div>
                   {isExpanded ? (
                     <ChevronDown className="h-3 w-3" />
                   ) : (
@@ -51,10 +54,10 @@ export const AdminSidebarNav = ({ isSidebarOpen }: AdminSidebarNavProps) => {
                   )}
                 </>
               ) : (
-                <div 
+                <category.icon 
                   className={cn(
-                    "w-2 h-2 rounded-full",
-                    hasActiveItem ? "bg-primary" : "bg-muted-foreground"
+                    "h-4 w-4",
+                    hasActiveItem ? "text-primary" : "text-muted-foreground"
                   )}
                   title={category.label}
                 />

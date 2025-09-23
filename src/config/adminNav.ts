@@ -34,6 +34,7 @@ export interface AdminNavItem {
 export interface AdminNavCategory {
   key: string;
   label: string;
+  icon: React.ComponentType<any>;
   items: AdminNavItem[];
 }
 
@@ -220,27 +221,32 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
 export const ADMIN_NAV_CATEGORIES: AdminNavCategory[] = [
   {
     key: 'dashboard',
-    label: '📊 Dashboard',
+    label: 'Dashboard',
+    icon: BarChart3,
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'dashboard')
   },
   {
     key: 'users',
-    label: '👥 Usuários & Contas',
+    label: 'Usuários & Contas',
+    icon: Users,
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'users')
   },
   {
     key: 'sms',
-    label: '📱 SMS & Campanhas',
+    label: 'SMS & Campanhas',
+    icon: MessageSquare,
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'sms')
   },
   {
     key: 'financial',
-    label: '💰 Financeiro',
+    label: 'Financeiro',
+    icon: DollarSign,
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'financial')
   },
   {
     key: 'system',
-    label: '⚙️ Sistema',
+    label: 'Sistema',
+    icon: Settings,
     items: ADMIN_NAV_ITEMS.filter(item => item.category === 'system')
   }
 ];
