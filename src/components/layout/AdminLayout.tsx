@@ -10,7 +10,7 @@ import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
 import { GlobalSearch } from "@/components/admin/GlobalSearch";
 import { QuickActionsPanel } from "@/components/admin/QuickActionsPanel";
-import { NotificationCenter } from "@/components/admin/NotificationCenter";
+
 import { Badge } from "@/components/ui/badge";
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -81,8 +81,6 @@ const AdminLayout = ({
               {/* Quick Actions */}
               <QuickActionsPanel />
 
-              {/* Notifications */}
-              <NotificationCenter />
 
               <ThemeToggle />
               
