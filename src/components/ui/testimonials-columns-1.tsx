@@ -27,14 +27,16 @@ export const TestimonialsColumn = (props: {
       ease: "linear",
       repeatType: "loop"
     }} className="flex flex-col gap-6 pb-6 bg-background">
-        {new Array(2).fill(0).map((_, index) => <React.Fragment key={index}>
+        {new Array(2).fill(0).map((_, index) => (
+          <React.Fragment key={index}>
             {props.testimonials.map(({
-          text,
-          image,
-          name,
-          role,
-          flag
-        }, i) => <div className="p-10 rounded-3xl border shadow-lg shadow-primary/10 max-w-xs w-full" key={`${index}-${i}`}>
+              text,
+              image,
+              name,
+              role,
+              flag
+            }, i) => (
+              <div className="p-10 rounded-3xl border shadow-lg shadow-primary/10 max-w-xs w-full" key={`${index}-${i}`}>
                 <div className="text-sm leading-relaxed">{text}</div>
                 <div className="flex items-center gap-3 mt-5">
                   <img width={40} height={40} src={image} alt={name} className="h-10 w-10 rounded-full object-cover" />
@@ -46,8 +48,10 @@ export const TestimonialsColumn = (props: {
                     <div className="leading-5 opacity-60 tracking-tight text-sm">{role}</div>
                   </div>
                 </div>
-              </div>)}
-          </React.Fragment>)}
+              </div>
+            ))}
+          </React.Fragment>
+        ))}
       </motion.div>
     </div>;
 };
