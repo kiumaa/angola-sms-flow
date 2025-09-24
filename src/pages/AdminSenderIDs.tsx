@@ -38,48 +38,60 @@ const AdminSenderIDs = () => {
 
   const fetchRequests = async () => {
     try {
-      const { data, error } = await supabase
+      // Buscar sender IDs globais (account_id is null)
+      const { data: globalData, error: globalError } = await supabase
         .from('sender_ids')
-        .select(`
-          id,
-          sender_id,
-          status,
-          created_at,
-          user_id,
-          account_id,
-          is_default,
-          bulksms_status
-        `)
-        .order('account_id', { ascending: true, nullsFirst: true }) // Global primeiro
+        .select('*')
+        .is('account_id', null)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (globalError) throw globalError;
 
-      // Separar sender IDs globais dos específicos por usuário
-      const globalSenderIds: SenderIDRequest[] = [];
+      // Buscar sender IDs de usuários (account_id is not null)
+      const { data: userData, error: userError } = await supabase
+        .from('sender_ids')
+        .select('*')
+        .not('account_id', 'is', null)
+        .order('created_at', { ascending: false });
+
+      if (userError) throw userError;
+
+      // Processar sender IDs globais
+      const globalSenderIds: SenderIDRequest[] = (globalData || []).map(item => ({
+        ...item,
+        is_system_default: item.sender_id === 'SMSAO'
+      }));
+
+      // Processar sender IDs de usuários e buscar perfis
       const userSpecificSenderIds: SenderIDRequest[] = [];
+      
+      if (userData && userData.length > 0) {
+        // Buscar todos os user_ids únicos
+        const userIds = [...new Set(userData.map(item => item.user_id))];
+        
+        // Buscar perfis em batch
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, email, full_name')
+          .in('user_id', userIds);
 
-      // Processar dados e buscar perfis quando necessário
-      for (const request of data || []) {
-        let processedRequest: SenderIDRequest = {
-          ...request,
-          is_system_default: request.account_id === null && request.sender_id === 'SMSAO'
-        };
+        // Mapear perfis por user_id
+        const profilesMap = new Map(
+          (profiles || []).map(profile => [profile.user_id, profile])
+        );
 
-        if (request.account_id === null) {
-          // Sender ID global (SMSAO)
-          globalSenderIds.push(processedRequest);
-        } else {
-          // Sender ID específico do usuário - buscar perfil
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, full_name')
-            .eq('user_id', request.user_id)
-            .single();
-          
-          processedRequest.profiles = profile || { email: '', full_name: '' };
-          userSpecificSenderIds.push(processedRequest);
-        }
+        // Processar sender IDs com perfis
+        userData.forEach(request => {
+          const profile = profilesMap.get(request.user_id);
+          userSpecificSenderIds.push({
+            ...request,
+            is_system_default: false,
+            profiles: profile ? {
+              email: profile.email || '',
+              full_name: profile.full_name || ''
+            } : { email: '', full_name: '' }
+          });
+        });
       }
 
       setSystemSenderIds(globalSenderIds);
