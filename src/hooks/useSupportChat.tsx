@@ -59,13 +59,10 @@ export const useSupportChat = () => {
     try {
       setLoading(true);
       
+      // Buscar conversas básicas primeiro
       let query = supabase
         .from('support_conversations')
-        .select(`
-          *,
-          profiles:user_id (full_name, email),
-          admin_profile:admin_id (full_name, email)
-        `)
+        .select('*')
         .order('last_message_at', { ascending: false });
 
       // Se não for admin, filtrar apenas conversas próprias
@@ -73,11 +70,40 @@ export const useSupportChat = () => {
         query = query.eq('user_id', user.id);
       }
 
-      const { data, error } = await query;
+      const { data: conversations, error } = await query;
 
       if (error) throw error;
 
-      setConversations((data || []) as SupportConversation[]);
+      // Buscar perfis separadamente para evitar problemas de join
+      const conversationsWithProfiles = await Promise.all(
+        (conversations || []).map(async (conv) => {
+          // Buscar perfil do usuário
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('user_id', conv.user_id)
+            .single();
+
+          // Buscar perfil do admin se existe
+          let adminProfile = null;
+          if (conv.admin_id) {
+            const { data: admin } = await supabase
+              .from('profiles')
+              .select('full_name, email')
+              .eq('user_id', conv.admin_id)
+              .single();
+            adminProfile = admin;
+          }
+
+          return {
+            ...conv,
+            profiles: userProfile,
+            admin_profile: adminProfile
+          };
+        })
+      );
+
+      setConversations(conversationsWithProfiles as SupportConversation[]);
     } catch (error: any) {
       console.error('Erro ao buscar conversas:', error);
       toast({
@@ -93,18 +119,32 @@ export const useSupportChat = () => {
   // Buscar mensagens de uma conversa
   const fetchMessages = useCallback(async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
+      // Buscar mensagens básicas primeiro
+      const { data: messages, error } = await supabase
         .from('support_messages')
-        .select(`
-          *,
-          sender_profile:sender_id (full_name, email)
-        `)
+        .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      setMessages((data || []) as SupportMessage[]);
+      // Buscar perfis separadamente
+      const messagesWithProfiles = await Promise.all(
+        (messages || []).map(async (msg) => {
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('user_id', msg.sender_id)
+            .single();
+
+          return {
+            ...msg,
+            sender_profile: senderProfile
+          };
+        })
+      );
+
+      setMessages(messagesWithProfiles as SupportMessage[]);
       
       // Marcar mensagens como lidas
       await markAsRead(conversationId);

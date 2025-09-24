@@ -15,7 +15,8 @@ import {
   CheckCircle,
   AlertCircle,
   User,
-  Headphones
+  Headphones,
+  Maximize2
 } from "lucide-react";
 import { useSupportChat, type SupportMessage } from "@/hooks/useSupportChat";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +34,9 @@ const SupportChatWidget: React.FC<SupportChatWidgetProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const [typing, setTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { 
@@ -58,12 +61,14 @@ const SupportChatWidget: React.FC<SupportChatWidgetProps> = ({
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !conversationId) return;
+    if (!newMessage.trim() || !conversationId || sending) return;
 
+    setTyping(true);
     const success = await sendMessage(conversationId, newMessage.trim());
     if (success) {
       setNewMessage("");
     }
+    setTyping(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -114,21 +119,34 @@ const SupportChatWidget: React.FC<SupportChatWidgetProps> = ({
     );
   }
 
+  const chatHeight = isExpanded ? 'h-[80vh]' : 'h-[500px]';
+  const chatWidth = isExpanded ? 'w-[90vw] max-w-4xl' : 'w-96';
+
   return (
-    <Card className={`fixed bottom-6 right-6 w-96 shadow-xl z-50 transition-all duration-300 ${
-      isMinimized ? 'h-16' : 'h-[500px]'
-    }`}>
+    <Card className={`fixed bottom-6 right-6 shadow-2xl z-50 transition-all duration-300 border-2 ${
+      isMinimized ? 'h-16 w-96' : `${chatHeight} ${chatWidth}`
+    } border-border`}>
       <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b">
         <CardTitle className="text-lg flex items-center">
           <Headphones className="h-5 w-5 mr-2" />
           Suporte
         </CardTitle>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-8 w-8"
+            title={isExpanded ? "Reduzir" : "Expandir"}
+          >
+            <Maximize2 className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsMinimized(!isMinimized)}
             className="h-8 w-8"
+            title={isMinimized ? "Maximizar" : "Minimizar"}
           >
             <Minimize2 className="h-4 w-4" />
           </Button>
@@ -140,6 +158,7 @@ const SupportChatWidget: React.FC<SupportChatWidgetProps> = ({
               onClose?.();
             }}
             className="h-8 w-8"
+            title="Fechar"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -149,7 +168,7 @@ const SupportChatWidget: React.FC<SupportChatWidgetProps> = ({
       {!isMinimized && (
         <>
           <CardContent className="p-0 flex-1">
-            <ScrollArea className="h-80 p-4">
+            <ScrollArea className={`${isExpanded ? 'h-[60vh]' : 'h-80'} p-4`}>
               <div className="space-y-4">
                 {messages.map((message: SupportMessage) => (
                   <div
@@ -181,26 +200,40 @@ const SupportChatWidget: React.FC<SupportChatWidgetProps> = ({
                       
                       <div className="space-y-1">
                         <div
-                          className={`rounded-lg px-3 py-2 text-sm ${
+                          className={`rounded-xl px-4 py-2 text-sm max-w-xs break-words ${
                             message.sender_id === user?.id
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-100 text-gray-900'
+                              ? 'bg-primary text-primary-foreground ml-auto'
+                              : 'bg-muted text-foreground'
                           }`}
                         >
                           {message.message}
                         </div>
-                        <div className={`text-xs text-gray-500 ${
+                        <div className={`text-xs text-muted-foreground ${
                           message.sender_id === user?.id ? 'text-right' : 'text-left'
                         }`}>
                           {getMessageTime(message.created_at)}
-                          {message.read_at && (
-                            <CheckCircle className="h-3 w-3 inline ml-1" />
+                          {message.read_at && message.sender_id === user?.id && (
+                            <CheckCircle className="h-3 w-3 inline ml-1 text-green-500" />
                           )}
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
+                
+                {typing && (
+                  <div className="flex justify-start">
+                    <div className="flex items-center space-x-2 bg-muted rounded-xl px-4 py-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                      <span className="text-xs text-muted-foreground">Digitando...</span>
+                    </div>
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
