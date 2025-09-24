@@ -64,6 +64,10 @@ import AdminCompliance from "./pages/AdminCompliance";
 import AdminAutomations from "./pages/AdminAutomations";
 import AdminWorkflows from "./pages/AdminWorkflows";
 
+// Import components for support system
+import Support from "./pages/Support";
+import AdminSupport from "./pages/AdminSupport";
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -183,10 +187,16 @@ function App() {
                   <ProtectedRoute>
                     <LazyUserSettings />
                   </ProtectedRoute>
-                }
-              />
-
-              {/* Protected admin routes with nested layout */}
+                 }
+               />
+               <Route
+                 path="/support"
+                 element={
+                   <ProtectedRoute>
+                     <Support />
+                   </ProtectedRoute>
+                 }
+               />";
               <Route
                 path="/admin"
                 element={
@@ -218,7 +228,7 @@ function App() {
                 <Route path="security" element={<LazyAdminSecurityCenter />} />
                 <Route path="system-monitoring" element={<LazyAdminSystemMonitoring />} />
                 <Route path="production" element={<LazyAdminProductionMonitoring />} />
-                <Route path="gateway-control" element={<LazyAdminGatewayControl />} />
+                <Route path="support" element={<AdminSupport />} />
               </Route>
 
               {/* Legal Pages */}

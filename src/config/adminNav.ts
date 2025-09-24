@@ -19,7 +19,8 @@ import {
   Mail,
   Activity,
   Globe,
-  Eye
+  Eye,
+  Headphones
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -80,10 +81,10 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     category: 'sms'
   },
   {
-    key: 'senderIds',
-    label: 'Sender IDs',
-    href: '/admin/sender-ids',
-    icon: Send,
+    key: 'support',
+    label: 'Centro de Suporte',
+    href: '/admin/support',
+    icon: Headphones,
     category: 'sms'
   },
   {

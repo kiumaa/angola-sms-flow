@@ -1411,6 +1411,101 @@ export type Database = {
         }
         Relationships: []
       }
+      support_conversations: {
+        Row: {
+          account_id: string
+          admin_id: string | null
+          category: string | null
+          created_at: string
+          id: string
+          last_message_at: string | null
+          priority: string
+          status: string
+          subject: string
+          unread_admin_count: number | null
+          unread_user_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          admin_id?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          priority?: string
+          status?: string
+          subject: string
+          unread_admin_count?: number | null
+          unread_user_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          admin_id?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          priority?: string
+          status?: string
+          subject?: string
+          unread_admin_count?: number | null
+          unread_user_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          attachment_url: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          is_admin: boolean
+          message: string
+          message_type: string | null
+          read_at: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          message: string
+          message_type?: string | null
+          read_at?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          message?: string
+          message_type?: string | null
+          read_at?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount_kwanza: number
@@ -1651,6 +1746,10 @@ export type Database = {
       }
       log_security_event: {
         Args: { details?: Json; event_type: string; user_identifier?: string }
+        Returns: undefined
+      }
+      mark_conversation_as_read: {
+        Args: { conversation_id_param: string; is_admin_param?: boolean }
         Returns: undefined
       }
       migrate_sms_credentials_to_secrets: {

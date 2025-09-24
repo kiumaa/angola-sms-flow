@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, Zap, BarChart3 } from "lucide-react";
+import { Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, Zap, BarChart3, MessageCircle } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +71,11 @@ const DashboardLayout = ({
     href: "/sender-ids",
     icon: Send,
     current: location.pathname.startsWith("/sender-ids")
+  }, {
+    name: "Suporte",
+    href: "/support",
+    icon: MessageCircle,
+    current: location.pathname.startsWith("/support")
   }, {
     name: "Configurações",
     href: "/settings",
