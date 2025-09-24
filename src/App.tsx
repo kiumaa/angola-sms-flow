@@ -40,15 +40,18 @@ import {
   LazyAdminTransactions,
   LazyAdminCreditRequests,
   LazyAdminSenderIDs,
-  LazyAdminSMSGateways,
-  LazyAdminSMSMonitoring,
-  LazyAdminSMSTest,
   LazyAdminReports,
   LazyAdminSettings,
   LazyAdminBrand,
   LazyAdminSMSConfiguration,
+  LazyAdminSMSMonitoring,
+  LazyAdminSMSTest,
   LazyAdminProductionMonitoring,
   LazyAdminGatewayControl,
+  LazyAdminTemplates,
+  LazyAdminSMTPSettings,
+  LazyAdminSecurityCenter,
+  LazyAdminSystemMonitoring,
   LazyNotFound,
   LazyTerms,
   LazyPrivacy
@@ -195,6 +198,7 @@ function App() {
                 <Route index element={<LazyAdminDashboard />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="campaigns" element={<AdminCampaigns />} />
+                <Route path="templates" element={<LazyAdminTemplates />} />
                 <Route path="automations" element={<AdminAutomations />} />
                 <Route path="workflows" element={<AdminWorkflows />} />
                 <Route path="compliance" element={<AdminCompliance />} />
@@ -204,13 +208,15 @@ function App() {
                 <Route path="transactions" element={<LazyAdminTransactions />} />
                 <Route path="credit-requests" element={<LazyAdminCreditRequests />} />
                 <Route path="sender-ids" element={<LazyAdminSenderIDs />} />
-                <Route path="sms-gateway-settings" element={<LazyAdminSMSGateways />} />
+                <Route path="sms-configuration" element={<LazyAdminSMSConfiguration />} />
                 <Route path="sms-monitoring" element={<LazyAdminSMSMonitoring />} />
                 <Route path="sms-test" element={<LazyAdminSMSTest />} />
                 <Route path="reports" element={<LazyAdminReports />} />
                 <Route path="settings" element={<LazyAdminSettings />} />
+                <Route path="smtp-settings" element={<LazyAdminSMTPSettings />} />
                 <Route path="brand" element={<LazyAdminBrand />} />
-                <Route path="sms-configuration" element={<LazyAdminSMSConfiguration />} />
+                <Route path="security" element={<LazyAdminSecurityCenter />} />
+                <Route path="system-monitoring" element={<LazyAdminSystemMonitoring />} />
                 <Route path="production" element={<LazyAdminProductionMonitoring />} />
                 <Route path="gateway-control" element={<LazyAdminGatewayControl />} />
               </Route>

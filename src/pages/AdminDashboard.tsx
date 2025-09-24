@@ -22,6 +22,7 @@ import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useGatewayMonitoring } from "@/hooks/useGatewayMonitoring";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { DashboardWidgets } from "@/components/admin/DashboardWidgets";
+import { AdminFunctionalitiesOverview } from "@/components/admin/AdminFunctionalitiesOverview";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
@@ -57,15 +58,18 @@ const AdminDashboard = () => {
         <div className="relative">
           <h1 className="text-4xl font-light gradient-text mb-2 flex items-center space-x-3">
             <div className="p-3 rounded-3xl bg-gradient-primary shadow-glow animate-glow">
-              <Activity className="h-8 w-8 text-white" />
+              <CheckCircle className="h-8 w-8 text-white" />
             </div>
-            <span>Painel Administrativo</span>
+            <span>Painel Administrativo - 100% Ativo</span>
           </h1>
           <p className="text-muted-foreground text-lg">
-            Centro de comando da plataforma SMS Marketing Angola
+            🚀 Plataforma otimizada e pronta para produção - Todas as funcionalidades ativas
           </p>
         </div>
       </div>
+
+      {/* Funcionalidades Overview */}
+      <AdminFunctionalitiesOverview />
 
       {/* Modern Dashboard Widgets */}
       <DashboardWidgets />

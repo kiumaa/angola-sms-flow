@@ -63,15 +63,8 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Users,
     category: 'users'
   },
-  {
-    key: 'roles',
-    label: 'Roles & Permissões',
-    href: '/admin/roles',
-    icon: UserCheck,
-    category: 'users'
-  },
   
-  // SMS & Campanhas  
+  // SMS & Campanhas (simplificado)
   {
     key: 'campaigns',
     label: 'Campanhas',
@@ -102,7 +95,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   },
   {
     key: 'smsMonitoring',
-    label: 'Monitoramento',
+    label: 'Monitoramento SMS',
     href: '/admin/sms-monitoring',
     icon: MonitorSpeaker,
     category: 'sms'
@@ -114,15 +107,15 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: TestTube,
     category: 'sms'
   },
-  {
-    key: 'gatewaySettings',
-    label: 'Config. Gateways',
-    href: '/admin/sms-gateway-settings',
-    icon: Settings,
-    category: 'sms'
-  },
   
-  // Financeiro
+  // Financeiro (reorganizado)
+  {
+    key: 'financeiro',
+    label: 'Dashboard Financeiro',
+    href: '/admin/financeiro',
+    icon: DollarSign,
+    category: 'financial'
+  },
   {
     key: 'transactions',
     label: 'Transações',
@@ -151,15 +144,15 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: BarChart3,
     category: 'financial'
   },
-  {
-    key: 'financeiro',
-    label: 'Dashboard Financeiro',
-    href: '/admin/financeiro',
-    icon: DollarSign,
-    category: 'financial'
-  },
   
-  // Sistema
+  // Sistema (reorganizado)
+  {
+    key: 'security',
+    label: 'Security Center',
+    href: '/admin/security',
+    icon: Shield,
+    category: 'system'
+  },
   {
     key: 'automations',
     label: 'Automações',
@@ -175,24 +168,10 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     category: 'system'
   },
   {
-    key: 'security',
-    label: 'Segurança',
-    href: '/admin/security',
-    icon: Shield,
-    category: 'system'
-  },
-  {
     key: 'compliance',
     label: 'Compliance',
     href: '/admin/compliance',
     icon: Archive,
-    category: 'system'
-  },
-  {
-    key: 'branding',
-    label: 'Personalização',
-    href: '/admin/brand',
-    icon: Palette,
     category: 'system'
   },
   {
@@ -203,10 +182,24 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     category: 'system'
   },
   {
-    key: 'gatewayControl',
-    label: 'Controle Gateway',
-    href: '/admin/gateway-control',
-    icon: Globe,
+    key: 'smtpSettings',
+    label: 'SMTP Settings',
+    href: '/admin/smtp-settings',
+    icon: Mail,
+    category: 'system'
+  },
+  {
+    key: 'branding',
+    label: 'Personalização',
+    href: '/admin/brand',
+    icon: Palette,
+    category: 'system'
+  },
+  {
+    key: 'systemMonitoring',
+    label: 'System Monitoring',
+    href: '/admin/system-monitoring',
+    icon: Activity,
     category: 'system'
   },
   {
@@ -214,6 +207,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Monit. Produção',
     href: '/admin/production',
     icon: Eye,
+    category: 'system'
+  },
+  {
+    key: 'gatewayControl',
+    label: 'Controle Gateway',
+    href: '/admin/gateway-control',
+    icon: Globe,
     category: 'system'
   },
 ];

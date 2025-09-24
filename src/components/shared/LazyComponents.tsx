@@ -35,12 +35,16 @@ export const LazyAdminReports = lazy(() => import("@/pages/AdminReports"));
 export const LazyAdminSenderIDs = lazy(() => import("@/pages/AdminSenderIDs"));
 export const LazyAdminCreditRequests = lazy(() => import("@/pages/AdminCreditRequests"));
 export const LazyAdminBrand = lazy(() => import("@/pages/AdminBrand"));
-export const LazyAdminSMSGateways = lazy(() => import("@/pages/AdminSMSGateways"));
+export const LazyAdminSMSConfiguration = lazy(() => import("@/pages/AdminSMSConfiguration"));
 export const LazyAdminSMSMonitoring = lazy(() => import("@/pages/AdminSMSMonitoring"));
 export const LazyAdminSMSTest = lazy(() => import("@/pages/AdminSMSTest"));
-export const LazyAdminSMSConfiguration = lazy(() => import("@/pages/AdminSMSConfiguration"));
 export const LazyAdminProductionMonitoring = lazy(() => import("@/pages/AdminProductionMonitoring"));
 export const LazyAdminGatewayControl = lazy(() => import("@/pages/AdminGatewayControl"));
+// New active pages
+export const LazyAdminTemplates = lazy(() => import("@/pages/AdminTemplates"));
+export const LazyAdminSMTPSettings = lazy(() => import("@/pages/AdminSMTPSettings"));
+export const LazyAdminSecurityCenter = lazy(() => import("@/pages/AdminSecurityCenter"));
+export const LazyAdminSystemMonitoring = lazy(() => import("@/pages/AdminSystemMonitoring"));
 
 // Legal Pages
 export const LazyTerms = lazy(() => import("@/pages/legal/Terms"));
