@@ -196,7 +196,7 @@ function App() {
                      <Support />
                    </ProtectedRoute>
                  }
-               />";
+               />
               <Route
                 path="/admin"
                 element={
