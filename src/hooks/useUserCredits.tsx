@@ -15,18 +15,37 @@ export const useUserCredits = () => {
 
   const fetchCredits = async () => {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('profiles')
         .select('credits')
         .eq('user_id', user?.id)
         .single();
 
-      if (error) {
+      // Se o perfil não existe, criar automaticamente
+      if (error && error.code === 'PGRST116') {
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user?.id,
+            email: user?.email,
+            full_name: user?.user_metadata?.full_name || user?.email,
+            credits: 5 // Créditos iniciais
+          })
+          .select('credits')
+          .single();
+
+        if (createError) {
+          console.error('Erro ao criar perfil:', createError);
+          return;
+        }
+        
+        data = newProfile;
+      } else if (error) {
         console.error('Erro ao buscar créditos:', error);
         return;
       }
 
-      setCredits(data.credits || 0);
+      setCredits(data?.credits || 0);
     } catch (error) {
       console.error('Erro ao buscar créditos:', error);
     } finally {

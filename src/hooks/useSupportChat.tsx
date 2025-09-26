@@ -171,14 +171,30 @@ export const useSupportChat = () => {
       setSending(true);
 
       // Obter account_id do usuário
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .single();
 
+      // Se o perfil não existe, criá-lo automaticamente
       if (!profile) {
-        throw new Error('Perfil do usuário não encontrado');
+        const { data: newProfile, error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.email,
+            credits: 5 // Créditos iniciais
+          })
+          .select('id')
+          .single();
+
+        if (profileError) {
+          throw new Error('Erro ao criar perfil do usuário: ' + profileError.message);
+        }
+        
+        profile = newProfile;
       }
 
       // Criar conversa
