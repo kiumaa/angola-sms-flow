@@ -13,7 +13,10 @@ import {
   Users,
   MessageSquare,
   CreditCard,
-  BarChart3
+  BarChart3,
+  Shield,
+  RefreshCw,
+  Database
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -37,14 +40,35 @@ interface FinancialMetrics {
   profitMargin: number;
 }
 
+interface IntegrityCheck {
+  status: 'healthy' | 'warning' | 'critical';
+  metrics: {
+    total_profiles: number;
+    untracked_credits: number;
+    inconsistent_balances: number;
+  };
+  profiles_with_issues?: Array<{
+    user_id: string;
+    credits?: number;
+    profile_credits?: number;
+    adjustment_total?: number;
+    issue: string;
+  }>;
+  recommendations: string[];
+}
+
 export default function AdminFinanceiro() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<FinancialMetrics | null>(null);
+  const [integrityCheck, setIntegrityCheck] = useState<IntegrityCheck | null>(null);
   const [loading, setLoading] = useState(true);
+  const [integrityLoading, setIntegrityLoading] = useState(false);
+  const [migrating, setMigrating] = useState(false);
   const [timeRange, setTimeRange] = useState('30d');
 
   useEffect(() => {
     fetchFinancialMetrics();
+    checkFinancialIntegrity();
   }, [timeRange]);
 
   const fetchFinancialMetrics = async () => {
@@ -142,6 +166,47 @@ export default function AdminFinanceiro() {
       console.error('Error fetching financial metrics:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkFinancialIntegrity = async () => {
+    try {
+      setIntegrityLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('financial-integrity-check', {
+        body: { action: 'check' }
+      });
+
+      if (error) throw error;
+      setIntegrityCheck(data);
+      
+    } catch (error) {
+      console.error('Error checking financial integrity:', error);
+    } finally {
+      setIntegrityLoading(false);
+    }
+  };
+
+  const migrateUnrackedCredits = async () => {
+    try {
+      setMigrating(true);
+      
+      const { data, error } = await supabase.functions.invoke('financial-integrity-check', {
+        body: { action: 'migrate' }
+      });
+
+      if (error) throw error;
+      
+      // Refresh both metrics and integrity check
+      await Promise.all([
+        fetchFinancialMetrics(),
+        checkFinancialIntegrity()
+      ]);
+      
+    } catch (error) {
+      console.error('Error migrating untracked credits:', error);
+    } finally {
+      setMigrating(false);
     }
   };
 
@@ -246,6 +311,7 @@ export default function AdminFinanceiro() {
         <TabsList>
           <TabsTrigger value="countries">Por País</TabsTrigger>
           <TabsTrigger value="packages">Pacotes</TabsTrigger>
+          <TabsTrigger value="integrity">Integridade</TabsTrigger>
           <TabsTrigger value="alerts">Alertas</TabsTrigger>
         </TabsList>
 
@@ -323,6 +389,139 @@ export default function AdminFinanceiro() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="integrity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Integridade Financeira
+                <button
+                  onClick={checkFinancialIntegrity}
+                  disabled={integrityLoading}
+                  className="ml-auto p-1 hover:bg-muted rounded"
+                >
+                  <RefreshCw className={cn("h-4 w-4", integrityLoading && "animate-spin")} />
+                </button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {integrityCheck ? (
+                <div className="space-y-4">
+                  {/* Status Overview */}
+                  <div className={cn(
+                    "p-4 rounded-lg border",
+                    integrityCheck.status === 'healthy' && "bg-green-50 border-green-200",
+                    integrityCheck.status === 'warning' && "bg-yellow-50 border-yellow-200", 
+                    integrityCheck.status === 'critical' && "bg-red-50 border-red-200"
+                  )}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Database className="h-5 w-5" />
+                      <span className="font-medium">
+                        Status: {integrityCheck.status === 'healthy' ? 'Saudável' : 
+                                integrityCheck.status === 'warning' ? 'Atenção' : 'Crítico'}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <div className="text-muted-foreground">Total de Perfis</div>
+                        <div className="font-medium">{integrityCheck.metrics.total_profiles}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Créditos Não Rastreados</div>
+                        <div className={cn(
+                          "font-medium",
+                          integrityCheck.metrics.untracked_credits > 0 && "text-red-600"
+                        )}>
+                          {integrityCheck.metrics.untracked_credits}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Balanços Inconsistentes</div>
+                        <div className={cn(
+                          "font-medium",
+                          integrityCheck.metrics.inconsistent_balances > 0 && "text-red-600"
+                        )}>
+                          {integrityCheck.metrics.inconsistent_balances}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Migration Action */}
+                  {integrityCheck.metrics.untracked_credits > 0 && (
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="flex items-center justify-between">
+                        <span>
+                          <strong>Créditos não rastreados detectados:</strong> {integrityCheck.metrics.untracked_credits} perfis 
+                          têm créditos que não estão registrados na auditoria financeira.
+                        </span>
+                        <button
+                          onClick={migrateUnrackedCredits}
+                          disabled={migrating}
+                          className="ml-4 px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {migrating ? "Migrando..." : "Corrigir Agora"}
+                        </button>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Issues Detail */}
+                  {integrityCheck.profiles_with_issues && integrityCheck.profiles_with_issues.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Perfis com Problemas:</h4>
+                      <div className="max-h-48 overflow-y-auto space-y-2">
+                        {integrityCheck.profiles_with_issues.slice(0, 10).map((profile, index) => (
+                          <div key={index} className="p-2 bg-muted rounded text-sm">
+                            <div className="font-mono text-xs">{profile.user_id}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {profile.issue === 'untracked_free_credits' && 
+                                `${profile.credits} créditos sem registro de auditoria`}
+                              {profile.issue === 'inconsistent_balance' && 
+                                `Perfil: ${profile.profile_credits} vs Ajustes: ${profile.adjustment_total}`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {integrityCheck.profiles_with_issues.length > 10 && (
+                        <div className="text-xs text-muted-foreground">
+                          E mais {integrityCheck.profiles_with_issues.length - 10} perfis...
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {integrityCheck.recommendations.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Recomendações:</h4>
+                      <ul className="text-sm space-y-1">
+                        {integrityCheck.recommendations.map((rec, index) => (
+                          <li key={index} className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full" />
+                            {rec === 'run_credit_migration' && 'Execute migração de créditos não rastreados'}
+                            {rec === 'audit_credit_balances' && 'Audite balances inconsistentes'}
+                            {rec === 'system_healthy' && 'Sistema financeiro está saudável'}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center space-y-2">
+                    <Database className="h-8 w-8 text-muted-foreground mx-auto" />
+                    <p className="text-muted-foreground">Clique em ↻ para verificar integridade</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
