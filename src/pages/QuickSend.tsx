@@ -21,7 +21,7 @@ import {
   History,
   ArrowLeft
 } from "lucide-react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { useContacts } from "@/hooks/useContacts";
@@ -178,16 +178,14 @@ const QuickSendNew = () => {
 
   if (creditsLoading || contactsLoading || senderIdsLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <div className="container mx-auto p-6 max-w-6xl">
       <div className="container mx-auto p-6 max-w-6xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
@@ -449,7 +447,7 @@ const QuickSendNew = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

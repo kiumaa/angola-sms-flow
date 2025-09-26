@@ -14,7 +14,7 @@ import {
   BarChart3,
   Zap
 } from "lucide-react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 
@@ -61,25 +61,23 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="space-y-8 animate-pulse">
-          <div className="glass-card p-8">
-            <div className="h-20 bg-muted/20 rounded-3xl"></div>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="glass-card p-6">
-                <div className="h-32 bg-muted/20 rounded-2xl"></div>
-              </div>
-            ))}
-          </div>
+      <div className="space-y-8 animate-pulse">
+        <div className="glass-card p-8">
+          <div className="h-20 bg-muted/20 rounded-3xl"></div>
         </div>
-      </DashboardLayout>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="glass-card p-6">
+              <div className="h-32 bg-muted/20 rounded-2xl"></div>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <div className="space-y-8">
       <div className="space-y-8">
         {/* Header */}
         <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
@@ -225,7 +223,7 @@ const Reports = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
