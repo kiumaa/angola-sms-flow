@@ -78,15 +78,15 @@ const SupportTicketCard: React.FC<SupportTicketCardProps> = ({
 
   return (
     <Card 
-      className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group ${
-        hasUnreadMessages ? 'ring-2 ring-primary/20 shadow-md' : ''
+      className={`cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.01] group border-border/50 hover:border-primary/20 bg-gradient-to-r from-background to-background/80 backdrop-blur-sm ${
+        hasUnreadMessages ? 'ring-2 ring-primary/30 shadow-lg bg-gradient-to-r from-primary/5 to-primary/10' : ''
       }`}
       onClick={onClick}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
+            <CardTitle className="text-xl font-bold group-hover:text-primary transition-all duration-300 line-clamp-1 mb-1">
               {conversation.subject}
             </CardTitle>
             <CardDescription className="mt-2 flex items-center space-x-2">
@@ -113,11 +113,11 @@ const SupportTicketCard: React.FC<SupportTicketCardProps> = ({
             </CardDescription>
           </div>
           
-          <div className="flex flex-col items-end space-y-2 ml-4">
+          <div className="flex flex-col items-end space-y-3 ml-4">
             {getStatusBadge(conversation.status)}
             <div className="flex items-center space-x-2">
               {getPriorityBadge(conversation.priority)}
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs font-medium">
                 {getCategoryLabel(conversation.category)}
               </Badge>
             </div>
@@ -127,10 +127,10 @@ const SupportTicketCard: React.FC<SupportTicketCardProps> = ({
 
       <CardContent className="pt-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-3 w-3" />
-              <span>
+          <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-4 w-4" />
+              <span className="font-medium">
                 {formatDistanceToNow(new Date(conversation.created_at), {
                   addSuffix: true,
                   locale: ptBR
@@ -139,9 +139,9 @@ const SupportTicketCard: React.FC<SupportTicketCardProps> = ({
             </div>
             
             {conversation.last_message_at && (
-              <div className="flex items-center space-x-1">
-                <MessageCircle className="h-3 w-3" />
-                <span>
+              <div className="flex items-center space-x-2">
+                <MessageCircle className="h-4 w-4" />
+                <span className="font-medium">
                   Última: {formatDistanceToNow(new Date(conversation.last_message_at), {
                     addSuffix: true,
                     locale: ptBR
@@ -152,9 +152,9 @@ const SupportTicketCard: React.FC<SupportTicketCardProps> = ({
           </div>
 
           {hasUnreadMessages && (
-            <Badge className="bg-red-500 text-white hover:bg-red-600 animate-pulse">
+            <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 animate-pulse shadow-lg">
               <MessageCircle className="h-3 w-3 mr-1" />
-              {isAdmin ? conversation.unread_admin_count : conversation.unread_user_count} nova(s)
+              {isAdmin ? conversation.unread_admin_count : conversation.unread_user_count} nova{(isAdmin ? conversation.unread_admin_count : conversation.unread_user_count) !== 1 ? 's' : ''}
             </Badge>
           )}
         </div>
