@@ -170,39 +170,21 @@ export const useSupportChat = () => {
     try {
       setSending(true);
 
-      // Obter account_id do usuário
-      let { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      // Se o perfil não existe, criá-lo automaticamente
-      if (!profile) {
-        const { data: newProfile, error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            email: user.email,
-            full_name: user.user_metadata?.full_name || user.email,
-            credits: 5 // Créditos iniciais
-          })
-          .select('id')
-          .single();
-
-        if (profileError) {
-          throw new Error('Erro ao criar perfil do usuário: ' + profileError.message);
-        }
-        
-        profile = newProfile;
+      // Garantir que o perfil do usuário existe
+      const { data: profileData, error: profileError } = await supabase.functions.invoke('ensure-profile');
+      
+      if (profileError || !profileData?.success) {
+        throw new Error('Erro ao verificar perfil do usuário: ' + (profileError?.message || profileData?.error));
       }
+
+      const profileId = profileData.profileId;
 
       // Criar conversa
       const { data: conversation, error: convError } = await supabase
         .from('support_conversations')
         .insert({
           user_id: user.id,
-          account_id: profile.id,
+          account_id: profileId,
           subject,
           category,
           priority,
