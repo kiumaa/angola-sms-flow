@@ -3,6 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import multicaixaExpressLogo from '@/assets/multicaixa-express-logo.png';
+import multicaixaLogo from '@/assets/multicaixa-logo.png';
+import stripeLogo from '@/assets/stripe-logo.png';
 import { 
   CreditCard, 
   Copy, 
@@ -280,20 +283,23 @@ export const EnhancedPaymentInstructions = ({
               {
                 name: "Multicaixa Express",
                 description: "Pagamento via Multicaixa Express",
-                logo: "https://www.multicaixa.ao/themes/custom/multicaixa/logo.svg",
-                color: "from-blue-500/10 to-blue-500/5"
+                logo: multicaixaExpressLogo,
+                color: "from-orange-500/10 to-orange-500/5",
+                icon: "📱"
               },
               {
                 name: "Pagamento por Referência",
                 description: "Gere uma referência para pagamento",
-                logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Banco_BIC_Angola_logo.svg/512px-Banco_BIC_Angola_logo.svg.png",
-                color: "from-purple-500/10 to-purple-500/5"
+                logo: multicaixaLogo,
+                color: "from-orange-500/10 to-orange-500/5",
+                icon: "🏧"
               },
               {
                 name: "Cartão (via Stripe)",
                 description: "Pagamento seguro com cartão de crédito",
-                logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stripe_Logo%2C_revised_2016.svg/512px-Stripe_Logo%2C_revised_2016.svg.png",
-                color: "from-green-500/10 to-green-500/5"
+                logo: stripeLogo,
+                color: "from-blue-500/10 to-blue-500/5",
+                icon: "💳"
               }
             ].map((method, index) => (
               <motion.div
@@ -312,7 +318,7 @@ export const EnhancedPaymentInstructions = ({
                     <img 
                       src={method.logo} 
                       alt={method.name}
-                      className="w-8 h-8 object-contain"
+                      className="w-8 h-8 object-contain rounded"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
