@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Users, Calendar, Settings, Plus, Layout, LogOut, Shield, Send, Zap, BarChart3, MessageCircle } from "lucide-react";
-import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useUserCredits } from "@/hooks/useUserCredits";
@@ -9,7 +9,7 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 import NotificationCenter from "@/components/shared/NotificationCenter";
 import { WhatsAppSupportButton } from "@/components/shared/WhatsAppSupportButton";
 interface DashboardLayoutProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }
 const DashboardLayout = ({
   children
@@ -134,7 +134,7 @@ const DashboardLayout = ({
 
         {/* Main Content */}
         <main className="flex-1 p-6">
-          {children || <Outlet />}
+          {children}
         </main>
       </div>
     </div>;

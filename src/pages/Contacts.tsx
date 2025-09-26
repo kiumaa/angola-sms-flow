@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Plus, Upload, Download, Search, Users, FileText, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import CSVImport from "@/components/contacts/CSVImport";
@@ -312,24 +312,27 @@ const Contacts = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-8 animate-pulse">
-        <div className="h-20 bg-muted/20 rounded-3xl"></div>
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <div className="h-96 bg-muted/20 rounded-3xl"></div>
-          </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-muted/20 rounded-3xl"></div>
-            ))}
+      <DashboardLayout>
+        <div className="space-y-8 animate-pulse">
+          <div className="h-20 bg-muted/20 rounded-3xl"></div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="h-96 bg-muted/20 rounded-3xl"></div>
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 bg-muted/20 rounded-3xl"></div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <DashboardLayout>
+      <div className="space-y-8">
         {/* Header Section */}
         <div className="glass-card p-8 bg-gradient-hero relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
@@ -559,7 +562,8 @@ const Contacts = () => {
           open={showListForm}
           onOpenChange={setShowListForm}
         />
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

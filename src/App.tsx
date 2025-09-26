@@ -11,7 +11,6 @@ import { ThemeProvider } from "next-themes";
 import { BrandProvider } from "@/providers/BrandProvider";
 import { ConsentProvider } from "./components/shared/ConsentProvider";
 import AdminLayout from "./components/layout/AdminLayout";
-import DashboardLayout from "./components/layout/DashboardLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useThemeAwareFavicon } from "./hooks/useThemeAwareFavicon";
 import { MetaTagsProvider } from "./components/shared/MetaTagsProvider";
@@ -101,31 +100,40 @@ function App() {
             <Route path="/register" element={<LazyRegister />} />
             <Route path="/forgot-password" element={<LazyForgotPassword />} />
 
-              {/* Protected user routes with DashboardLayout */}
+              {/* Protected user routes */}
               <Route
-                path="/"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <DashboardLayout>
-                      <div />
-                    </DashboardLayout>
+                    <LazyDashboard />
                   </ProtectedRoute>
                 }
-              >
-                <Route path="dashboard" element={<LazyDashboard />} />
-                <Route path="quick-send" element={<LazyQuickSend />} />
-                <Route path="contacts" element={<LazyContacts />} />
-                <Route path="credits" element={<LazyCredits />} />
-                <Route path="campaigns" element={<LazyComingSoon />} />
-                <Route path="reports" element={<LazyReports />} />
-                <Route path="transactions" element={<LazyTransactions />} />
-                <Route path="sender-ids" element={<LazySenderIDs />} />
-                <Route path="settings" element={<LazyUserSettings />} />
-                <Route path="support" element={<Support />} />
-              </Route>
-
-              {/* Checkout routes (without dashboard layout) */}
+              />
               <Route
+                path="/quick-send"
+                element={
+                  <ProtectedRoute>
+                    <LazyQuickSend />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/contacts"
+                element={
+                  <ProtectedRoute>
+                    <LazyContacts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/credits"
+                element={
+                  <ProtectedRoute>
+                    <LazyCredits />
+                  </ProtectedRoute>
+                }
+              />
+               <Route
                 path="/checkout/:packageId"
                 element={
                   <ProtectedRoute>
@@ -142,6 +150,54 @@ function App() {
                 }
               />
               <Route
+                path="/campaigns"
+                element={
+                  <ProtectedRoute>
+                    <LazyComingSoon />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute>
+                    <LazyReports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/transactions"
+                element={
+                  <ProtectedRoute>
+                    <LazyTransactions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sender-ids"
+                element={
+                  <ProtectedRoute>
+                    <LazySenderIDs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <LazyUserSettings />
+                  </ProtectedRoute>
+                 }
+               />
+               <Route
+                 path="/support"
+                 element={
+                   <ProtectedRoute>
+                     <Support />
+                   </ProtectedRoute>
+                 }
+               />";
+              <Route
                 path="/admin"
                 element={
                   <ProtectedRoute requireAdmin>
@@ -150,7 +206,6 @@ function App() {
                 }
               >
                 <Route index element={<LazyAdminDashboard />} />
-                <Route path="gateway-control" element={<LazyAdminGatewayControl />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="campaigns" element={<AdminCampaigns />} />
                 <Route path="templates" element={<LazyAdminTemplates />} />

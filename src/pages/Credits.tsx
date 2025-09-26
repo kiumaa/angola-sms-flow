@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { History, CreditCard, Zap, TrendingUp, RefreshCw, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { usePackages } from "@/hooks/usePackages";
 import { useUserCredits } from "@/hooks/useUserCredits";
@@ -92,19 +92,21 @@ const Credits = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-8 animate-pulse">
-        <div className="h-48 bg-muted/20 rounded-3xl"></div>
-        <div className="grid lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-[420px] bg-muted/20 rounded-3xl"></div>
-          ))}
+      <DashboardLayout>
+        <div className="space-y-8 animate-pulse">
+          <div className="h-48 bg-muted/20 rounded-3xl"></div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-[420px] bg-muted/20 rounded-3xl"></div>
+            ))}
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 px-4 sm:px-6 lg:px-8">
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-12 px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center space-y-6">
@@ -279,7 +281,7 @@ const Credits = () => {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
