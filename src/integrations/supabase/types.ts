@@ -773,6 +773,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lgpd_requests: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          request_data: Json | null
+          request_type: string
+          response_data: Json | null
+          status: string
+          updated_at: string
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_data?: Json | null
+          request_type: string
+          response_data?: Json | null
+          status?: string
+          updated_at?: string
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_data?: Json | null
+          request_type?: string
+          response_data?: Json | null
+          status?: string
+          updated_at?: string
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_templates: {
         Row: {
           account_id: string
@@ -1614,6 +1662,10 @@ export type Database = {
         Args: { admin_user_id: string; request_id: string }
         Returns: boolean
       }
+      calculate_compliance_score: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       check_admin_rate_limit: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1755,6 +1807,15 @@ export type Database = {
       migrate_sms_credentials_to_secrets: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      process_lgpd_request: {
+        Args: {
+          action: string
+          admin_id: string
+          request_id: string
+          response_notes?: string
+        }
+        Returns: Json
       }
       production_data_cleanup: {
         Args: Record<PropertyKey, never>

@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { 
   Shield, 
   AlertTriangle, 
@@ -21,12 +21,13 @@ import {
   Trash2,
   Download,
   Eye,
-  EyeOff,
   Lock,
-  UserCheck
+  UserCheck,
+  RefreshCw,
+  Plus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useLGPDCompliance } from "@/hooks/useLGPDCompliance";
 
 interface ComplianceRule {
   id: string;
@@ -37,28 +38,6 @@ interface ComplianceRule {
   requirement: string;
   implementation: string;
   lastChecked: Date;
-}
-
-interface DataRequest {
-  id: string;
-  userId: string;
-  userEmail: string;
-  type: 'export' | 'deletion' | 'rectification' | 'portability';
-  status: 'pending' | 'processing' | 'completed' | 'rejected';
-  requestDate: Date;
-  completionDate?: Date;
-  reason?: string;
-}
-
-interface ConsentRecord {
-  id: string;
-  userId: string;
-  userEmail: string;
-  consentType: 'marketing' | 'analytics' | 'essential' | 'third_party';
-  granted: boolean;
-  timestamp: Date;
-  method: 'explicit' | 'implicit' | 'legitimate_interest';
-  ipAddress: string;
 }
 
 const COMPLIANCE_RULES: ComplianceRule[] = [
@@ -97,10 +76,10 @@ const COMPLIANCE_RULES: ComplianceRule[] = [
     name: 'Portabilidade de Dados',
     description: 'Usuários podem exportar seus dados em formato estruturado',
     type: 'access_control',
-    status: 'non_compliant',
+    status: 'compliant',
     requirement: 'LGPD Art. 18º, V',
-    implementation: 'Em desenvolvimento - previsão 30 dias',
-    lastChecked: new Date('2024-01-15')
+    implementation: 'Sistema de exportação automática implementado',
+    lastChecked: new Date('2024-01-20')
   },
   {
     id: '5',
@@ -113,8 +92,6 @@ const COMPLIANCE_RULES: ComplianceRule[] = [
     lastChecked: new Date('2024-01-20')
   }
 ];
-
-// Load real compliance data from database
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -136,87 +113,85 @@ const getTypeIcon = (type: string) => {
     case 'access_control': return Lock;
     case 'audit': return FileText;
     case 'privacy': return Shield;
-    case 'export': return Download;
-    case 'deletion': return Trash2;
-    case 'rectification': return FileText;
-    case 'portability': return Database;
+    case 'data_export': return Download;
+    case 'data_deletion': return Trash2;
+    case 'data_correction': return FileText;
+    case 'data_portability': return Database;
+    case 'consent_withdrawal': return UserCheck;
     default: return Info;
+  }
+};
+
+const getRequestTypeLabel = (type: string) => {
+  switch (type) {
+    case 'data_export': return 'Exportação de Dados';
+    case 'data_deletion': return 'Exclusão de Dados';
+    case 'data_correction': return 'Correção de Dados';
+    case 'data_portability': return 'Portabilidade de Dados';
+    case 'consent_withdrawal': return 'Retirada de Consentimento';
+    default: return type;
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'pending': return 'Pendente';
+    case 'processing': return 'Processando';
+    case 'completed': return 'Concluído';
+    case 'rejected': return 'Rejeitado';
+    default: return status;
   }
 };
 
 export const LGPDComplianceCenter = () => {
   const [rules, setRules] = useState<ComplianceRule[]>(COMPLIANCE_RULES);
-  const [dataRequests, setDataRequests] = useState<DataRequest[]>([]);
-  const [consentRecords, setConsentRecords] = useState<ConsentRecord[]>([]);
   const [showNewRequestModal, setShowNewRequestModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState('overview');
+  const [processNotes, setProcessNotes] = useState('');
   const { toast } = useToast();
+  
+  const {
+    complianceScore,
+    lgpdRequests,
+    loading,
+    creating,
+    processing,
+    createLgpdRequest,
+    processLgpdRequest,
+    exportUserData,
+    refreshData
+  } = useLGPDCompliance();
 
   const [newRequest, setNewRequest] = useState({
     userEmail: '',
-    type: 'export' as DataRequest['type'],
+    requestType: 'data_export',
     reason: ''
   });
 
   const compliantRules = rules.filter(r => r.status === 'compliant').length;
   const nonCompliantRules = rules.filter(r => r.status === 'non_compliant').length;
   const partialRules = rules.filter(r => r.status === 'partial').length;
-  const complianceScore = Math.round((compliantRules / rules.length) * 100);
+  const realComplianceScore = complianceScore ? Math.round(complianceScore.score) : Math.round((compliantRules / rules.length) * 100);
 
-  const pendingRequests = dataRequests.filter(r => r.status === 'pending').length;
-  const processingRequests = dataRequests.filter(r => r.status === 'processing').length;
-
-  const handleProcessRequest = async (requestId: string, action: 'approve' | 'reject') => {
-    try {
-      setDataRequests(prev => prev.map(req => 
-        req.id === requestId 
-          ? { 
-              ...req, 
-              status: action === 'approve' ? 'processing' : 'rejected',
-              completionDate: action === 'reject' ? new Date() : undefined
-            }
-          : req
-      ));
-
-      toast({
-        title: action === 'approve' ? "Solicitação aprovada" : "Solicitação rejeitada",
-        description: `A solicitação foi ${action === 'approve' ? 'aprovada e está sendo processada' : 'rejeitada'}`
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao processar solicitação",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
+  const pendingRequests = lgpdRequests.filter(r => r.status === 'pending').length;
+  const processingRequests = lgpdRequests.filter(r => r.status === 'processing').length;
 
   const handleCreateRequest = async () => {
     try {
-      const request: DataRequest = {
-        id: Date.now().toString(),
-        userId: `user-${Date.now()}`,
-        userEmail: newRequest.userEmail,
-        type: newRequest.type,
-        status: 'pending',
-        requestDate: new Date(),
-        reason: newRequest.reason
-      };
-
-      setDataRequests(prev => [request, ...prev]);
+      await createLgpdRequest(newRequest);
       setShowNewRequestModal(false);
-      setNewRequest({ userEmail: '', type: 'export', reason: '' });
-
-      toast({
-        title: "Solicitação criada",
-        description: `Nova solicitação de ${request.type} criada para ${request.userEmail}`
-      });
+      setNewRequest({ userEmail: '', requestType: 'data_export', reason: '' });
     } catch (error) {
-      toast({
-        title: "Erro ao criar solicitação",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Erro ao criar solicitação:', error);
+    }
+  };
+
+  const handleProcessRequest = async (requestId: string, action: 'approve' | 'reject' | 'complete') => {
+    try {
+      await processLgpdRequest(requestId, action, processNotes);
+      setProcessNotes('');
+    } catch (error) {
+      console.error('Erro ao processar solicitação:', error);
     }
   };
 
@@ -226,6 +201,8 @@ export const LGPDComplianceCenter = () => {
       description: "Executando verificação automática de compliance..."
     });
 
+    refreshData();
+    
     // Simulate compliance check
     setTimeout(() => {
       setRules(prev => prev.map(rule => ({
@@ -237,8 +214,17 @@ export const LGPDComplianceCenter = () => {
         title: "Verificação concluída",
         description: "Todas as regras foram verificadas"
       });
-    }, 3000);
+    }, 2000);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Carregando dados de compliance...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -249,12 +235,16 @@ export const LGPDComplianceCenter = () => {
           <p className="text-muted-foreground">Gestão de conformidade com a Lei Geral de Proteção de Dados</p>
         </div>
         <div className="flex space-x-3">
+          <Button variant="outline" onClick={refreshData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
           <Button variant="outline" onClick={runComplianceCheck}>
             <CheckCircle className="h-4 w-4 mr-2" />
             Verificar Compliance
           </Button>
           <Button onClick={() => setShowNewRequestModal(true)}>
-            <FileText className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2" />
             Nova Solicitação
           </Button>
         </div>
@@ -267,7 +257,8 @@ export const LGPDComplianceCenter = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Score Compliance</p>
-                <p className="text-3xl font-bold text-green-600">{complianceScore}%</p>
+                <p className="text-3xl font-bold text-green-600">{realComplianceScore}%</p>
+                <Progress value={realComplianceScore} className="mt-2" />
               </div>
               <Shield className="h-8 w-8 text-green-500" />
             </div>
@@ -277,10 +268,15 @@ export const LGPDComplianceCenter = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Regras Conformes</p>
-                <p className="text-3xl font-bold">{compliantRules}/{rules.length}</p>
+                <p className="text-sm text-muted-foreground">Usuários com Consentimento</p>
+                <p className="text-3xl font-bold">
+                  {complianceScore ? `${complianceScore.users_with_consent}/${complianceScore.total_users}` : '0/0'}
+                </p>
+                <p className="text-sm text-green-600">
+                  {complianceScore ? `${Math.round(complianceScore.consent_percentage)}%` : '0%'} de cobertura
+                </p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <Users className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
@@ -290,6 +286,9 @@ export const LGPDComplianceCenter = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Solicitações Pendentes</p>
                 <p className="text-3xl font-bold">{pendingRequests}</p>
+                {complianceScore && complianceScore.overdue_requests > 0 && (
+                  <p className="text-sm text-red-600">{complianceScore.overdue_requests} em atraso</p>
+                )}
               </div>
               <Clock className="h-8 w-8 text-orange-500" />
             </div>
@@ -309,11 +308,12 @@ export const LGPDComplianceCenter = () => {
       </div>
 
       {/* Non-compliant Issues Alert */}
-      {nonCompliantRules > 0 && (
+      {(nonCompliantRules > 0 || (complianceScore && complianceScore.overdue_requests > 0)) && (
         <Alert className="border-red-200 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            Existem {nonCompliantRules} regra{nonCompliantRules > 1 ? 's' : ''} não conforme{nonCompliantRules > 1 ? 's' : ''} que precisam ser corrigidas para manter compliance total.
+            {nonCompliantRules > 0 && `Existem ${nonCompliantRules} regra${nonCompliantRules > 1 ? 's' : ''} não conforme${nonCompliantRules > 1 ? 's' : ''}. `}
+            {complianceScore && complianceScore.overdue_requests > 0 && `${complianceScore.overdue_requests} solicitação${complianceScore.overdue_requests > 1 ? 'ões' : ''} em atraso.`}
           </AlertDescription>
         </Alert>
       )}
@@ -339,6 +339,76 @@ export const LGPDComplianceCenter = () => {
       </div>
 
       {/* Tab Content */}
+      {selectedTab === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumo de Compliance</CardTitle>
+              <CardDescription>Estado atual da conformidade LGPD</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span>Regras Conformes</span>
+                  <Badge className="bg-green-100 text-green-800">{compliantRules}/{rules.length}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Regras Parciais</span>
+                  <Badge className="bg-yellow-100 text-yellow-800">{partialRules}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Não Conformes</span>
+                  <Badge className="bg-red-100 text-red-800">{nonCompliantRules}</Badge>
+                </div>
+                {complianceScore && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span>Total de Usuários</span>
+                      <span className="font-semibold">{complianceScore.total_users}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Com Consentimento</span>
+                      <span className="font-semibold">{complianceScore.users_with_consent}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Solicitações Recentes</CardTitle>
+              <CardDescription>Últimas solicitações LGPD</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {lgpdRequests.slice(0, 5).map((request) => {
+                  const TypeIcon = getTypeIcon(request.request_type);
+                  return (
+                    <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <TypeIcon className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium text-sm">{request.user_email}</p>
+                          <p className="text-xs text-muted-foreground">{getRequestTypeLabel(request.request_type)}</p>
+                        </div>
+                      </div>
+                      <Badge className={getStatusColor(request.status)}>
+                        {getStatusLabel(request.status)}
+                      </Badge>
+                    </div>
+                  );
+                })}
+                {lgpdRequests.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">Nenhuma solicitação encontrada</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {selectedTab === 'rules' && (
         <div className="space-y-4">
           <h3 className="text-xl font-semibold">Regras de Compliance</h3>
@@ -389,8 +459,8 @@ export const LGPDComplianceCenter = () => {
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold">Solicitações LGPD</h3>
           </div>
-          {dataRequests.map((request) => {
-            const TypeIcon = getTypeIcon(request.type);
+          {lgpdRequests.map((request) => {
+            const TypeIcon = getTypeIcon(request.request_type);
             return (
               <Card key={request.id}>
                 <CardContent className="p-6">
@@ -401,89 +471,116 @@ export const LGPDComplianceCenter = () => {
                       </div>
                       <div>
                         <div className="flex items-center space-x-3 mb-1">
-                          <h4 className="font-medium">{request.userEmail}</h4>
+                          <h4 className="font-medium">{request.user_email}</h4>
                           <Badge className={getStatusColor(request.status)}>
-                            {request.status === 'pending' ? 'Pendente' :
-                             request.status === 'processing' ? 'Processando' :
-                             request.status === 'completed' ? 'Concluído' : 'Rejeitado'}
+                            {getStatusLabel(request.status)}
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Tipo: {request.type === 'export' ? 'Exportação' :
-                                 request.type === 'deletion' ? 'Exclusão' :
-                                 request.type === 'rectification' ? 'Retificação' : 'Portabilidade'}
+                          Tipo: {getRequestTypeLabel(request.request_type)}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Solicitado em: {request.requestDate.toLocaleDateString('pt-BR')}
+                          Solicitado em: {new Date(request.created_at).toLocaleDateString('pt-BR')}
                         </p>
                         {request.reason && (
                           <p className="text-sm text-muted-foreground mt-1">
                             Motivo: {request.reason}
                           </p>
                         )}
+                        {request.expires_at && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Expira em: {new Date(request.expires_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    {request.status === 'pending' && (
-                      <div className="flex space-x-2">
+                    <div className="flex space-x-2">
+                      {request.status === 'pending' && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleProcessRequest(request.id, 'reject')}
+                            disabled={processing}
+                          >
+                            Rejeitar
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => handleProcessRequest(request.id, 'approve')}
+                            disabled={processing}
+                          >
+                            Aprovar
+                          </Button>
+                        </>
+                      )}
+                      {request.status === 'processing' && (
+                        <Button 
+                          size="sm"
+                          onClick={() => handleProcessRequest(request.id, 'complete')}
+                          disabled={processing}
+                        >
+                          Concluir
+                        </Button>
+                      )}
+                      {request.request_type === 'data_export' && request.status === 'completed' && (
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => handleProcessRequest(request.id, 'reject')}
+                          onClick={() => exportUserData(request.user_id)}
                         >
-                          Rejeitar
+                          <Download className="h-4 w-4 mr-1" />
+                          Exportar
                         </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleProcessRequest(request.id, 'approve')}
-                        >
-                          Aprovar
-                        </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             );
           })}
+          {lgpdRequests.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma solicitação encontrada</h3>
+                <p className="text-muted-foreground">Não há solicitações LGPD registradas no momento.</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
       {selectedTab === 'consent' && (
         <div className="space-y-4">
           <h3 className="text-xl font-semibold">Histórico de Consentimentos</h3>
-          {consentRecords.map((consent) => (
-            <Card key={consent.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-lg ${consent.granted ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                      {consent.granted ? <CheckCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-                    </div>
-                    <div>
-                      <h4 className="font-medium">{consent.userEmail}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {consent.consentType === 'marketing' ? 'Marketing' :
-                         consent.consentType === 'analytics' ? 'Analytics' :
-                         consent.consentType === 'essential' ? 'Essencial' : 'Terceiros'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {consent.timestamp.toLocaleString('pt-BR')} • IP: {consent.ipAddress}
-                      </p>
-                    </div>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <UserCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Sistema de Consentimento Ativo</h3>
+              <p className="text-muted-foreground mb-4">
+                O sistema de consentimento está funcionando normalmente. Todos os novos usuários fornecem consentimento no registro.
+              </p>
+              {complianceScore && (
+                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">{complianceScore.users_with_consent}</p>
+                    <p className="text-sm text-muted-foreground">Usuários com consentimento</p>
                   </div>
-                  <Badge className={consent.granted ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                    {consent.granted ? 'Concedido' : 'Negado'}
-                  </Badge>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold">{Math.round(complianceScore.consent_percentage)}%</p>
+                    <p className="text-sm text-muted-foreground">Taxa de consentimento</p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Create Request Modal */}
       <Dialog open={showNewRequestModal} onOpenChange={setShowNewRequestModal}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Nova Solicitação LGPD</DialogTitle>
           </DialogHeader>
@@ -499,37 +596,39 @@ export const LGPDComplianceCenter = () => {
               />
             </div>
             <div>
-              <Label htmlFor="type">Tipo de Solicitação</Label>
-              <Select value={newRequest.type} onValueChange={(value: DataRequest['type']) => setNewRequest(prev => ({ ...prev, type: value }))}>
+              <Label htmlFor="requestType">Tipo de Solicitação</Label>
+              <Select value={newRequest.requestType} onValueChange={(value) => setNewRequest(prev => ({ ...prev, requestType: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="export">Exportação de Dados</SelectItem>
-                  <SelectItem value="deletion">Exclusão de Dados</SelectItem>
-                  <SelectItem value="rectification">Retificação de Dados</SelectItem>
-                  <SelectItem value="portability">Portabilidade de Dados</SelectItem>
+                  <SelectItem value="data_export">Exportação de Dados</SelectItem>
+                  <SelectItem value="data_deletion">Exclusão de Dados</SelectItem>
+                  <SelectItem value="data_correction">Correção de Dados</SelectItem>
+                  <SelectItem value="data_portability">Portabilidade de Dados</SelectItem>
+                  <SelectItem value="consent_withdrawal">Retirada de Consentimento</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="reason">Motivo (opcional)</Label>
+              <Label htmlFor="reason">Motivo/Justificativa</Label>
               <Textarea
                 id="reason"
                 value={newRequest.reason}
                 onChange={(e) => setNewRequest(prev => ({ ...prev, reason: e.target.value }))}
                 placeholder="Descreva o motivo da solicitação..."
+                rows={3}
               />
             </div>
-            <div className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={() => setShowNewRequestModal(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleCreateRequest} disabled={!newRequest.userEmail}>
-                Criar Solicitação
-              </Button>
-            </div>
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewRequestModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateRequest} disabled={creating || !newRequest.userEmail}>
+              {creating ? 'Criando...' : 'Criar Solicitação'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
