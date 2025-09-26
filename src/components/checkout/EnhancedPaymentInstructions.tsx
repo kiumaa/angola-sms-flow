@@ -3,9 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import multicaixaExpressLogo from '@/assets/multicaixa-express-logo.png';
-import multicaixaLogo from '@/assets/multicaixa-logo.png';
-import stripeLogo from '@/assets/stripe-logo.png';
 import { 
   CreditCard, 
   Copy, 
@@ -283,21 +280,21 @@ export const EnhancedPaymentInstructions = ({
               {
                 name: "Multicaixa Express",
                 description: "Pagamento via Multicaixa Express",
-                logo: multicaixaExpressLogo,
+                logo: "/multicaixa-express-logo.png",
                 color: "from-orange-500/10 to-orange-500/5",
                 icon: "📱"
               },
               {
                 name: "Pagamento por Referência",
                 description: "Gere uma referência para pagamento",
-                logo: multicaixaLogo,
+                logo: "/multicaixa-logo.png",
                 color: "from-orange-500/10 to-orange-500/5",
                 icon: "🏧"
               },
               {
                 name: "Cartão (via Stripe)",
                 description: "Pagamento seguro com cartão de crédito",
-                logo: stripeLogo,
+                logo: "/stripe-logo.png",
                 color: "from-blue-500/10 to-blue-500/5",
                 icon: "💳"
               }
@@ -314,15 +311,19 @@ export const EnhancedPaymentInstructions = ({
                 transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={method.logo} 
-                      alt={method.name}
-                      className="w-8 h-8 object-contain rounded"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center p-2">
+                      <img 
+                        src={method.logo} 
+                        alt={method.name}
+                        className="w-full h-full object-contain"
+                        loading="eager"
+                        onError={(e) => {
+                          console.error(`Erro ao carregar logo: ${method.name}`, e);
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjOTk5IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=';
+                        }}
+                      />
+                    </div>
                     <div>
                       <h5 className="font-medium text-foreground/70">{method.name}</h5>
                       <p className="text-sm text-muted-foreground">{method.description}</p>
