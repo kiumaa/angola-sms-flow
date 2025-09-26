@@ -280,19 +280,19 @@ export const EnhancedPaymentInstructions = ({
               {
                 name: "Multicaixa Express",
                 description: "Pagamento via Multicaixa Express",
-                icon: "📱",
+                logo: "https://www.multicaixa.ao/themes/custom/multicaixa/logo.svg",
                 color: "from-blue-500/10 to-blue-500/5"
               },
               {
                 name: "Pagamento por Referência",
                 description: "Gere uma referência para pagamento",
-                icon: "🏧",
+                logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Banco_BIC_Angola_logo.svg/512px-Banco_BIC_Angola_logo.svg.png",
                 color: "from-purple-500/10 to-purple-500/5"
               },
               {
                 name: "Cartão (via Stripe)",
                 description: "Pagamento seguro com cartão de crédito",
-                icon: "💳",
+                logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stripe_Logo%2C_revised_2016.svg/512px-Stripe_Logo%2C_revised_2016.svg.png",
                 color: "from-green-500/10 to-green-500/5"
               }
             ].map((method, index) => (
@@ -309,7 +309,14 @@ export const EnhancedPaymentInstructions = ({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{method.icon}</span>
+                    <img 
+                      src={method.logo} 
+                      alt={method.name}
+                      className="w-8 h-8 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
                     <div>
                       <h5 className="font-medium text-foreground/70">{method.name}</h5>
                       <p className="text-sm text-muted-foreground">{method.description}</p>
