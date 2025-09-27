@@ -62,6 +62,54 @@ export type Database = {
           },
         ]
       }
+      admin_notifications: {
+        Row: {
+          admin_id: string
+          category: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          message: string
+          priority: string
+          target_role: Database["public"]["Enums"]["app_role"] | null
+          target_type: string
+          target_users: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          category?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          message: string
+          priority?: string
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          target_type: string
+          target_users?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          category?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string
+          priority?: string
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          target_type?: string
+          target_users?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brand_settings: {
         Row: {
           custom_css: string | null
@@ -1628,6 +1676,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_notifications: {
+        Row: {
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          notification_id: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          notification_id: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          notification_id?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "admin_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1719,6 +1802,10 @@ export type Database = {
       decrypt_smtp_password: {
         Args: { encrypted_password: string }
         Returns: string
+      }
+      distribute_admin_notification: {
+        Args: { notification_id: string }
+        Returns: number
       }
       encrypt_payment_reference: {
         Args: { ref_text: string }
