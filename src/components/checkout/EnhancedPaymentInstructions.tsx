@@ -257,7 +257,7 @@ export const EnhancedPaymentInstructions = ({
                         {step.description}
                       </p>
                       <p className="text-xs text-blue-400 mt-1">
-                        💡 {step.detail}
+                        {step.detail}
                       </p>
                     </div>
                   </motion.div>
@@ -283,21 +283,21 @@ export const EnhancedPaymentInstructions = ({
                 description: "Pagamento via Multicaixa Express",
                 logo: "/multicaixa-express-logo.png",
                 color: "from-orange-500/10 to-orange-500/5",
-                icon: "📱"
+                icon: "Pagamento via app móvel"
               },
               {
                 name: "Pagamento por Referência",
                 description: "Gere uma referência para pagamento",
                 logo: "/multicaixa-logo.png",
                 color: "from-orange-500/10 to-orange-500/5",
-                icon: "🏧"
+                icon: "Referência bancária"
               },
               {
                 name: "Cartão (via Stripe)",
                 description: "Pagamento seguro com cartão de crédito",
                 logo: "/stripe-logo.png",
                 color: "from-blue-500/10 to-blue-500/5",
-                icon: "💳"
+                icon: "Cartão internacional"
               }
             ].map((method, index) => (
               <motion.div
@@ -347,7 +347,7 @@ export const EnhancedPaymentInstructions = ({
           
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              💡 Novos métodos de pagamento serão adicionados em breve para sua comodidade
+              Novos métodos de pagamento serão adicionados em breve para sua comodidade
             </p>
           </div>
         </motion.div>
