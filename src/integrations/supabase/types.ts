@@ -1804,7 +1804,7 @@ export type Database = {
         Returns: string
       }
       distribute_admin_notification: {
-        Args: { notification_id: string }
+        Args: { p_notification_id: string }
         Returns: number
       }
       encrypt_payment_reference: {
