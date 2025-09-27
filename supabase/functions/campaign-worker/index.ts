@@ -109,7 +109,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Campaign worker error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Campaign worker error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -251,7 +252,7 @@ async function processSendingTargets(supabase: any) {
   console.log(`Processing ${targets.length} targets for sending`)
 
   // Group targets by account to implement per-account rate limiting
-  const targetsByAccount = targets.reduce((acc, target) => {
+  const targetsByAccount = targets.reduce((acc: Record<string, any[]>, target: any) => {
     const accountId = target.campaigns.account_id
     if (!acc[accountId]) acc[accountId] = []
     acc[accountId].push(target)
@@ -259,11 +260,9 @@ async function processSendingTargets(supabase: any) {
   }, {} as Record<string, any[]>)
 
   // Process each account's targets with rate limiting
-  await Promise.all(
-    Object.entries(targetsByAccount).map(([accountId, accountTargets]) =>
-      processAccountTargets(supabase, accountId, accountTargets)
-    )
-  )
+  for (const [accountId, accountTargets] of Object.entries(targetsByAccount)) {
+    await processAccountTargets(supabase, accountId, accountTargets as any[])
+  }
 }
 
 async function processAccountTargets(supabase: any, accountId: string, targets: any[]) {
@@ -359,12 +358,13 @@ async function sendSMS(supabase: any, target: any) {
     console.error(`Error sending SMS to ${target.phone_e164}:`, error)
     
     // Update target with error
+    const errorMessage = error instanceof Error ? error.message : 'System error';
     await supabase
       .from('campaign_targets')
       .update({ 
         status: 'failed',
         error_code: 'SYSTEM_ERROR',
-        error_detail: error.message
+        error_detail: errorMessage
       })
       .eq('id', target.id)
   }
@@ -413,10 +413,11 @@ async function sendViaBulkSMS(phone: string, message: string, senderId: string) 
     }
     
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Network error';
     return {
       success: false,
       error_code: 'NETWORK_ERROR',
-      error: error.message
+      error: errorMessage
     }
   }
 }

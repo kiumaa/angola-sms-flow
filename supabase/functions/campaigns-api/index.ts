@@ -112,7 +112,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Campaign API Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Campaign API error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -214,7 +215,7 @@ async function calculateAudiencePreview(supabase: any, audience: AudienceFilter,
     contacts = data || []
 
     // Add phones that don't have contacts as ad-hoc entries
-    const existingPhones = contacts.map(c => c.phone_e164)
+    const existingPhones = contacts.map((c: any) => c.phone_e164)
     const newPhones = validPhones.filter(phone => !existingPhones.includes(phone))
     
     for (const phone of newPhones) {
@@ -228,8 +229,8 @@ async function calculateAudiencePreview(supabase: any, audience: AudienceFilter,
   }
 
   // Deduplicate by phone
-  const uniqueContacts = contacts.reduce((acc, contact) => {
-    if (!acc.some(c => c.phone_e164 === contact.phone_e164)) {
+  const uniqueContacts = contacts.reduce((acc: any[], contact: any) => {
+    if (!acc.some((c: any) => c.phone_e164 === contact.phone_e164)) {
       acc.push(contact)
     }
     return acc

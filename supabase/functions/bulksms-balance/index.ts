@@ -147,8 +147,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in bulksms-balance function:', error);
     
-    let errorMessage = error.message;
-    if (error.name === 'AbortError') {
+    let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    if (error instanceof Error && error.name === 'AbortError') {
       errorMessage = 'Timeout connecting to BulkSMS API';
     }
     

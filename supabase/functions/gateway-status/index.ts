@@ -100,13 +100,15 @@ serve(async (req) => {
                 status = 'online';
                 balance = v2Data.data?.credit || null;
               } catch (parseError) {
-                console.error('❌ v2 JSON Parse Error:', parseError.message);
+                const parseErrorMessage = parseError instanceof Error ? parseError.message : 'Parse error';
+                console.error('❌ v2 JSON Parse Error:', parseErrorMessage);
               }
             } else {
               console.log(`🔄 v2 API failed (${v2Response.status}), falling back to v1`);
             }
           } catch (v2Error) {
-            console.error('❌ v2 API Error:', v2Error.message);
+            const v2ErrorMessage = v2Error instanceof Error ? v2Error.message : 'V2 API error';
+            console.error('❌ v2 API Error:', v2ErrorMessage);
           }
           
           // Reset status and try v1 API if v2 failed
@@ -144,8 +146,9 @@ serve(async (req) => {
                   status = 'online';
                   balance = v1Data.data?.credit || null;
                 } catch (parseError) {
-                  console.error('❌ v1 JSON Parse Error:', parseError.message);
-                  throw new Error(`BulkGate v1 response parse error: ${parseError.message}`);
+                  const parseErrorMessage = parseError instanceof Error ? parseError.message : 'Parse error';
+                  console.error('❌ v1 JSON Parse Error:', parseErrorMessage);
+                  throw new Error(`BulkGate v1 response parse error: ${parseErrorMessage}`);
                 }
               } else {
                 console.log(`❌ v1 API Error: ${v1Response.status} - ${v1ResponseText}`);
@@ -160,8 +163,9 @@ serve(async (req) => {
                 }
               }
             } catch (v1Error) {
-              console.error('❌ v1 API Connection Error:', v1Error.message);
-              throw new Error(`BulkGate v1 connection error: ${v1Error.message}`);
+              const v1ErrorMessage = v1Error instanceof Error ? v1Error.message : 'V1 connection error';
+              console.error('❌ v1 API Connection Error:', v1ErrorMessage);
+              throw new Error(`BulkGate v1 connection error: ${v1ErrorMessage}`);
             }
           }
         } else {
@@ -175,7 +179,7 @@ serve(async (req) => {
     } catch (error) {
       console.error(`Gateway ${gateway_name} check failed:`, error);
       status = 'error';
-      errorMessage = error.message;
+      errorMessage = error instanceof Error ? error.message : 'Unknown error';
     }
 
     const responseTime = Date.now() - startTime;
@@ -192,8 +196,9 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: errorMessage,
       status: 'error'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

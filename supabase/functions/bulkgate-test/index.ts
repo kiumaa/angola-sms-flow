@@ -76,7 +76,8 @@ serve(async (req) => {
           })
         }
       } catch (v2Error) {
-        console.error('❌ v2 API Error:', v2Error.message)
+        const v2ErrorMessage = v2Error instanceof Error ? v2Error.message : 'V2 API error';
+        console.error('❌ v2 API Error:', v2ErrorMessage)
       }
       
       // Test v1 API
@@ -123,10 +124,11 @@ serve(async (req) => {
           })
         }
       } catch (v1Error) {
-        console.error('❌ v1 API Error:', v1Error.message)
+        const v1ErrorMessage = v1Error instanceof Error ? v1Error.message : 'V1 API error';
+        console.error('❌ v1 API Error:', v1ErrorMessage)
         return new Response(JSON.stringify({
           success: false,
-          error: v1Error.message,
+          error: v1ErrorMessage,
           test_type: 'connection_error'
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -149,10 +151,11 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('❌ Unexpected error:', error.message)
+    const errorMessage = error instanceof Error ? error.message : 'Unexpected error';
+    console.error('❌ Unexpected error:', errorMessage)
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: errorMessage 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500

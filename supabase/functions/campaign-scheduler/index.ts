@@ -109,8 +109,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Campaign scheduler error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Campaign scheduler error';
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: errorMessage,
       timestamp: new Date().toISOString()
     }), {
       status: 500,
