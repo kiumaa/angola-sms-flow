@@ -14,7 +14,8 @@ import {
   EyeOff,
   ArrowRight,
   HelpCircle,
-  Phone
+  Phone,
+  Building2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "motion/react";
@@ -116,7 +117,7 @@ export const EnhancedPaymentInstructions = ({
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
-              <CreditCard className="h-5 w-5 text-white" />
+              <Building2 className="h-5 w-5 text-white" />
             </div>
             <div>
               <h3 className="font-medium">Transferência Bancária</h3>
