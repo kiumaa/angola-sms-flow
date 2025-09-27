@@ -94,7 +94,7 @@ serve(async (req) => {
 
     // Parse request body
     const { phone }: SendOTPRequest = await req.json();
-    const clientIP = getClientIP(req);
+    let clientIP = getClientIP(req);
 
     if (!phone) {
       return new Response(
@@ -172,7 +172,7 @@ serve(async (req) => {
     }
     
     // Additional IP-based rate limiting
-    const clientIP = getClientIP(req);
+    clientIP = getClientIP(req);
     if (clientIP) {
       const { data: ipRequests } = await supabase
         .from('otp_requests')

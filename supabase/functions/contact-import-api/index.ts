@@ -169,7 +169,8 @@ async function processImportData(
       }
 
     } catch (error) {
-      results.errors.push(`Chunk ${i / chunkSize + 1}: Processing error - ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Processing error';
+      results.errors.push(`Chunk ${i / chunkSize + 1}: Processing error - ${errorMessage}`);
     }
   }
 

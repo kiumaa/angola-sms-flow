@@ -29,54 +29,48 @@ interface SMSRequest {
   message: string
   senderId?: string
   campaignId?: string
+  userId: string
   isTest?: boolean
-  userId?: string // For internal function calls
 }
 
-interface BulkSMSResponse {
+interface SMSResult {
   success: boolean
   to: string
   messageId?: string
   error?: string
 }
 
-// SECURE function to fetch credentials from encrypted Supabase secrets
-async function getBulkSMSCredentials(supabase: any) {
+async function getSecureBulkSMSCredentials(): Promise<{ tokenId?: string; tokenSecret?: string }> {
   try {
-    console.log('Loading BulkSMS credentials from secure secrets...');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // First check if we have configured secrets in the database
-    const { data: config, error: configError } = await supabase
-      .from('sms_configurations')
-      .select('api_token_id_secret_name, api_token_secret_name, credentials_encrypted')
-      .eq('gateway_name', 'bulksms')
-      .eq('is_active', true)
+    // Try to get from Supabase Secrets first
+    const { data: tokenIdSecret } = await supabase
+      .from('vault')
+      .select('decrypted_secret')
+      .eq('name', 'BULKSMS_TOKEN_ID')
       .single();
-
-    if (configError || !config) {
-      console.warn('No secure SMS configuration found, using environment fallback');
-      return {
-        tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
-        tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
-      };
-    }
-
-    // Use encrypted secrets if available
-    if (config.credentials_encrypted && config.api_token_id_secret_name && config.api_token_secret_name) {
-      console.log('Using encrypted secrets for BulkSMS credentials');
-      return {
-        tokenId: Deno.env.get(config.api_token_id_secret_name),
-        tokenSecret: Deno.env.get(config.api_token_secret_name)
-      };
-    }
-
-    // Fall back to environment variables for the configured secret names
-    console.log('Using environment variables for BulkSMS credentials');
-    return {
-      tokenId: Deno.env.get(config.api_token_id_secret_name || 'BULKSMS_TOKEN_ID'),
-      tokenSecret: Deno.env.get(config.api_token_secret_name || 'BULKSMS_TOKEN_SECRET')
-    };
+      
+    const { data: tokenSecretSecret } = await supabase
+      .from('vault')
+      .select('decrypted_secret')
+      .eq('name', 'BULKSMS_TOKEN_SECRET')
+      .single();
     
+    if (tokenIdSecret?.decrypted_secret && tokenSecretSecret?.decrypted_secret) {
+      return {
+        tokenId: tokenIdSecret.decrypted_secret,
+        tokenSecret: tokenSecretSecret.decrypted_secret
+      };
+    }
+    
+    // Fallback to environment variables
+    return {
+      tokenId: Deno.env.get('BULKSMS_TOKEN_ID'),
+      tokenSecret: Deno.env.get('BULKSMS_TOKEN_SECRET')
+    };
   } catch (error) {
     console.error('Error loading secure credentials:', error);
     // Secure fallback to environment variables
@@ -109,6 +103,19 @@ serve(async (req) => {
         error: 'User ID is required'
       }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get secure BulkSMS credentials
+    const { tokenId: bulkSMSTokenId, tokenSecret: bulkSMSTokenSecret } = await getSecureBulkSMSCredentials();
+
+    if (!bulkSMSTokenId || !bulkSMSTokenSecret) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'BulkSMS credentials not configured'
+      }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -146,6 +153,7 @@ serve(async (req) => {
     }
 
     // Validar Sender ID apenas se não for o padrão SMSAO
+    let finalSenderId = resolvedSenderId;
     if (resolvedSenderId !== DEFAULT_SENDER_ID) {
       const { data: senderData, error: senderError } = await supabase
         .from('sender_ids')
@@ -157,45 +165,27 @@ serve(async (req) => {
 
       if (senderError || !senderData) {
         console.warn(`Sender ID personalizado "${resolvedSenderId}" não aprovado, usando padrão ${DEFAULT_SENDER_ID}`);
-        // Forçar uso do padrão
-        resolvedSenderId = DEFAULT_SENDER_ID;
+        // Usar o padrão
+        finalSenderId = DEFAULT_SENDER_ID;
       } else {
         console.log(`Using approved Sender ID: ${resolvedSenderId} for user: ${userId}`)
       }
-    } else {
-      console.log(`Using default Sender ID: ${resolvedSenderId}`)
-    }
-
-    // Load secure credentials using encrypted secrets
-    const credentials = await getBulkSMSCredentials(supabase);
-    const bulkSMSTokenId = credentials.tokenId;
-    const bulkSMSTokenSecret = credentials.tokenSecret;
-
-    if (!bulkSMSTokenId) {
-      console.error('BulkSMS credentials not configured in secure secrets');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'BulkSMS API credentials not configured in secure storage'
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
     }
 
     // Log only partial credentials for security
     console.log(`Using secure BulkSMS Token ID: ${bulkSMSTokenId.substring(0, 4)}****`)
     console.log(`Secure Token Secret available: ${!!bulkSMSTokenSecret}`)
-    console.log(`Sending SMS to ${contacts.length} contacts with sender: ${resolvedSenderId}`)
+    console.log(`Sending SMS to ${contacts.length} contacts with sender: ${finalSenderId}`)
 
     // Send SMS via BulkSMS API v1
     const bulkSMSResponse = await sendViaBulkSMSProduction(
       contacts,
       message,
-      resolvedSenderId, // Usar sender ID normalizado
+      finalSenderId,
       bulkSMSTokenId,
       bulkSMSTokenSecret,
       isTest
-    )
+    );
 
     // Parse response and calculate totals
     const totalSent = bulkSMSResponse.filter(r => r.success).length
@@ -210,32 +200,30 @@ serve(async (req) => {
         await supabase
           .from('sms_logs')
           .insert({
-            campaign_id: campaignId || null, // Allow null for test SMS
-            user_id: userId,
-            phone_number: result.to,
+            phone: result.to,
             message: message,
             status: result.success ? 'sent' : 'failed',
-            gateway_used: 'bulksms',
-            gateway_message_id: result.messageId,
+            provider: 'bulksms',
             cost_credits: 1,
-            error_message: result.success ? null : result.error,
-            sent_at: result.success ? new Date().toISOString() : null
-          })
+            user_id: userId,
+            campaign_id: campaignId,
+            message_id: result.messageId,
+            error_detail: result.error || null,
+            is_test: isTest
+          });
       } catch (logError) {
         console.error('Error logging SMS:', logError);
-        // Don't fail the whole operation if logging fails
       }
     }
 
     // Update user credits if not test
     if (!isTest && totalSent > 0) {
-      const creditsUsed = Math.ceil(totalCost)
       try {
-        await supabase.rpc('add_user_credits', {
+        await supabase.rpc('debit_user_credits', {
           user_id: userId,
-          credit_amount: -creditsUsed
-        })
-        console.log(`Debited ${creditsUsed} credits from user ${userId}`);
+          amount: totalCost,
+          reason: `SMS sent via BulkSMS: ${totalSent} messages`
+        });
       } catch (creditError) {
         console.error('Error updating credits:', creditError);
         // Don't fail the operation if credit update fails
@@ -255,22 +243,23 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
-    )
+    );
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('BulkSMS sending error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Internal server error'
+        error: errorMessage
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       }
-    )
+    );
   }
-})
+});
 
 async function sendViaBulkSMSProduction(
   contacts: string[],
@@ -279,112 +268,117 @@ async function sendViaBulkSMSProduction(
   apiTokenId: string,
   apiTokenSecret: string,
   isTest: boolean = false
-): Promise<BulkSMSResponse[]> {
+): Promise<SMSResult[]> {
+  console.log(`Preparing to send via BulkSMS v1: ${contacts.length} contacts`)
   
-  // Format phone numbers correctly
-  const formattedContacts = contacts.map(contact => {
-    let cleanContact = contact.trim().replace(/[\s\-\(\)]/g, '');
-    
-    // If already starts with +, return as is
-    if (cleanContact.startsWith('+')) {
-      return cleanContact;
-    }
-    
-    // Remove leading zeros
-    if (cleanContact.startsWith('0')) {
-      cleanContact = cleanContact.substring(1);
-    }
-    
-    // If starts with 244, ensure correct format
-    if (cleanContact.startsWith('244')) {
-      return `+${cleanContact}`;
-    } 
-    
-    // Only add Angola prefix if it looks like a local Angolan number (starts with 9)
-    if (cleanContact.startsWith('9') && cleanContact.length === 9) {
-      return `+244${cleanContact}`;
-    }
-    
-    // For other numbers, assume they need + prefix
-    return cleanContact.startsWith('+') ? cleanContact : `+${cleanContact}`;
-  })
+  // Format phone numbers and deduplicate
+  const formattedContacts = [...new Set(contacts
+    .map(phone => phone.replace(/\s+/g, ''))
+    .filter(phone => phone.startsWith('+244') && phone.length >= 13)
+  )];
 
-  console.log(`Formatted contacts:`, formattedContacts)
+  console.log(`Valid contacts after formatting: ${formattedContacts.length}`)
 
-  // Prepare messages for API v1
-  const messages = formattedContacts.map(contact => ({
-    to: contact,
-    from: senderId,
-    body: message
-  }))
-
-  console.log(`Sending ${formattedContacts.length} SMS via BulkSMS API v1`)
-
-  // Create proper Basic Auth with TokenID:TokenSecret
-  const authString = `${apiTokenId}:${apiTokenSecret || ''}`;
+  if (formattedContacts.length === 0) {
+    return [{
+      success: false,
+      to: 'invalid',
+      error: 'No valid Angola phone numbers provided'
+    }];
+  }
 
   try {
+    // Create authentication header
+    const authString = btoa(`${apiTokenId}:${apiTokenSecret}`);
+    
+    // Prepare batch payload
+    const messages = formattedContacts.map(phone => ({
+      to: phone,
+      body: message,
+      from: senderId
+    }));
+
+    console.log(`Sending ${messages.length} SMS messages via BulkSMS`);
+
+    // Call BulkSMS API v1
     const response = await fetch('https://api.bulksms.com/v1/messages', {
       method: 'POST',
       headers: {
+        'Authorization': `Basic ${authString}`,
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(authString)}`,
-        'Accept': 'application/json'
+        'User-Agent': 'SMS-AO-Production/1.0'
       },
       body: JSON.stringify(messages)
-    })
-
-    const responseData = await response.json()
-    console.log('BulkSMS API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      data: responseData
     });
 
-    const results: BulkSMSResponse[] = []
+    console.log(`BulkSMS API responded with status: ${response.status}`);
 
-    if (response.ok && Array.isArray(responseData)) {
-      responseData.forEach((result, index) => {
-        const contact = formattedContacts[index]
-        if (result.id) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('BulkSMS API error response:', errorText);
+      
+      return formattedContacts.map(contact => ({
+        success: false,
+        to: contact,
+        messageId: undefined,
+        error: `BulkSMS API error: ${response.status} - ${errorText}`
+      }));
+    }
+
+    const responseData = await response.json();
+    console.log(`BulkSMS response:`, JSON.stringify(responseData, null, 2));
+
+    // Process each response
+    const results: SMSResult[] = [];
+    
+    if (Array.isArray(responseData)) {
+      responseData.forEach((item, index) => {
+        const contact = formattedContacts[index] || 'unknown';
+        
+        if (item.id && item.type === 'SENT') {
           results.push({
             success: true,
             to: contact,
-            messageId: result.id,
-            error: undefined
-          })
+            messageId: item.id
+          });
         } else {
+          const errorMessage = item.status?.description || item.detail || 'Unknown error';
           results.push({
             success: false,
             to: contact,
             messageId: undefined,
-            error: result.error?.description || 'Unknown error'
-          })
+            error: errorMessage
+          });
         }
-      })
+      });
+    } else if (responseData.id) {
+      // Single message response
+      results.push({
+        success: true,
+        to: formattedContacts[0],
+        messageId: responseData.id
+      });
     } else {
-      // Se houve erro na requisição, marcar todos como falha
-      const errorMessage = responseData.detail || responseData.error?.description || `HTTP ${response.status}`;
-      console.error('BulkSMS API error:', errorMessage);
-      
-      formattedContacts.forEach(contact => {
-        results.push({
-          success: false,
-          to: contact,
-          messageId: undefined,
-          error: errorMessage
-        })
-      })
+      // Unexpected response format
+      return formattedContacts.map(contact => ({
+        success: false,
+        to: contact,
+        messageId: undefined,
+        error: 'Unexpected API response format'
+      }));
     }
 
-    return results
-  } catch (error: any) {
+    console.log(`Processed ${results.length} SMS results`);
+    return results;
+
+  } catch (error) {
     console.error('Error calling BulkSMS API v1:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Network error';
     return formattedContacts.map(contact => ({
       success: false,
       to: contact,
       messageId: undefined,
-      error: error.message || 'Network error'
-    }))
+      error: errorMessage
+    }));
   }
 }
