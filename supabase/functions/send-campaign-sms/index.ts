@@ -136,7 +136,7 @@ serve(async (req) => {
             .from('campaign_targets')
             .update({ 
               status: 'failed',
-              error_detail: error.message,
+              error_detail: error instanceof Error ? error.message : 'Unknown error',
               tries: (target.tries || 0) + 1
             })
             .eq('id', target.id)
@@ -163,7 +163,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Campaign worker error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

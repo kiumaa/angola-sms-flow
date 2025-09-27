@@ -339,7 +339,7 @@ serve(async (req) => {
             .from('quick_send_targets')
             .update({
               status: 'failed',
-              error_detail: 'API error: ' + error.message
+              error_detail: 'API error: ' + (error instanceof Error ? error.message : 'Unknown error')
             })
             .eq('job_id', job.id)
             .eq('phone_e164', phoneData.e164);
@@ -392,7 +392,7 @@ serve(async (req) => {
     console.error('Unexpected error:', error);
     return new Response(JSON.stringify({ 
       error: 'INTERNAL_ERROR',
-      message: error.message 
+      message: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

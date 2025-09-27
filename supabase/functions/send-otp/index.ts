@@ -370,7 +370,7 @@ async function sendViaBulkSMS(
     console.error('Erro na requisição BulkSMS:', error);
     return {
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 }

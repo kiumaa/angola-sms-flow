@@ -105,7 +105,7 @@ serve(async (req) => {
       if (senderError || !senderData) {
         console.warn(`Sender ID "${senderId}" not approved, using default SMSAO`);
         // Use default instead of throwing error
-        senderId = 'SMSAO';
+        let finalSenderId = 'SMSAO';
       } else {
         console.log(`Using approved Sender ID: ${senderId} for user: ${user.id}`)
       }

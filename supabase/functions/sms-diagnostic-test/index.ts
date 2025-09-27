@@ -1,320 +1,292 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 interface DiagnosticResult {
-  test: string;
-  status: 'success' | 'warning' | 'error';
-  message: string;
-  details?: any;
-  duration?: number;
+  test: string
+  status: 'success' | 'error' | 'warning'
+  message: string
+  duration: number
+  details?: any
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { test_phone, test_message = "Teste diagnóstico SMS", gateway = "bulksms" } = await req.json();
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { test_phone, test_message, gateway } = await req.json()
+    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const results: DiagnosticResult[] = [];
-    let overallStatus = 'success';
+    const results: DiagnosticResult[] = []
+    let overallStatus: 'success' | 'error' | 'warning' = 'success'
 
-    // Test 1: Check user authentication
-    const startAuth = Date.now();
+    // Test 1: User Authentication
+    let startTime = Date.now()
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser(
-        req.headers.get('Authorization')?.replace('Bearer ', '') || ''
-      );
-      
-      if (authError || !user) {
-        results.push({
-          test: "User Authentication",
-          status: 'error',
-          message: "User not authenticated",
-          details: authError,
-          duration: Date.now() - startAuth
-        });
-        overallStatus = 'error';
-      } else {
-        results.push({
-          test: "User Authentication",
-          status: 'success',
-          message: `User authenticated: ${user.email}`,
-          duration: Date.now() - startAuth
-        });
+      const authHeader = req.headers.get('Authorization')
+      if (!authHeader) {
+        throw new Error('No authorization header')
       }
+      
+      const token = authHeader.replace('Bearer ', '')
+      const { data: user, error } = await supabase.auth.getUser(token)
+      
+      if (error) throw error
+      
+      results.push({
+        test: 'User Authentication',
+        status: 'success',
+        message: `User authenticated: ${user.user.email}`,
+        duration: Date.now() - startTime
+      })
     } catch (error) {
       results.push({
-        test: "User Authentication",
+        test: 'User Authentication',
         status: 'error',
-        message: error.message,
-        duration: Date.now() - startAuth
-      });
-      overallStatus = 'error';
+        message: error instanceof Error ? error.message : 'Authentication failed',
+        duration: Date.now() - startTime
+      })
+      overallStatus = 'error'
     }
 
-    // Test 2: Check user profile and credits
-    const startProfile = Date.now();
+    // Test 2: User Profile Check
+    startTime = Date.now()
     try {
-      const { data: profile, error: profileError } = await supabase
+      const authHeader = req.headers.get('Authorization')
+      const token = authHeader?.replace('Bearer ', '')
+      const { data: user } = await supabase.auth.getUser(token!)
+      
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('id, credits, user_status')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
+        .select('id, credits')
+        .eq('id', user.user!.id)
+        .single()
 
-      if (profileError || !profile) {
-        results.push({
-          test: "User Profile",
-          status: 'error',
-          message: "Profile not found",
-          details: profileError,
-          duration: Date.now() - startProfile
-        });
-        overallStatus = 'error';
-      } else {
-        results.push({
-          test: "User Profile",
-          status: profile.credits >= 1 ? 'success' : 'warning',
-          message: `Profile found: ${profile.credits} credits, status: ${profile.user_status}`,
-          details: profile,
-          duration: Date.now() - startProfile
-        });
-        if (profile.credits < 1) overallStatus = 'warning';
-      }
+      if (error) throw error
+
+      results.push({
+        test: 'User Profile',
+        status: 'success',
+        message: `Profile found. Credits: ${profile.credits}`,
+        duration: Date.now() - startTime,
+        details: { credits: profile.credits }
+      })
     } catch (error) {
       results.push({
-        test: "User Profile",
+        test: 'User Profile',
         status: 'error',
-        message: error.message,
-        duration: Date.now() - startProfile
-      });
-      overallStatus = 'error';
+        message: error instanceof Error ? error.message : 'Profile check failed',
+        duration: Date.now() - startTime
+      })
+      overallStatus = 'error'
     }
 
-    // Test 3: Check SMS gateway credentials
-    const startCreds = Date.now();
-    try {
-      const tokenId = Deno.env.get("BULKSMS_TOKEN_ID");
-      const tokenSecret = Deno.env.get("BULKSMS_TOKEN_SECRET");
-      const bulkgateKey = Deno.env.get("BULKGATE_API_KEY");
+    // Test 3: Gateway Credentials Check
+    startTime = Date.now()
+    const credsStatus: Record<'bulksms' | 'bulkgate', boolean> = {
+      bulksms: !!(Deno.env.get('BULKSMS_TOKEN_ID') && Deno.env.get('BULKSMS_TOKEN_SECRET')),
+      bulkgate: !!(Deno.env.get('BULKGATE_APPLICATION_ID') && Deno.env.get('BULKGATE_APPLICATION_TOKEN'))
+    }
+
+    if (gateway && (gateway === 'bulksms' || gateway === 'bulkgate')) {
+      const gatewayKey = gateway as 'bulksms' | 'bulkgate'
+      results.push({
+        test: 'Gateway Credentials',
+        status: credsStatus[gatewayKey] ? 'success' : 'error',
+        message: `${gateway.toUpperCase()} credentials: ${credsStatus[gatewayKey] ? 'configured' : 'missing'}`,
+        duration: Date.now() - startTime,
+        details: credsStatus
+      })
       
-      const credsStatus = {
-        bulksms: !!(tokenId && tokenSecret),
-        bulkgate: !!bulkgateKey
-      };
-
+      if (!credsStatus[gatewayKey]) overallStatus = 'error'
+    } else {
       results.push({
-        test: "Gateway Credentials",
-        status: credsStatus[gateway] ? 'success' : 'error',
-        message: `${gateway.toUpperCase()} credentials: ${credsStatus[gateway] ? 'configured' : 'missing'}`,
-        details: credsStatus,
-        duration: Date.now() - startCreds
-      });
-
-      if (!credsStatus[gateway]) overallStatus = 'error';
-    } catch (error) {
-      results.push({
-        test: "Gateway Credentials",
+        test: 'Gateway Credentials',
         status: 'error',
-        message: error.message,
-        duration: Date.now() - startCreds
-      });
-      overallStatus = 'error';
+        message: 'Invalid gateway specified',
+        duration: Date.now() - startTime
+      })
+      overallStatus = 'error'
     }
 
-    // Test 4: Test gateway connectivity
-    const startConn = Date.now();
+    // Test 4: Gateway Connectivity
+    startTime = Date.now()
     try {
-      let connResult;
+      let connectivityResult = 'Not tested'
+      
       if (gateway === 'bulksms') {
-        const tokenId = Deno.env.get("BULKSMS_TOKEN_ID");
-        const tokenSecret = Deno.env.get("BULKSMS_TOKEN_SECRET");
-        const authString = btoa(`${tokenId}:${tokenSecret}`);
+        const tokenId = Deno.env.get('BULKSMS_TOKEN_ID')
+        const tokenSecret = Deno.env.get('BULKSMS_TOKEN_SECRET')
         
-        const response = await fetch('https://api.bulksms.com/v1/profile', {
-          headers: {
-            'Authorization': `Basic ${authString}`,
-            'Content-Type': 'application/json'
-          },
-          signal: AbortSignal.timeout(10000)
-        });
-
-        if (response.ok) {
-          const profileData = await response.json();
-          connResult = {
-            status: 'success',
-            message: `BulkSMS connected. Balance: ${profileData.credits?.balance || 'unknown'}`,
-            details: profileData
-          };
-        } else {
-          const errorText = await response.text();
-          connResult = {
-            status: 'error',
-            message: `BulkSMS connection failed: ${response.status} ${response.statusText}`,
-            details: { status: response.status, error: errorText }
-          };
-          overallStatus = 'error';
+        if (tokenId && tokenSecret) {
+          const authString = btoa(`${tokenId}:${tokenSecret}`)
+          const response = await fetch('https://api.bulksms.com/v1/profile', {
+            headers: {
+              'Authorization': `Basic ${authString}`,
+              'Content-Type': 'application/json'
+            }
+          })
+          connectivityResult = response.ok ? 'Connected' : `HTTP ${response.status}`
         }
-      } else {
-        // BulkGate test
-        const apiKey = Deno.env.get("BULKGATE_API_KEY");
-        const [appId, appToken] = apiKey.split(':');
+      } else if (gateway === 'bulkgate') {
+        const appId = Deno.env.get('BULKGATE_APPLICATION_ID')
+        const appToken = Deno.env.get('BULKGATE_APPLICATION_TOKEN')
         
-        const response = await fetch('https://portal.bulkgate.com/api/1.0/simple/info', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            application_id: parseInt(appId),
-            application_token: appToken
-          }),
-          signal: AbortSignal.timeout(10000)
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          connResult = {
-            status: 'success',
-            message: `BulkGate connected. Balance: ${data.data?.credit || 'unknown'}`,
-            details: data
-          };
-        } else {
-          const errorText = await response.text();
-          connResult = {
-            status: 'error',
-            message: `BulkGate connection failed: ${response.status} ${response.statusText}`,
-            details: { status: response.status, error: errorText }
-          };
-          overallStatus = 'error';
+        if (appId && appToken) {
+          const response = await fetch('https://portal.bulkgate.com/api/1.0/simple/info', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              application_id: appId,
+              application_token: appToken
+            })
+          })
+          connectivityResult = response.ok ? 'Connected' : `HTTP ${response.status}`
         }
       }
 
       results.push({
-        test: "Gateway Connectivity",
-        ...connResult,
-        duration: Date.now() - startConn
-      });
+        test: 'Gateway Connectivity',
+        status: connectivityResult === 'Connected' ? 'success' : 'warning',
+        message: `Gateway connectivity: ${connectivityResult}`,
+        duration: Date.now() - startTime
+      })
+
+      if (connectivityResult !== 'Connected' && connectivityResult !== 'Not tested') {
+        overallStatus = 'warning'
+      }
     } catch (error) {
       results.push({
-        test: "Gateway Connectivity",
+        test: 'Gateway Connectivity',
         status: 'error',
-        message: error.message,
-        duration: Date.now() - startConn
-      });
-      overallStatus = 'error';
+        message: error instanceof Error ? error.message : 'Connectivity test failed',
+        duration: Date.now() - startTime
+      })
+      if (overallStatus !== 'error') overallStatus = 'warning'
     }
 
-    // Test 5: Test credit debit function (if phone provided)
-    if (test_phone && overallStatus !== 'error') {
-      const startDebit = Date.now();
+    // Test 5: Credit Debit Test (Optional)
+    if (test_phone) {
+      startTime = Date.now()
       try {
+        const authHeader = req.headers.get('Authorization')
+        const token = authHeader?.replace('Bearer ', '')
+        const { data: user } = await supabase.auth.getUser(token!)
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .single();
+          .select('id, credits')
+          .eq('id', user.user!.id)
+          .single()
 
-        // Test debit with 1 credit
+        if (!profile) throw new Error('Profile not found')
+
+        // Test debit operation
         const { error: debitError } = await supabase.rpc('debit_user_credits', {
           _account_id: profile.id,
           _amount: 1,
-          _reason: 'SMS diagnostic test',
-          _meta: { test: true }
-        });
+          _reason: 'Diagnostic test debit'
+        })
 
-        if (debitError) {
-          results.push({
-            test: "Credit Debit Test",
-            status: 'error',
-            message: `Failed to debit credits: ${debitError.message}`,
-            details: debitError,
-            duration: Date.now() - startDebit
-          });
-          overallStatus = 'error';
-        } else {
-          // Refund the credit
-          await supabase.rpc('add_user_credits', {
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-            credit_amount: 1
-          });
+        if (debitError) throw debitError
 
-          results.push({
-            test: "Credit Debit Test",
-            status: 'success',
-            message: "Credit debit/refund successful",
-            duration: Date.now() - startDebit
-          });
-        }
+        // Test refund operation
+        const { error: refundError } = await supabase.rpc('credit_user_account', {
+          _account_id: profile.id,
+          _amount: 1,
+          _reason: 'Diagnostic test refund'
+        })
+
+        if (refundError) throw refundError
+
+        results.push({
+          test: 'Credit Operations',
+          status: 'success',
+          message: 'Credit debit and refund operations completed successfully',
+          duration: Date.now() - startTime
+        })
       } catch (error) {
         results.push({
-          test: "Credit Debit Test",
+          test: 'Credit Operations',
           status: 'error',
-          message: error.message,
-          duration: Date.now() - startDebit
-        });
-        overallStatus = 'error';
+          message: error instanceof Error ? error.message : 'Credit operations failed',
+          duration: Date.now() - startTime
+        })
+        overallStatus = 'error'
       }
     }
 
+    // Generate recommendations
+    const recommendations = generateRecommendations(results)
+
     return new Response(JSON.stringify({
-      overall_status: overallStatus,
-      total_tests: results.length,
+      success: true,
+      overallStatus,
       results,
-      timestamp: new Date().toISOString(),
-      recommendations: generateRecommendations(results)
+      recommendations,
+      summary: {
+        total_tests: results.length,
+        passed: results.filter(r => r.status === 'success').length,
+        failed: results.filter(r => r.status === 'error').length,
+        warnings: results.filter(r => r.status === 'warning').length
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    })
 
   } catch (error) {
-    console.error('Diagnostic test error:', error);
+    console.error('Diagnostic test error:', error)
     return new Response(JSON.stringify({
-      error: 'DIAGNOSTIC_ERROR',
-      message: error.message,
-      timestamp: new Date().toISOString()
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      overallStatus: 'error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    })
   }
-});
+})
 
 function generateRecommendations(results: DiagnosticResult[]): string[] {
-  const recommendations: string[] = [];
+  const recommendations: string[] = []
   
   results.forEach(result => {
     if (result.status === 'error') {
       switch (result.test) {
-        case "User Authentication":
-          recommendations.push("Verifique se está logado corretamente");
-          break;
-        case "User Profile":
-          recommendations.push("Verifique se seu perfil está configurado e tem créditos");
-          break;
-        case "Gateway Credentials":
-          recommendations.push("Configure as credenciais dos gateways SMS");
-          break;
-        case "Gateway Connectivity":
-          recommendations.push("Verifique as credenciais e conectividade dos gateways");
-          break;
-        case "Credit Debit Test":
-          recommendations.push("Problema na função de débito de créditos - contacte suporte");
-          break;
+        case 'User Authentication':
+          recommendations.push('Check your authentication token and ensure you are logged in')
+          break
+        case 'User Profile':
+          recommendations.push('Verify your user profile exists and has sufficient credits')
+          break
+        case 'Gateway Credentials':
+          recommendations.push('Configure your SMS gateway credentials in the admin settings')
+          break
+        case 'Gateway Connectivity':
+          recommendations.push('Check your internet connection and gateway service status')
+          break
+        case 'Credit Operations':
+          recommendations.push('Review your credit balance and account permissions')
+          break
       }
+    } else if (result.status === 'warning') {
+      recommendations.push(`Warning in ${result.test}: ${result.message}`)
     }
-  });
-  
+  })
+
   if (recommendations.length === 0) {
-    recommendations.push("Sistema funcionando corretamente");
+    recommendations.push('All diagnostic tests passed successfully!')
   }
-  
-  return recommendations;
+
+  return recommendations
 }

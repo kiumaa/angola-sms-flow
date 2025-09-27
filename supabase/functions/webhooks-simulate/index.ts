@@ -140,7 +140,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Unknown error in webhook simulation'
+        error: error instanceof Error ? error.message : 'Unknown error in webhook simulation'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
