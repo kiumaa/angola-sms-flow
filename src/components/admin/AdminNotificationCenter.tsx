@@ -33,7 +33,8 @@ export function AdminNotificationCenter() {
     loading, 
     createNotification, 
     loadNotifications,
-    deactivateNotification 
+    deactivateNotification,
+    getNotificationStats
   } = useAdminNotifications();
 
   const form = useForm<NotificationFormData>({
@@ -311,15 +312,33 @@ export function AdminNotificationCenter() {
                       </div>
                       <Badge variant="outline">{notification.category}</Badge>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Estatísticas
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                     <div className="flex items-center space-x-2">
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={async () => {
+                           const stats = await getNotificationStats(notification.id);
+                           if (stats) {
+                             // Para demonstração, vamos mostrar um alert com as estatísticas
+                             alert(`Estatísticas:\nTotal: ${stats.total_recipients}\nLidas: ${stats.read_count}\nDispensadas: ${stats.dismissed_count}\nAtivas: ${stats.active_count}`);
+                           }
+                         }}
+                       >
+                         <Eye className="h-4 w-4 mr-1" />
+                         Estatísticas
+                       </Button>
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={async () => {
+                           if (confirm('Tem certeza que deseja desativar esta notificação?')) {
+                             await deactivateNotification(notification.id);
+                           }
+                         }}
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
                   </div>
                 </CardContent>
               </Card>

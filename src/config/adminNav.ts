@@ -20,7 +20,8 @@ import {
   Activity,
   Globe,
   Eye,
-  Headphones
+  Headphones,
+  Bell
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -85,6 +86,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Centro de Suporte',
     href: '/admin/support',
     icon: Headphones,
+    category: 'sms'
+  },
+  {
+    key: 'notifications',
+    label: 'Central de Notificações',
+    href: '/admin/notifications',
+    icon: Bell,
     category: 'sms'
   },
   {

@@ -67,6 +67,7 @@ import AdminWorkflows from "./pages/AdminWorkflows";
 // Import components for support system
 import Support from "./pages/Support";
 import AdminSupport from "./pages/AdminSupport";
+import AdminNotifications from "./pages/AdminNotifications";
 
 const queryClient = new QueryClient();
 
@@ -229,6 +230,7 @@ function App() {
                 <Route path="system-monitoring" element={<LazyAdminSystemMonitoring />} />
                 <Route path="production" element={<LazyAdminProductionMonitoring />} />
                 <Route path="support" element={<AdminSupport />} />
+                <Route path="notifications" element={<AdminNotifications />} />
               </Route>
 
               {/* Legal Pages */}
