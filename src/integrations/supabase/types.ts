@@ -1803,6 +1803,10 @@ export type Database = {
         Args: { encrypted_password: string }
         Returns: string
       }
+      decrypt_smtp_password_enhanced: {
+        Args: { encrypted_password: string }
+        Returns: string
+      }
       distribute_admin_notification: {
         Args: { p_notification_id: string }
         Returns: number
@@ -1812,6 +1816,10 @@ export type Database = {
         Returns: string
       }
       encrypt_smtp_password: {
+        Args: { password_text: string }
+        Returns: string
+      }
+      encrypt_smtp_password_enhanced: {
         Args: { password_text: string }
         Returns: string
       }
@@ -1842,6 +1850,24 @@ export type Database = {
       get_effective_sender_id: {
         Args: { _requested_sender_id?: string; _user_id: string }
         Returns: string
+      }
+      get_masked_smtp_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          from_email: string
+          from_name: string
+          host: string
+          id: string
+          is_active: boolean
+          last_tested_at: string
+          password_masked: string
+          port: number
+          test_status: string
+          updated_at: string
+          use_tls: boolean
+          username: string
+        }[]
       }
       get_public_brand_settings: {
         Args: Record<PropertyKey, never>
