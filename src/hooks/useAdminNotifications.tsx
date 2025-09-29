@@ -71,7 +71,7 @@ export function useAdminNotifications() {
 
       // Distribute notification to users
       const { data: distributionResult, error: distributionError } = await supabase
-        .rpc('distribute_admin_notification', { notification_id: notification.id });
+        .rpc('distribute_admin_notification', { p_notification_id: notification.id });
 
       if (distributionError) throw distributionError;
 
