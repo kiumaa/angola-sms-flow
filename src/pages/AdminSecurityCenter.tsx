@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
+import { EnhancedSecurityDashboard } from '@/components/admin/EnhancedSecurityDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { Shield, Key, Lock, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Shield, Key, Lock, Eye, AlertTriangle, CheckCircle, Settings } from 'lucide-react';
 
 interface SecuritySetting {
   id: string;
@@ -135,9 +136,9 @@ export default function AdminSecurityCenter() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Centro de Segurança</h1>
+          <h1 className="text-3xl font-bold">Centro de Segurança Avançado</h1>
           <p className="text-muted-foreground">
-            Monitore e configure as medidas de segurança do sistema
+            Monitoramento avançado de segurança, alertas em tempo real e configurações de proteção
           </p>
         </div>
         <Button onClick={checkSystemHealth} variant="outline">
@@ -146,124 +147,155 @@ export default function AdminSecurityCenter() {
         </Button>
       </div>
 
-      {/* Security Dashboard */}
-      <SecurityDashboard />
-
-      {/* System Health Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5" />
-            Status do Sistema
-          </CardTitle>
-          <CardDescription>
-            Verificação geral da segurança do sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-green-600" />
-                <span className="font-medium">RLS Ativado</span>
-              </div>
-              {systemHealth.rls_enabled ? (
-                <Badge variant="default" className="bg-green-600">Ativo</Badge>
-              ) : (
-                <Badge variant="destructive">Inativo</Badge>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Key className="h-5 w-5 text-green-600" />
-                <span className="font-medium">Criptografia</span>
-              </div>
-              <Badge variant="default" className="bg-green-600">Ativa</Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-600" />
-                <span className="font-medium">SSL/TLS</span>
-              </div>
-              <Badge variant="default" className="bg-green-600">Ativo</Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Eye className="h-5 w-5 text-green-600" />
-                <span className="font-medium">Backup</span>
-              </div>
-              <Badge variant="default" className="bg-green-600">Ativo</Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Security Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurações de Segurança</CardTitle>
-          <CardDescription>
-            Configure as políticas de segurança do sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {securitySettings.map((setting) => (
-              <div key={setting.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">{setting.name}</span>
-                    <Badge variant={getLevelColor(setting.level) as any} className="text-xs">
-                      {setting.level.toUpperCase()}
-                    </Badge>
+      {/* Enhanced Security Dashboard */}
+      <Tabs defaultValue="dashboard" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="dashboard">Dashboard de Segurança</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="dashboard">
+          <EnhancedSecurityDashboard />
+        </TabsContent>
+        
+        <TabsContent value="settings" className="space-y-6">
+          {/* System Health Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Status do Sistema
+              </CardTitle>
+              <CardDescription>
+                Verificação geral da segurança do sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-5 w-5 text-green-600" />
+                    <span className="font-medium">RLS Ativado</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {setting.description}
-                  </p>
+                  {systemHealth.rls_enabled ? (
+                    <Badge variant="default" className="bg-green-600">Ativo</Badge>
+                  ) : (
+                    <Badge variant="destructive">Inativo</Badge>
+                  )}
                 </div>
-                <Switch
-                  checked={setting.enabled}
-                  onCheckedChange={() => toggleSecuritySetting(setting.id)}
-                />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Security Recommendations */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recomendações de Segurança</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <Alert>
-              <Shield className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Recomendação:</strong> Ative a autenticação multi-fator para todos os administradores.
-              </AlertDescription>
-            </Alert>
-            
-            <Alert>
-              <Key className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Recomendação:</strong> Configure restrições de IP para acesso administrativo.
-              </AlertDescription>
-            </Alert>
-            
-            <Alert>
-              <Eye className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Recomendação:</strong> Revise regularmente os logs de auditoria para atividades suspeitas.
-              </AlertDescription>
-            </Alert>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-5 w-5 text-green-600" />
+                    <span className="font-medium">Criptografia</span>
+                  </div>
+                  <Badge variant="default" className="bg-green-600">Ativa</Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    <span className="font-medium">SSL/TLS</span>
+                  </div>
+                  <Badge variant="default" className="bg-green-600">Ativo</Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-5 w-5 text-green-600" />
+                    <span className="font-medium">Backup</span>
+                  </div>
+                  <Badge variant="default" className="bg-green-600">Ativo</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Security Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Configurações de Segurança
+              </CardTitle>
+              <CardDescription>
+                Configure as políticas de segurança do sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {securitySettings.map((setting) => (
+                  <div key={setting.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{setting.name}</span>
+                        <Badge variant={getLevelColor(setting.level) as any} className="text-xs">
+                          {setting.level.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {setting.description}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={setting.enabled}
+                      onCheckedChange={() => toggleSecuritySetting(setting.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Enhanced Security Recommendations */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recomendações de Segurança Avançadas</CardTitle>
+              <CardDescription>
+                Implementadas automaticamente após as correções de segurança
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <Alert>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription>
+                    <strong>✅ Implementado:</strong> Todas as funções do banco de dados agora têm search_path seguro configurado.
+                  </AlertDescription>
+                </Alert>
+                
+                <Alert>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription>
+                    <strong>✅ Implementado:</strong> Monitoramento de segurança aprimorado com detecção de padrões suspeitos.
+                  </AlertDescription>
+                </Alert>
+                
+                <Alert>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription>
+                    <strong>✅ Implementado:</strong> Sistema de alertas de segurança em tempo real com análise de risco.
+                  </AlertDescription>
+                </Alert>
+                
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Recomendação:</strong> Atualize o PostgreSQL para a versão mais recente para aplicar patches de segurança.
+                  </AlertDescription>
+                </Alert>
+                
+                <Alert>
+                  <Key className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Recomendação:</strong> Configure alertas automáticos para atividades suspeitas após horário comercial.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -74,14 +74,14 @@ export function SecurityDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="flex items-center gap-3 p-4 border rounded-lg">
               <div className="p-2 bg-destructive/10 rounded-full">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
               </div>
               <div>
                 <div className="font-semibold text-lg">{criticalAlerts.length}</div>
-                <div className="text-sm text-muted-foreground">Alertas Críticos</div>
+                <div className="text-sm text-muted-foreground">Críticos</div>
               </div>
             </div>
             
@@ -91,7 +91,17 @@ export function SecurityDashboard() {
               </div>
               <div>
                 <div className="font-semibold text-lg">{highAlerts.length}</div>
-                <div className="text-sm text-muted-foreground">Alertas Altos</div>
+                <div className="text-sm text-muted-foreground">Altos</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-4 border rounded-lg">
+              <div className="p-2 bg-yellow-100 rounded-full">
+                <Shield className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-lg">{alerts.filter(a => a.severity === 'medium').length}</div>
+                <div className="text-sm text-muted-foreground">Médios</div>
               </div>
             </div>
             
@@ -101,7 +111,7 @@ export function SecurityDashboard() {
               </div>
               <div>
                 <div className="font-semibold text-lg">{alerts.length}</div>
-                <div className="text-sm text-muted-foreground">Total de Alertas</div>
+                <div className="text-sm text-muted-foreground">Total</div>
               </div>
             </div>
           </div>

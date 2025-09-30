@@ -1966,7 +1966,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_enhanced_session: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       validate_secure_sms_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      validate_security_configuration: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
