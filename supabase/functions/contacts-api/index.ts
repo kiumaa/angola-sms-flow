@@ -45,11 +45,11 @@ function normalizePhoneAngola(input: string): { ok: boolean; e164?: string; reas
   return { ok: true, e164: normalized };
 }
 
-async function getCurrentAccountId(authHeader: string): Promise<string | null> {
+async function getCurrentAccountId(authHeader: string): Promise<{ accountId: string | null; userId: string | null }> {
   const token = authHeader.replace('Bearer ', '');
   const { data: { user } } = await supabase.auth.getUser(token);
   
-  if (!user) return null;
+  if (!user) return { accountId: null, userId: null };
   
   const { data: profile } = await supabase
     .from('profiles')
@@ -57,7 +57,7 @@ async function getCurrentAccountId(authHeader: string): Promise<string | null> {
     .eq('user_id', user.id)
     .single();
     
-  return profile?.id || null;
+  return { accountId: profile?.id || null, userId: user.id };
 }
 
 Deno.serve(async (req) => {
@@ -68,9 +68,9 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const authHeader = req.headers.get('Authorization') || '';
-    const accountId = await getCurrentAccountId(authHeader);
+    const { accountId, userId } = await getCurrentAccountId(authHeader);
     
-    if (!accountId) {
+    if (!accountId || !userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -144,13 +144,16 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Upsert contact
+      // Upsert contact with user_id
       const { data: contact, error: contactError } = await supabase
         .from('contacts')
         .upsert({
           account_id: accountId,
+          user_id: userId,
+          phone: body.phone,
           phone_e164: phoneResult.e164,
           name: body.name,
+          email: body.email || null,
           attributes: body.attributes || {}
         }, {
           onConflict: 'account_id,phone_e164',
