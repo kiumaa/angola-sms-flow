@@ -8,7 +8,7 @@ export const useOTP = () => {
   const { user } = useAuth();
 
   /**
-   * Create and send OTP request using custom edge function
+   * Create and send OTP request using Supabase Phone Auth + Twilio Verify
    */
   const requestOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
     setLoading(true);
@@ -21,22 +21,20 @@ export const useOTP = () => {
         throw new Error('Formato de telefone inválido. Use +[código do país][número]');
       }
 
-      // Use custom send-otp edge function
-      const { data, error } = await supabase.functions.invoke('send-otp', {
-        body: { phone: phone.trim() }
+      // Use Supabase native phone auth with Twilio Verify
+      // Sending OTP via Supabase Phone Auth
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: phone.trim(),
+        options: {
+          shouldCreateUser: true,
+        }
       });
 
       if (error) {
-        console.error('Failed to send OTP via edge function:', error);
+        console.error('Failed to send OTP via Supabase:', error);
         const errorMessage = error.message || 'Erro ao enviar código OTP';
         setError(errorMessage);
         return { success: false, error: errorMessage };
-      }
-
-      if (data?.error) {
-        console.error('Edge function returned error:', data.error);
-        setError(data.error);
-        return { success: false, error: data.error };
       }
       
       // OTP sent successfully
@@ -52,50 +50,92 @@ export const useOTP = () => {
   };
 
   /**
-   * Verify OTP code using custom edge function
+   * Verify OTP code using Supabase Phone Auth and create/update profile
    */
   const verifyOTP = async (phone: string, code: string, registrationData?: any): Promise<{ success: boolean; error?: string; isNewUser?: boolean; magicLink?: string }> => {
     setLoading(true);
     setError(null);
 
     try {
-      // Verify OTP via custom edge function
-      const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: { 
-          phone: phone.trim(),
-          code: code.trim(),
-          ...registrationData
-        }
+      // Verify OTP via Supabase Phone Auth
+      // Verifying OTP via Supabase Phone Auth
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: phone.trim(),
+        token: code,
+        type: 'sms'
       });
 
       if (error) {
-        console.error('Failed to verify OTP via edge function:', error);
+        console.error('Failed to verify OTP via Supabase:', error);
         const errorMessage = error.message || 'Código inválido ou expirado';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
 
-      if (data?.error) {
-        console.error('Edge function returned error:', data.error);
-        setError(data.error);
-        return { success: false, error: data.error };
-      }
-
-      if (!data?.success) {
-        const errorMessage = 'Falha na verificação do código';
+      if (!data?.user) {
+        const errorMessage = 'Falha na autenticação';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
 
       // OTP verified successfully
+
+      // Check if user profile exists to determine if new user
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, company_name, email')
+        .eq('user_id', data.user.id)
+        .single();
+
+      const isNewUser = !profile && !!profileError;
+
+      // If it's a new user or registration data provided, update profile
+      if (isNewUser || registrationData) {
+        const profileData: any = {
+          user_id: data.user.id,
+          phone: phone.trim(),
+        };
+
+        if (registrationData?.fullName) {
+          profileData.full_name = registrationData.fullName;
+        }
+        if (registrationData?.company) {
+          profileData.company_name = registrationData.company;
+        }
+        if (registrationData?.email) {
+          profileData.email = registrationData.email;
+        }
+
+        if (isNewUser) {
+          // Create new profile
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert(profileData);
+          
+          if (insertError) {
+            console.error('Failed to create profile:', insertError);
+          }
+        } else {
+          // Update existing profile
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update(profileData)
+            .eq('user_id', data.user.id);
+          
+          if (updateError) {
+            console.error('Failed to update profile:', updateError);
+          }
+        }
+      }
+
       return { 
         success: true, 
-        isNewUser: data.isNewUser,
-        magicLink: data.redirectUrl 
+        isNewUser: !!isNewUser
       };
     } catch (err) {
       console.error('OTP verification exception:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao verificar código';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao verificar OTP';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -104,18 +144,20 @@ export const useOTP = () => {
   };
 
   /**
-   * Clean expired OTP requests (utility function) - Deprecated
+   * Clean expired OTP requests (utility function) - Deprecated with Supabase Phone Auth
    */
   const cleanExpiredOTPs = async (): Promise<{ success: boolean; deletedCount?: number }> => {
-    // Cleanup handled automatically by edge functions
+    // With Supabase Phone Auth + Twilio Verify, cleanup is handled automatically
+    // Cleanup handled automatically
     return { success: true, deletedCount: 0 };
   };
 
   /**
-   * Clean expired OTP requests via admin function - Deprecated
+   * Clean expired OTP requests via admin function - Deprecated with Supabase Phone Auth
    */
   const adminCleanExpiredOTPs = async (): Promise<{ success: boolean; deletedCount?: number; error?: string }> => {
-    // Cleanup handled automatically by edge functions
+    // With Supabase Phone Auth + Twilio Verify, cleanup is handled automatically
+    // Cleanup handled automatically
     return { success: true, deletedCount: 0 };
   };
 
@@ -124,8 +166,8 @@ export const useOTP = () => {
     error,
     requestOTP,
     verifyOTP,
-    cleanExpiredOTPs, // Keep for backward compatibility
-    adminCleanExpiredOTPs, // Keep for backward compatibility
+    cleanExpiredOTPs, // Keep for backward compatibility - now handled by Supabase
+    adminCleanExpiredOTPs, // Keep for backward compatibility - now handled by Supabase
     clearError: () => setError(null)
   };
 };
