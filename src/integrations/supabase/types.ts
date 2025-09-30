@@ -780,6 +780,42 @@ export type Database = {
           },
         ]
       }
+      function_call_audit: {
+        Row: {
+          called_at: string
+          caller_id: string | null
+          error_message: string | null
+          execution_time_ms: number | null
+          function_name: string
+          id: string
+          ip_address: unknown | null
+          parameters: Json | null
+          success: boolean
+        }
+        Insert: {
+          called_at?: string
+          caller_id?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          function_name: string
+          id?: string
+          ip_address?: unknown | null
+          parameters?: Json | null
+          success?: boolean
+        }
+        Update: {
+          called_at?: string
+          caller_id?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          function_name?: string
+          id?: string
+          ip_address?: unknown | null
+          parameters?: Json | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       gateway_overrides: {
         Row: {
           created_at: string
