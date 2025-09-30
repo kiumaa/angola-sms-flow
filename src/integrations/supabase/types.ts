@@ -54,10 +54,24 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
           {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "admin_audit_logs_target_user_id_fkey"
             columns: ["target_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profiles"
             referencedColumns: ["user_id"]
           },
         ]
@@ -652,10 +666,24 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
           {
+            foreignKeyName: "credit_adjustments_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "credit_adjustments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "credit_adjustments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profiles"
             referencedColumns: ["user_id"]
           },
         ]
@@ -935,6 +963,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "otp_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       package_discounts: {
@@ -986,6 +1021,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pii_access_audit: {
+        Row: {
+          access_type: string
+          accessed_at: string
+          accessor_id: string | null
+          column_accessed: string
+          id: string
+          ip_address: unknown | null
+          masked_value: string | null
+          record_id: string
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          access_type: string
+          accessed_at?: string
+          accessor_id?: string | null
+          column_accessed: string
+          id?: string
+          ip_address?: unknown | null
+          masked_value?: string | null
+          record_id: string
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          access_type?: string
+          accessed_at?: string
+          accessor_id?: string | null
+          column_accessed?: string
+          id?: string
+          ip_address?: unknown | null
+          masked_value?: string | null
+          record_id?: string
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1734,7 +1808,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      safe_profiles: {
+        Row: {
+          created_at: string | null
+          status_display: string | null
+          user_id: string | null
+          user_status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          status_display?: never
+          user_id?: string | null
+          user_status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          status_display?: never
+          user_id?: string | null
+          user_status?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_user_credits: {
@@ -1916,6 +2010,18 @@ export type Database = {
       mark_conversation_as_read: {
         Args: { conversation_id_param: string; is_admin_param?: boolean }
         Returns: undefined
+      }
+      mask_email: {
+        Args: { email: string }
+        Returns: string
+      }
+      mask_name: {
+        Args: { name: string }
+        Returns: string
+      }
+      mask_phone: {
+        Args: { phone: string }
+        Returns: string
       }
       migrate_sms_credentials_to_secrets: {
         Args: Record<PropertyKey, never>
