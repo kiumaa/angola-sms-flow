@@ -62,15 +62,16 @@ const AdminSMTPSettings = () => {
 
   const fetchSMTPSettings = async () => {
     try {
+      // Security: Use masked RPC function to avoid exposing encrypted passwords
       const { data, error } = await supabase
-        .from('smtp_settings')
-        .select('*')
-        .eq('is_active', true)
-        .maybeSingle();
+        .rpc('get_masked_smtp_settings');
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
 
-      if (data) {
+      // Get the active setting from the masked results
+      const activeSetting = data?.find((setting: any) => setting.is_active);
+      
+      if (activeSetting) {
         setIsConfigured(true);
         setFormData({
           ...data,
