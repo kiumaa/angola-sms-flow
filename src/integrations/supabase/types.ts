@@ -2068,6 +2068,10 @@ export type Database = {
         Args: { _user_id?: string }
         Returns: Json
       }
+      grant_welcome_credits: {
+        Args: { _credits?: number; _user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
