@@ -80,9 +80,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   return <div className="h-[100dvh] flex flex-col md:flex-row font-geist w-[100dvw]">
       {/* Left column: sign-in form */}
-      <section className="w-full md:flex-1 flex items-center justify-center p-4 md:p-8 min-h-screen md:min-h-0">
-        <div className="w-full max-w-md">
-          <div className="flex flex-col gap-6">
+      <section className="w-full md:flex-1 flex items-center justify-center p-4 md:p-8 py-6 md:py-8 min-h-screen md:min-h-0">
+        <div className="w-full max-w-md max-h-screen overflow-y-auto">
+          <div className="flex flex-col gap-4">
             <div className="animate-element animate-delay-100 text-center">
               <BrandLogo size="lg" showText={true} />
             </div>
