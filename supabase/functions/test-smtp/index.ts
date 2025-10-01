@@ -14,15 +14,6 @@ const corsHeaders = {
 
 interface SMTPTestRequest {
   test_email: string;
-  smtp_settings: {
-    host: string;
-    port: number;
-    username: string;
-    password: string;
-    use_tls: boolean;
-    from_name: string;
-    from_email: string;
-  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,22 +23,33 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { test_email, smtp_settings }: SMTPTestRequest = await req.json();
+    const { test_email }: SMTPTestRequest = await req.json();
     const startTime = Date.now();
     
+    console.log('Fetching SMTP settings securely via RPC...');
+    
+    // Get SMTP settings using secure function (automatically audited and rate-limited)
+    const { data: smtpSettings, error: settingsError } = await supabase
+      .rpc('get_smtp_settings_for_edge_function')
+      .single();
+
+    if (settingsError) {
+      console.error('Failed to fetch SMTP settings:', settingsError);
+      throw new Error('SMTP settings not configured or access denied');
+    }
+
+    if (!smtpSettings) {
+      throw new Error('No active SMTP configuration found');
+    }
+    
     console.log('Testing SMTP connection with settings:', {
-      host: smtp_settings.host,
-      port: smtp_settings.port,
-      from: smtp_settings.from_email
+      host: smtpSettings.host,
+      port: smtpSettings.port,
+      from: smtpSettings.from_email
     });
 
     // For now, we'll simulate SMTP testing since Deno's SMTP capabilities are limited
     // In a real implementation, you would use a proper SMTP library
-    
-    // Basic validation
-    if (!smtp_settings.host || !smtp_settings.username || !smtp_settings.password) {
-      throw new Error("Configurações SMTP incompletas");
-    }
 
     // Simulate connection test
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));

@@ -2028,6 +2028,42 @@ export type Database = {
           unique_users: number
         }[]
       }
+      get_smtp_password_for_test: {
+        Args: { setting_id: string }
+        Returns: string
+      }
+      get_smtp_settings_for_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          from_email: string
+          from_name: string
+          host: string
+          id: string
+          is_active: boolean
+          last_tested_at: string
+          password_masked: string
+          port: number
+          test_status: string
+          updated_at: string
+          use_tls: boolean
+          username: string
+        }[]
+      }
+      get_smtp_settings_for_edge_function: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          from_email: string
+          from_name: string
+          host: string
+          id: string
+          is_active: boolean
+          password_encrypted: string
+          port: number
+          use_tls: boolean
+          username: string
+        }[]
+      }
       get_user_transaction_summary: {
         Args: { _user_id?: string }
         Returns: Json

@@ -62,27 +62,27 @@ const AdminSMTPSettings = () => {
 
   const fetchSMTPSettings = async () => {
     try {
-      // Security: Use masked RPC function to avoid exposing encrypted passwords
+      // Security: Use secure RPC function (audited, rate-limited, password masked)
       const { data, error } = await supabase
-        .rpc('get_masked_smtp_settings');
+        .rpc('get_smtp_settings_for_admin')
+        .maybeSingle();
 
       if (error) throw error;
 
-      // Get the active setting from the masked results
-      const activeSetting = data?.find((setting: any) => setting.is_active);
-      
-      if (activeSetting) {
+      if (data) {
         setIsConfigured(true);
         setFormData({
-          id: activeSetting.id,
-          host: activeSetting.host,
-          port: activeSetting.port,
-          username: activeSetting.username,
+          id: data.id,
+          host: data.host,
+          port: data.port,
+          username: data.username,
           password: '', // Never expose actual password (backend returns masked version)
-          from_name: activeSetting.from_name,
-          from_email: activeSetting.from_email,
-          use_tls: activeSetting.use_tls,
-          is_active: activeSetting.is_active,
+          from_name: data.from_name,
+          from_email: data.from_email,
+          use_tls: data.use_tls,
+          is_active: data.is_active,
+          test_status: (data.test_status || 'pending') as 'success' | 'failed' | 'pending',
+          last_tested_at: data.last_tested_at
         });
       }
     } catch (error: any) {
@@ -210,10 +210,11 @@ const AdminSMTPSettings = () => {
 
     setTesting(true);
     try {
+      // Security: SMTP credentials are fetched securely within the edge function
+      // No sensitive data is sent from the client
       const { data, error } = await supabase.functions.invoke('test-smtp', {
         body: {
-          test_email: user.email,
-          smtp_settings: formData
+          test_email: user.email
         }
       });
 
