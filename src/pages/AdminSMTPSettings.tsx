@@ -74,9 +74,15 @@ const AdminSMTPSettings = () => {
       if (activeSetting) {
         setIsConfigured(true);
         setFormData({
-          ...data,
-          password: '••••••••', // Mask password
-          test_status: data.test_status as 'success' | 'failed' | 'pending' | undefined
+          id: activeSetting.id,
+          host: activeSetting.host,
+          port: activeSetting.port,
+          username: activeSetting.username,
+          password: '', // Never expose actual password (backend returns masked version)
+          from_name: activeSetting.from_name,
+          from_email: activeSetting.from_email,
+          use_tls: activeSetting.use_tls,
+          is_active: activeSetting.is_active,
         });
       }
     } catch (error: any) {
