@@ -54,7 +54,7 @@ Aguardo seu retorno para dar suporte rápido e eficiente! 🚀`
       title="Suporte via WhatsApp"
     >
       <MessageCircle className="h-4 w-4" />
-      {showText && <span className="ml-2">Suporte</span>}
+      {showText && <span className="ml-2">Suporte via Whatsapp</span>}
     </Button>
   );
 };
