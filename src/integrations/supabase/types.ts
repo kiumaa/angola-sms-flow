@@ -2080,7 +2080,11 @@ export type Database = {
         Returns: boolean
       }
       log_security_event: {
-        Args: { details: Json; event_type: string; user_id: string }
+        Args: {
+          affected_user_id: string
+          event_details: Json
+          event_type: string
+        }
         Returns: undefined
       }
       mark_conversation_as_read: {
