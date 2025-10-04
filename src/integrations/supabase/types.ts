@@ -76,6 +76,75 @@ export type Database = {
           },
         ]
       }
+      admin_mfa_bypass_logs: {
+        Row: {
+          attempted_action: string
+          blocked: boolean
+          bypass_reason: string | null
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          attempted_action: string
+          blocked?: boolean
+          bypass_reason?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          attempted_action?: string
+          blocked?: boolean
+          bypass_reason?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_mfa_settings: {
+        Row: {
+          backup_codes_generated: boolean | null
+          created_at: string
+          enrolled_at: string | null
+          id: string
+          last_verified_at: string | null
+          mfa_enabled: boolean
+          mfa_method: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes_generated?: boolean | null
+          created_at?: string
+          enrolled_at?: string | null
+          id?: string
+          last_verified_at?: string | null
+          mfa_enabled?: boolean
+          mfa_method?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes_generated?: boolean | null
+          created_at?: string
+          enrolled_at?: string | null
+          id?: string
+          last_verified_at?: string | null
+          mfa_enabled?: boolean
+          mfa_method?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           admin_id: string
@@ -779,6 +848,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      data_retention_policies: {
+        Row: {
+          created_at: string
+          date_column: string
+          description: string | null
+          id: string
+          is_active: boolean
+          last_cleanup_at: string | null
+          records_cleaned_last_run: number | null
+          retention_days: number
+          status_filter: string[] | null
+          table_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_column?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_cleanup_at?: string | null
+          records_cleaned_last_run?: number | null
+          retention_days: number
+          status_filter?: string[] | null
+          table_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_column?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_cleanup_at?: string | null
+          records_cleaned_last_run?: number | null
+          retention_days?: number
+          status_filter?: string[] | null
+          table_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       function_call_audit: {
         Row: {
@@ -1874,6 +1985,10 @@ export type Database = {
         Args: { credit_amount: number; user_id: string }
         Returns: undefined
       }
+      admin_has_mfa_enabled: {
+        Args: { admin_user_id: string }
+        Returns: boolean
+      }
       approve_credit_request: {
         Args: { admin_user_id: string; request_id: string }
         Returns: boolean
@@ -1987,6 +2102,10 @@ export type Database = {
           window_minutes?: number
         }
         Returns: boolean
+      }
+      export_user_data: {
+        Args: { export_user_id: string }
+        Returns: Json
       }
       get_active_gateway_override: {
         Args: Record<PropertyKey, never>
@@ -2102,6 +2221,10 @@ export type Database = {
         Args: { code: string }
         Returns: string
       }
+      log_mfa_bypass_attempt: {
+        Args: { attempted_action_param: string; bypass_reason_param?: string }
+        Returns: undefined
+      }
       log_security_event: {
         Args: {
           affected_user_id: string
@@ -2150,6 +2273,10 @@ export type Database = {
       reject_credit_request: {
         Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean
+      }
+      request_data_deletion: {
+        Args: { deletion_reason?: string }
+        Returns: string
       }
       run_all_cleanup_tasks: {
         Args: Record<PropertyKey, never>
