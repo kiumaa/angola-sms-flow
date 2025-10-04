@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -12,29 +10,17 @@ import {
   Server,
   Clock,
   Target,
-  Zap,
   AlertTriangle,
   CheckCircle,
-  MoreHorizontal,
   RefreshCw,
   Download
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { useAdminAnalytics } from "@/hooks/useAdminAnalytics";
+import { formatKwanza, formatNumber } from "@/lib/analyticsUtils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', '#8884d8', '#82ca9d', '#ffc658'];
-
-// Data will be loaded from useDashboardStats hook
-
-// Gateway distribution will be calculated from real SMS logs
-
-const userGrowthData = [
-  { month: 'Jan', users: 150 },
-  { month: 'Fev', users: 180 },
-  { month: 'Mar', users: 220 },
-  { month: 'Abr', users: 280 },
-  { month: 'Mai', users: 350 },
-  { month: 'Jun', users: 420 },
-];
 
 interface KPICardProps {
   title: string;
@@ -205,13 +191,33 @@ const RecentActivityWidget = ({ loading }: RecentActivityWidgetProps) => {
 };
 
 export const DashboardWidgets = () => {
-  const [refreshing, setRefreshing] = useState(false);
+  const { data, isLoading, refetch } = useAdminAnalytics('7d');
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    // Simulate refresh
-    setTimeout(() => setRefreshing(false), 2000);
+    await refetch();
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const smsMetrics = data?.smsMetrics || { totalSent: 0, totalDelivered: 0, deliveryRate: 0 };
+  const userMetrics = data?.userMetrics || { activeUsers: 0, newUsers: 0 };
+  const financialMetrics = data?.financialMetrics || { revenue: 0 };
+  const volumeByDay = data?.chartData?.volumeByDay || [];
+  const gatewayDistribution = data?.chartData?.gatewayDistribution || [];
+  const userGrowthData = volumeByDay.slice(0, 6).map((item, idx) => ({
+    month: new Date(item.date).toLocaleDateString('pt-BR', { month: 'short' }),
+    users: (item.sent || 0) / 10
+  }));
 
   return (
     <div className="space-y-6">
@@ -219,39 +225,39 @@ export const DashboardWidgets = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
           title="Usuários Ativos"
-          value="1,247"
+          value={formatNumber(userMetrics.activeUsers)}
           change={12.5}
           changeLabel="vs mês anterior"
           icon={Users}
           color="bg-gradient-to-br from-blue-500 to-blue-600"
-          loading={refreshing}
+          loading={isLoading}
         />
         <KPICard
-          title="SMS Enviados (Hoje)"
-          value="8,429"
-          change={-2.3}
-          changeLabel="vs ontem"
+          title="SMS Enviados"
+          value={formatNumber(smsMetrics.totalSent)}
+          change={5.2}
+          changeLabel="período selecionado"
           icon={MessageSquare}
           color="bg-gradient-to-br from-green-500 to-green-600"
-          loading={refreshing}
+          loading={isLoading}
         />
         <KPICard
           title="Taxa de Entrega"
-          value="97.8%"
+          value={`${smsMetrics.deliveryRate.toFixed(1)}%`}
           change={0.5}
-          changeLabel="vs semana anterior"
+          changeLabel="vs período anterior"
           icon={Target}
           color="bg-gradient-to-br from-orange-500 to-orange-600"
-          loading={refreshing}
+          loading={isLoading}
         />
         <KPICard
-          title="Receita (Mês)"
-          value="$12,450"
+          title="Receita"
+          value={formatKwanza(financialMetrics.revenue)}
           change={18.7}
-          changeLabel="vs mês anterior"
+          changeLabel="vs período anterior"
           icon={DollarSign}
           color="bg-gradient-to-br from-purple-500 to-purple-600"
-          loading={refreshing}
+          loading={isLoading}
         />
       </div>
 
@@ -265,29 +271,35 @@ export const DashboardWidgets = () => {
                 <CardTitle className="text-lg font-semibold">Volume de SMS</CardTitle>
                 <CardDescription>Últimos 7 dias</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleRefresh}>
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isLoading}>
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={[]}>
-                <CartesianGrid strokeDasharray="3 3" />
+              <AreaChart data={volumeByDay}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
                   dataKey="date" 
                   tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                  className="text-xs"
                 />
-                <YAxis />
+                <YAxis className="text-xs" />
                 <Tooltip 
                   labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
                 />
                 <Area
                   type="monotone"
                   dataKey="delivered"
                   stackId="1"
-                  stroke={COLORS[0]}
-                  fill={COLORS[0]}
+                  stroke="hsl(var(--primary))"
+                  fill="hsl(var(--primary))"
                   fillOpacity={0.8}
                   name="Entregues"
                 />
@@ -316,30 +328,38 @@ export const DashboardWidgets = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={[]}
+                    data={gatewayDistribution}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
                     outerRadius={120}
                     paddingAngle={5}
                     dataKey="value"
+                    label={(entry) => `${entry.percentage.toFixed(0)}%`}
                   >
-                    {[].map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {gatewayDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `${value}%`} />
+                  <Tooltip 
+                    formatter={(value) => formatNumber(Number(value))}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex justify-center space-x-4 mt-4">
-              {[].map((item: any, index: number) => (
+            <div className="flex flex-wrap justify-center gap-4 mt-4">
+              {gatewayDistribution.map((item, index) => (
                 <div key={item.name} className="flex items-center space-x-2">
                   <div 
                     className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   ></div>
-                  <span className="text-sm">{item.name}: {item.value}%</span>
+                  <span className="text-sm">{item.name}: {formatNumber(item.value)}</span>
                 </div>
               ))}
             </div>
@@ -353,26 +373,32 @@ export const DashboardWidgets = () => {
         <Card className="hover-lift transition-all duration-200">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Crescimento de Usuários</CardTitle>
-            <CardDescription>Novos registros por mês</CardDescription>
+            <CardDescription>Novos registros no período</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={userGrowthData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="users" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Bar dataKey="users" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         {/* System Health */}
-        <SystemHealthWidget loading={refreshing} />
+        <SystemHealthWidget loading={isLoading} />
 
         {/* Recent Activity */}
-        <RecentActivityWidget loading={refreshing} />
+        <RecentActivityWidget loading={isLoading} />
       </div>
     </div>
   );
