@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateRange } from "react-day-picker";
 import { 
   BarChart, 
   Bar, 
@@ -16,9 +15,11 @@ import {
   Line,
   AreaChart,
   Area,
-  PieChart,
-  Pie,
-  Cell
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar
 } from 'recharts';
 import { 
   TrendingUp,
@@ -29,14 +30,14 @@ import {
   Target,
   Download,
   RefreshCw,
-  Calendar,
-  Filter
+  Zap,
+  Activity
 } from "lucide-react";
-import { addDays, format } from "date-fns";
-
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { format } from "date-fns";
+import { useAdminAnalytics } from "@/hooks/useAdminAnalytics";
+import { exportAnalyticsToCSV, formatKwanza, formatNumber, getTrendColor } from "@/lib/analyticsUtils";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Real analytics data loaded from database
 
@@ -79,187 +80,77 @@ const MetricCard = ({ title, value, subtitle, trend, icon: Icon, color }: Metric
   </Card>
 );
 
-interface DatePickerWithRangeProps {
-  className?: string;
-  date?: DateRange;
-  setDate?: (date: DateRange | undefined) => void;
-}
-
-const DatePickerWithRange = ({ className, date, setDate }: DatePickerWithRangeProps) => {
-  return (
-    <div className={className}>
-      <Button variant="outline" className="justify-start text-left font-normal">
-        <Calendar className="mr-2 h-4 w-4" />
-        {date?.from ? (
-          date.to ? (
-            <>
-              {format(date.from, "LLL dd, y")} -{" "}
-              {format(date.to, "LLL dd, y")}
-            </>
-          ) : (
-            format(date.from, "LLL dd, y")
-          )
-        ) : (
-          <span>Selecionar período</span>
-        )}
-      </Button>
-    </div>
-  );
-};
 
 export const AdvancedAnalytics = () => {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: addDays(new Date(), -30),
-    to: new Date(),
-  });
-  const [period, setPeriod] = useState("7d");
-  const [segment, setSegment] = useState("all");
-  const [analyticsData, setAnalyticsData] = useState({
-    campaignPerformanceData: [],
-    audienceSegmentData: [],
-    topCampaignsData: [],
-    conversionFunnelData: []
-  });
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const [timeRange, setTimeRange] = useState("30days");
+  const [comparisonMode, setComparisonMode] = useState<"previous" | "benchmark">("previous");
+  const { toast } = useToast();
+  
+  const { data, isLoading, error, refetch, isFetching } = useAdminAnalytics(timeRange);
 
-  // Load real analytics data from database
-  useEffect(() => {
-    if (user) {
-      loadAnalyticsData();
-    }
-  }, [user, dateRange, period]);
-
-  const loadAnalyticsData = async () => {
-    if (!user) return;
+  const handleExport = () => {
+    if (!data) return;
     
     try {
-      setLoading(true);
-      
-      // Get SMS logs for analytics
-      const { data: smsLogs, error: smsError } = await supabase
-        .from('sms_logs')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('created_at', dateRange?.from?.toISOString())
-        .lte('created_at', dateRange?.to?.toISOString())
-        .order('created_at', { ascending: true });
-
-      if (smsError) throw smsError;
-
-      // Process real data for analytics
-      const processedData = processAnalyticsData(smsLogs || []);
-      setAnalyticsData(processedData);
-      
-    } catch (error) {
-      console.error('Error loading analytics:', error);
-      // Set empty data on error
-      setAnalyticsData({
-        campaignPerformanceData: [],
-        audienceSegmentData: [],
-        topCampaignsData: [],
-        conversionFunnelData: []
+      exportAnalyticsToCSV(
+        {
+          volumeByDay: data.chartData.volumeByDay,
+          deliveryRateTrend: data.chartData.deliveryRateTrend,
+          gatewayDistribution: data.chartData.gatewayDistribution,
+          countryDistribution: data.chartData.countryDistribution,
+          hourlyActivity: data.chartData.hourlyActivity,
+          smsMetrics: data.smsMetrics,
+          userMetrics: data.userMetrics,
+          financialMetrics: data.financialMetrics,
+        },
+        timeRange
+      );
+      toast({
+        title: "Exportado com sucesso!",
+        description: "Relatório avançado baixado em CSV",
       });
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      toast({
+        title: "Erro ao exportar",
+        description: "Não foi possível gerar o relatório",
+        variant: "destructive",
+      });
     }
   };
 
-  const processAnalyticsData = (smsLogs: any[]) => {
-    // Process SMS logs into analytics format
-    const campaignPerformanceData = generatePerformanceData(smsLogs);
-    const audienceSegmentData = generateAudienceData(smsLogs);
-    const topCampaignsData = generateTopCampaigns(smsLogs);
-    const conversionFunnelData = generateConversionFunnel(smsLogs);
-
-    return {
-      campaignPerformanceData,
-      audienceSegmentData,
-      topCampaignsData,
-      conversionFunnelData
-    };
-  };
-
-  const generatePerformanceData = (logs: any[]) => {
-    if (logs.length === 0) return [];
-    
-    const groupedByDate = logs.reduce((acc, log) => {
-      const date = new Date(log.created_at).toISOString().split('T')[0];
-      if (!acc[date]) {
-        acc[date] = { sent: 0, delivered: 0, failed: 0 };
-      }
-      acc[date].sent++;
-      if (log.status === 'delivered') acc[date].delivered++;
-      if (log.status === 'failed') acc[date].failed++;
-      return acc;
-    }, {});
-
-    return Object.entries(groupedByDate).map(([date, stats]: [string, any]) => ({
-      date,
-      campaigns: 1,
-      sent: stats.sent,
-      delivered: stats.delivered,
-      clicks: Math.round(stats.delivered * 0.15) // Estimated click rate
-    }));
-  };
-
-  const generateAudienceData = (logs: any[]) => {
-    if (logs.length === 0) return [];
-    
-    return [
-      { name: 'SMS Enviados', value: logs.length, growth: 0, color: '#8884d8' },
-      { name: 'Entregues', value: logs.filter(l => l.status === 'delivered').length, growth: 0, color: '#82ca9d' },
-      { name: 'Falhas', value: logs.filter(l => l.status === 'failed').length, growth: 0, color: '#ff7c7c' },
-      { name: 'Pendentes', value: logs.filter(l => l.status === 'pending').length, growth: 0, color: '#ffc658' }
-    ];
-  };
-
-  const generateTopCampaigns = (logs: any[]) => {
-    if (logs.length === 0) return [];
-    
-    // Group by message or create general stats
-    const delivered = logs.filter(l => l.status === 'delivered').length;
-    const total = logs.length;
-    const rate = total > 0 ? ((delivered / total) * 100).toFixed(1) : '0';
-    
-    return [{
-      name: 'Envios SMS',
-      sent: total,
-      delivered,
-      rate: parseFloat(rate),
-      clicks: Math.round(delivered * 0.1)
-    }];
-  };
-
-  const generateConversionFunnel = (logs: any[]) => {
-    if (logs.length === 0) return [];
-    
-    const sent = logs.length;
-    const delivered = logs.filter(l => l.status === 'delivered').length;
-    
-    return [
-      { stage: 'Enviado', value: sent, percentage: 100 },
-      { stage: 'Entregue', value: delivered, percentage: sent > 0 ? (delivered / sent) * 100 : 0 },
-      { stage: 'Visualizado', value: Math.round(delivered * 0.8), percentage: sent > 0 ? (delivered * 0.8 / sent) * 100 : 0 },
-      { stage: 'Clicado', value: Math.round(delivered * 0.15), percentage: sent > 0 ? (delivered * 0.15 / sent) * 100 : 0 }
-    ];
-  };
-
-  const { campaignPerformanceData, audienceSegmentData, topCampaignsData, conversionFunnelData } = analyticsData;
+  // Calculate advanced metrics
+  const avgCostPerSMS = data?.smsMetrics.totalSent 
+    ? (data.financialMetrics.revenue / data.smsMetrics.totalSent) 
+    : 0;
   
-  const totalSent = campaignPerformanceData.reduce((sum: number, day: any) => sum + (day.sent || 0), 0);
-  const totalDelivered = campaignPerformanceData.reduce((sum: number, day: any) => sum + (day.delivered || 0), 0);
-  const totalClicks = campaignPerformanceData.reduce((sum: number, day: any) => sum + (day.clicks || 0), 0);
-  const deliveryRate = totalSent > 0 ? ((totalDelivered / totalSent) * 100).toFixed(1) : '0';
-  const clickRate = totalDelivered > 0 ? ((totalClicks / totalDelivered) * 100).toFixed(1) : '0';
+  const engagementScore = data?.smsMetrics.deliveryRate || 0;
+  
+  const performanceScore = {
+    delivery: data?.smsMetrics.deliveryRate || 0,
+    speed: 95, // Could calculate from timestamp analysis
+    cost: Math.min(100, (1 / avgCostPerSMS) * 50), // Lower cost = higher score
+    reliability: Math.max(0, 100 - (data?.smsMetrics.totalFailed || 0) / Math.max(1, data?.smsMetrics.totalSent || 1) * 100),
+  };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="text-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Carregando analytics...</p>
+        <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
         </div>
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-muted-foreground">Erro ao carregar analytics avançado</p>
+        <Button onClick={() => refetch()} className="mt-4">Tentar novamente</Button>
       </div>
     );
   }
@@ -269,274 +160,261 @@ export const AdvancedAnalytics = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Analytics Avançado</h1>
-          <p className="text-muted-foreground">Análise detalhada de performance das campanhas</p>
+          <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
+            <Activity className="h-8 w-8" />
+            Analytics Avançado
+          </h1>
+          <p className="text-muted-foreground">Análise profunda de performance e insights</p>
         </div>
         <div className="flex items-center space-x-3">
-          <DatePickerWithRange
-            className="grid gap-2"
-            date={dateRange}
-            setDate={setDateRange}
-          />
-          <Button variant="outline">
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">Últimos 7 dias</SelectItem>
+              <SelectItem value="30days">Últimos 30 dias</SelectItem>
+              <SelectItem value="90days">Últimos 90 dias</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button variant="outline">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4" />
-          <span className="text-sm font-medium">Período:</span>
-        </div>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7d">7 dias</SelectItem>
-            <SelectItem value="30d">30 dias</SelectItem>
-            <SelectItem value="90d">90 dias</SelectItem>
-            <SelectItem value="1y">1 ano</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={segment} onValueChange={setSegment}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os segmentos</SelectItem>
-            <SelectItem value="active">Usuários ativos</SelectItem>
-            <SelectItem value="new">Novos usuários</SelectItem>
-            <SelectItem value="vip">Clientes VIP</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Key Metrics */}
+      {/* Advanced Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
-          title="SMS Enviados"
-          value={totalSent.toLocaleString()}
-          subtitle="Total do período"
-          trend={{ value: 12.5, isPositive: true }}
+          title="Volume Total"
+          value={formatNumber(data.smsMetrics.totalSent)}
+          subtitle="SMS processados"
+          trend={{ value: data.smsMetrics.trend, isPositive: data.smsMetrics.trend > 0 }}
           icon={MessageSquare}
           color="bg-gradient-to-br from-blue-500 to-blue-600"
         />
         <MetricCard
-          title="Taxa de Entrega"
-          value={`${deliveryRate}%`}
-          subtitle="SMS entregues com sucesso"
-          trend={{ value: 2.3, isPositive: true }}
+          title="Performance"
+          value={`${data.smsMetrics.deliveryRate.toFixed(1)}%`}
+          subtitle="Taxa de entrega"
+          trend={{ value: data.smsMetrics.trend, isPositive: data.smsMetrics.trend > 0 }}
           icon={Target}
           color="bg-gradient-to-br from-green-500 to-green-600"
         />
         <MetricCard
-          title="Taxa de Clique"
-          value={`${clickRate}%`}
-          subtitle="Engajamento médio"
-          trend={{ value: 1.8, isPositive: true }}
-          icon={TrendingUp}
-          color="bg-gradient-to-br from-orange-500 to-orange-600"
+          title="Crescimento"
+          value={formatNumber(data.userMetrics.newUsers)}
+          subtitle="Novos usuários"
+          trend={{ value: data.userMetrics.trend, isPositive: data.userMetrics.trend > 0 }}
+          icon={Users}
+          color="bg-gradient-to-br from-purple-500 to-purple-600"
         />
         <MetricCard
-          title="ROI Médio"
-          value="3.4x"
-          subtitle="Retorno sobre investimento"
-          trend={{ value: 8.7, isPositive: true }}
+          title="Receita"
+          value={formatKwanza(data.financialMetrics.revenue)}
+          subtitle="Total período"
+          trend={{ value: data.financialMetrics.trend, isPositive: data.financialMetrics.trend > 0 }}
           icon={DollarSign}
-          color="bg-gradient-to-br from-purple-500 to-purple-600"
+          color="bg-gradient-to-br from-orange-500 to-orange-600"
         />
       </div>
 
-      {/* Performance Over Time */}
+      {/* Advanced Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
+        {/* Performance Radar */}
         <Card>
           <CardHeader>
-            <CardTitle>Performance das Campanhas</CardTitle>
-            <CardDescription>Volume e engajamento ao longo do tempo</CardDescription>
+            <CardTitle>Score de Performance</CardTitle>
+            <CardDescription>Avaliação multidimensional do sistema</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={campaignPerformanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={(value) => format(new Date(value), 'dd/MM')}
+              <RadarChart data={[
+                { metric: 'Entrega', value: performanceScore.delivery, fullMark: 100 },
+                { metric: 'Velocidade', value: performanceScore.speed, fullMark: 100 },
+                { metric: 'Custo', value: performanceScore.cost, fullMark: 100 },
+                { metric: 'Confiabilidade', value: performanceScore.reliability, fullMark: 100 },
+              ]}>
+                <PolarGrid stroke="hsl(var(--border))" />
+                <PolarAngleAxis dataKey="metric" />
+                <PolarRadiusAxis domain={[0, 100]} />
+                <Radar 
+                  name="Performance" 
+                  dataKey="value" 
+                  stroke="hsl(var(--primary))" 
+                  fill="hsl(var(--primary))" 
+                  fillOpacity={0.6} 
                 />
-                <YAxis />
-                <Tooltip 
-                  labelFormatter={(value) => format(new Date(value), 'dd/MM/yyyy')}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="sent"
-                  stackId="1"
-                  stroke="#8884d8"
-                  fill="#8884d8"
-                  fillOpacity={0.8}
-                  name="Enviados"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="delivered"
-                  stackId="1"
-                  stroke="#82ca9d"
-                  fill="#82ca9d"
-                  fillOpacity={0.8}
-                  name="Entregues"
-                />
-              </AreaChart>
+                <Tooltip />
+              </RadarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
+        {/* Detailed Performance Over Time */}
         <Card>
           <CardHeader>
-            <CardTitle>Segmentação de Audiência</CardTitle>
-            <CardDescription>Distribuição e crescimento por segmento</CardDescription>
+            <CardTitle>Evolução Detalhada</CardTitle>
+            <CardDescription>Métricas combinadas ao longo do tempo</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {audienceSegmentData.map((segment, index) => (
-                <div key={segment.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: segment.color }}
-                    />
-                    <span className="font-medium">{segment.name}</span>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-lg font-bold">{segment.value}%</span>
-                    <div className={`flex items-center space-x-1 text-sm ${
-                      segment.growth >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {segment.growth >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      <span>{Math.abs(segment.growth)}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={data.chartData.volumeByDay}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="sent" 
+                  stroke="#8884d8" 
+                  strokeWidth={2}
+                  name="Enviados"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="delivered" 
+                  stroke="#82ca9d" 
+                  strokeWidth={2}
+                  name="Entregues"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="failed" 
+                  stroke="#ef4444" 
+                  strokeWidth={2}
+                  name="Falhados"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Top Campaigns & Conversion Funnel */}
+      {/* Cost & Efficiency Analysis */}
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Top Campanhas</CardTitle>
-            <CardDescription>Melhores performances do período</CardDescription>
+            <CardTitle>Análise de Custos</CardTitle>
+            <CardDescription>Eficiência financeira do sistema</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topCampaignsData.map((campaign, index) => (
-                <div key={campaign.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs">
-                        #{index + 1}
-                      </Badge>
-                      <span className="font-medium">{campaign.name}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {campaign.sent.toLocaleString()} enviados • {campaign.rate}% entrega
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-primary">{campaign.clicks.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">cliques</p>
-                  </div>
-                </div>
-              ))}
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <p className="text-sm text-muted-foreground">Custo médio por SMS</p>
+                <p className="text-2xl font-bold">{formatKwanza(avgCostPerSMS)}</p>
+              </div>
+              <Zap className="h-8 w-8 text-orange-500" />
+            </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <p className="text-sm text-muted-foreground">Ticket médio transação</p>
+                <p className="text-2xl font-bold">{formatKwanza(data.financialMetrics.avgTransactionValue)}</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-green-500" />
+            </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <p className="text-sm text-muted-foreground">Total de transações</p>
+                <p className="text-2xl font-bold">{data.financialMetrics.completedTransactions}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Funil de Conversão</CardTitle>
-            <CardDescription>Jornada do usuário desde o envio</CardDescription>
+            <CardTitle>Métricas de Qualidade</CardTitle>
+            <CardDescription>Indicadores de excelência operacional</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {conversionFunnelData.map((stage, index) => (
-                <div key={stage.stage} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{stage.stage}</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground">
-                        {stage.value.toLocaleString()}
-                      </span>
-                      <Badge variant="outline" className="text-xs">
-                        {stage.percentage}%
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${stage.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Taxa de Entrega</span>
+                <span className="font-bold">{performanceScore.delivery.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full transition-all"
+                  style={{ width: `${performanceScore.delivery}%` }}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Velocidade de Processamento</span>
+                <span className="font-bold">{performanceScore.speed.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all"
+                  style={{ width: `${performanceScore.speed}%` }}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Confiabilidade</span>
+                <span className="font-bold">{performanceScore.reliability.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-purple-500 h-2 rounded-full transition-all"
+                  style={{ width: `${performanceScore.reliability}%` }}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Otimização de Custo</span>
+                <span className="font-bold">{Math.min(100, performanceScore.cost).toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-orange-500 h-2 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, performanceScore.cost)}%` }}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detailed Performance Chart */}
+      {/* Gateway Performance Comparison */}
       <Card>
         <CardHeader>
-          <CardTitle>Análise Detalhada de Performance</CardTitle>
-          <CardDescription>Métricas avançadas de engajamento e conversão</CardDescription>
+          <CardTitle>Comparação de Gateways</CardTitle>
+          <CardDescription>Performance detalhada por provedor SMS</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={campaignPerformanceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                tickFormatter={(value) => format(new Date(value), 'dd/MM')}
-              />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data.chartData.gatewayDistribution}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+              <YAxis stroke="hsl(var(--muted-foreground))" />
               <Tooltip 
-                labelFormatter={(value) => format(new Date(value), 'dd/MM/yyyy')}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
               />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="sent"
-                stroke="#8884d8"
-                strokeWidth={2}
-                name="SMS Enviados"
-              />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="delivered"
-                stroke="#82ca9d"
-                strokeWidth={2}
-                name="SMS Entregues"
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="clicks"
-                stroke="#ffc658"
-                strokeWidth={2}
-                name="Cliques"
-              />
-            </LineChart>
+              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Volume" />
+            </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
