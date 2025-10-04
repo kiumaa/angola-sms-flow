@@ -56,6 +56,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: BarChart3,
     category: 'dashboard'
   },
+  {
+    key: 'business-analytics',
+    label: 'Analytics de Negócio',
+    href: '/admin/business-analytics',
+    icon: Activity,
+    category: 'dashboard'
+  },
   
   // Usuários & Contas
   {

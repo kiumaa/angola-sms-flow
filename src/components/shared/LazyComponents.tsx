@@ -45,6 +45,7 @@ export const LazyAdminTemplates = lazy(() => import("@/pages/AdminTemplates"));
 export const LazyAdminSMTPSettings = lazy(() => import("@/pages/AdminSMTPSettings"));
 export const LazyAdminSecurityCenter = lazy(() => import("@/pages/AdminSecurityCenter"));
 export const LazyAdminSystemMonitoring = lazy(() => import("@/pages/AdminSystemMonitoring"));
+export const LazyAdminBusinessAnalytics = lazy(() => import("@/pages/AdminBusinessAnalytics"));
 
 // Legal Pages
 export const LazyTerms = lazy(() => import("@/pages/legal/Terms"));

@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./hooks/useAuth";
 import MessageSendingLoader from "./components/shared/MessageSendingLoader";
@@ -52,6 +52,7 @@ import {
   LazyAdminSMTPSettings,
   LazyAdminSecurityCenter,
   LazyAdminSystemMonitoring,
+  LazyAdminBusinessAnalytics,
   LazyNotFound,
   LazyTerms,
   LazyPrivacy
@@ -229,6 +230,7 @@ function App() {
                 <Route path="security" element={<LazyAdminSecurityCenter />} />
                 <Route path="system-monitoring" element={<LazyAdminSystemMonitoring />} />
                 <Route path="production" element={<LazyAdminProductionMonitoring />} />
+                <Route path="business-analytics" element={<LazyAdminBusinessAnalytics />} />
                 <Route path="support" element={<AdminSupport />} />
                 <Route path="notifications" element={<AdminNotifications />} />
               </Route>
