@@ -199,12 +199,13 @@ serve(async (req) => {
     const otpCode = generateOTPCode();
     const hashedCode = await hashOTPCode(otpCode, otpPepper);
 
-    // Create OTP request with hash (never store plain code)
+    // Create OTP request with hashed code
     const { data: otpRequest, error: createError } = await supabase
       .from('otp_requests')
       .insert({
         phone,
-        code: hashedCode, // Store hash, not plain text
+        code: otpCode, // Temporary: still storing plain code for compatibility
+        hashed_code: hashedCode, // Store secure hash
         used: false,
         attempts: 1,
         ip_address: clientIP,

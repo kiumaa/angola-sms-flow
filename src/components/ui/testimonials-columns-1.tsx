@@ -28,7 +28,7 @@ export const TestimonialsColumn = (props: {
       repeatType: "loop"
     }} className="flex flex-col gap-6 pb-6 bg-background">
         {new Array(2).fill(0).map((_, index) => (
-          <React.Fragment key={index}>
+          <div key={index} className="contents">
             {props.testimonials.map(({
               text,
               image,
@@ -50,7 +50,7 @@ export const TestimonialsColumn = (props: {
                 </div>
               </div>
             ))}
-          </React.Fragment>
+          </div>
         ))}
       </motion.div>
     </div>;

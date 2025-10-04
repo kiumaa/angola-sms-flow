@@ -963,6 +963,7 @@ export type Database = {
           code: string
           created_at: string
           expires_at: string
+          hashed_code: string
           id: string
           ip_address: unknown | null
           phone: string
@@ -974,6 +975,7 @@ export type Database = {
           code: string
           created_at?: string
           expires_at?: string
+          hashed_code: string
           id?: string
           ip_address?: unknown | null
           phone: string
@@ -985,6 +987,7 @@ export type Database = {
           code?: string
           created_at?: string
           expires_at?: string
+          hashed_code?: string
           id?: string
           ip_address?: unknown | null
           phone?: string
@@ -2079,6 +2082,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_otp_code: {
+        Args: { code: string }
+        Returns: string
+      }
       log_security_event: {
         Args: {
           affected_user_id: string
@@ -2170,6 +2177,10 @@ export type Database = {
       }
       validate_user_session: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      verify_otp_with_security: {
+        Args: { client_ip: unknown; otp_code: string; phone_number: string }
         Returns: boolean
       }
     }
