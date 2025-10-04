@@ -1847,19 +1847,22 @@ export type Database = {
       safe_profiles: {
         Row: {
           created_at: string | null
-          status_display: string | null
+          credits: number | null
+          id: string | null
           user_id: string | null
           user_status: string | null
         }
         Insert: {
           created_at?: string | null
-          status_display?: never
+          credits?: number | null
+          id?: string | null
           user_id?: string | null
           user_status?: string | null
         }
         Update: {
           created_at?: string | null
-          status_display?: never
+          credits?: number | null
+          id?: string | null
           user_id?: string | null
           user_status?: string | null
         }
