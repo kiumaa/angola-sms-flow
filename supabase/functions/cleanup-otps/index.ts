@@ -20,8 +20,10 @@ serve(async (req) => {
     // Create Supabase client with service role
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Call the cleanup function
-    const { data: deletedCount, error } = await supabase.rpc('cleanup_expired_otps');
+    console.log('Running automated cleanup tasks...');
+
+    // Call the master cleanup function
+    const { data, error } = await supabase.rpc('run_all_cleanup_tasks');
     
     if (error) {
       console.error('Error running cleanup:', error);
@@ -37,13 +39,13 @@ serve(async (req) => {
       );
     }
 
-    console.log(`OTP cleanup completed: ${deletedCount} records deleted`);
+    console.log('Cleanup completed:', data);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        deleted_count: deletedCount,
-        message: `Cleaned up ${deletedCount} expired/used OTP records`
+        result: data,
+        message: `Cleaned up ${data.total_deleted} records`
       }),
       { 
         status: 200, 
@@ -52,7 +54,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in cleanup-otps function:', error);
+    console.error('Error in cleanup function:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
