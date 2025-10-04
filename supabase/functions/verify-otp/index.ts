@@ -103,12 +103,12 @@ serve(async (req) => {
     
     console.log(`Found ${allRecentOtps?.length || 0} recent OTPs for phone ${phone}:`, allRecentOtps);
 
-    // Find the most recent valid OTP that matches the hash
+    // Find the most recent valid OTP that matches the hash (security hardened)
     const { data: otpRequest, error: findError } = await supabase
       .from('otp_requests')
       .select('*')
       .eq('phone', phone)
-      .eq('code', hashedCode)
+      .eq('hashed_code', hashedCode) // Query using hashed_code only
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })

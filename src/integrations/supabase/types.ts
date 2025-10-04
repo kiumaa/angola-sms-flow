@@ -960,7 +960,6 @@ export type Database = {
       otp_requests: {
         Row: {
           attempts: number | null
-          code: string
           created_at: string
           expires_at: string
           hashed_code: string
@@ -972,7 +971,6 @@ export type Database = {
         }
         Insert: {
           attempts?: number | null
-          code: string
           created_at?: string
           expires_at?: string
           hashed_code: string
@@ -984,7 +982,6 @@ export type Database = {
         }
         Update: {
           attempts?: number | null
-          code?: string
           created_at?: string
           expires_at?: string
           hashed_code?: string
