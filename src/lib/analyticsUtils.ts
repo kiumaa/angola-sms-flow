@@ -2,7 +2,7 @@ import { format } from "date-fns";
 
 interface ChartDataPoint {
   date: string;
-  sent: number;
+  sent?: number;
   delivered?: number;
   failed?: number;
   rate?: number;
