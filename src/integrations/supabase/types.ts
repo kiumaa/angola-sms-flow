@@ -1903,11 +1903,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_expired_lgpd_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_expired_otps: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_old_campaigns: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_old_data: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      cleanup_old_sms_logs: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
@@ -1932,6 +1944,10 @@ export type Database = {
         Args: { encrypted_ref: string }
         Returns: string
       }
+      decrypt_pii: {
+        Args: { encrypted_text: string }
+        Returns: string
+      }
       decrypt_smtp_password: {
         Args: { encrypted_password: string }
         Returns: string
@@ -1946,6 +1962,10 @@ export type Database = {
       }
       encrypt_payment_reference: {
         Args: { ref_text: string }
+        Returns: string
+      }
+      encrypt_pii: {
+        Args: { plaintext: string }
         Returns: string
       }
       encrypt_smtp_password: {
@@ -2130,6 +2150,10 @@ export type Database = {
       reject_credit_request: {
         Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean
+      }
+      run_all_cleanup_tasks: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       sanitize_html_input: {
         Args: { input_text: string }
