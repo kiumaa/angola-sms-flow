@@ -2038,17 +2038,14 @@ export type Database = {
       get_smtp_settings_for_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
-          created_at: string
           from_email: string
           from_name: string
           host: string
           id: string
           is_active: boolean
           last_tested_at: string
-          password_masked: string
           port: number
           test_status: string
-          updated_at: string
           use_tls: boolean
           username: string
         }[]
@@ -2060,8 +2057,7 @@ export type Database = {
           from_name: string
           host: string
           id: string
-          is_active: boolean
-          password_encrypted: string
+          password: string
           port: number
           use_tls: boolean
           username: string
