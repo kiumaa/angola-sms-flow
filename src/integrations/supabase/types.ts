@@ -2047,13 +2047,21 @@ export type Database = {
         Returns: number
       }
       debit_user_credits: {
-        Args: {
-          _account_id: string
-          _amount: number
-          _meta?: Json
-          _reason: string
-        }
-        Returns: boolean
+        Args:
+          | {
+              _account_id: string
+              _amount: number
+              _meta?: Json
+              _reason: string
+            }
+          | {
+              _account_id: string
+              _credits: number
+              _metadata?: Json
+              _reference?: string
+              _user_id: string
+            }
+        Returns: Json
       }
       decrypt_payment_reference: {
         Args: { encrypted_ref: string }
