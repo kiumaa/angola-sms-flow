@@ -463,16 +463,17 @@ serve(async (req) => {
     console.log(`🏦 Attempting to debit ${totalCreditsRequired} credits from account ${profile.id}`);
     console.log(`💰 User has ${profile.credits} credits available`);
     
-    const { error: debitError } = await supabase.rpc('debit_user_credits', {
+    const { data: debitRes, error: debitRpcError } = await supabase.rpc('debit_user_credits', {
+      _user_id: user.id,
       _account_id: profile.id,
-      _amount: totalCreditsRequired,
-      _reason: `Quick SMS send (${recipients.length} recipients, ${segmentInfo.segments} segments each)`,
-      _meta: { job_id: job.id }
+      _credits: totalCreditsRequired,
+      _reference: `quick_send_job:${job.id}`,
+      _metadata: { job_id: job.id, operation: 'quick_send' }
     });
 
-    if (debitError) {
-      console.error('❌ Error debiting credits:', debitError);
-      console.error('❌ Full error details:', JSON.stringify(debitError, null, 2));
+    if (debitRpcError || !debitRes?.success) {
+      console.error('❌ Error debiting credits:', debitRpcError || debitRes);
+      console.error('❌ Full error details:', JSON.stringify(debitRpcError || debitRes, null, 2));
       
       // Mark job as failed
       await supabase
@@ -482,15 +483,17 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({
         error: 'CREDIT_DEBIT_FAILED',
-        message: 'Failed to reserve credits for sending',
-        details: debitError.message,
+        message: debitRes?.error || 'Failed to reserve credits for sending',
+        details: debitRpcError?.message || debitRes?.error,
         debug: {
           user_id: user.id,
           profile_id: profile.id,
-          credits_available: profile.credits,
+          credits_available: debitRes?.current_credits || profile.credits,
           credits_required: totalCreditsRequired,
-          error_code: debitError.code,
-          error_hint: debitError.hint
+          previous_credits: debitRes?.previous_credits,
+          new_credits: debitRes?.new_credits,
+          error_code: debitRpcError?.code,
+          error_hint: debitRpcError?.hint
         }
       }), {
         status: 402,
@@ -498,7 +501,12 @@ serve(async (req) => {
       });
     }
 
-    console.log('Credits debited successfully');
+    console.log('✅ Credits debited successfully:', {
+      previous: debitRes.previous_credits,
+      debited: debitRes.debited_credits,
+      new: debitRes.new_credits,
+      transaction_id: debitRes.transaction_id
+    });
 
     // Prepare authentication header for BulkSMS
     const credentials = btoa(`${bulkSmsTokenId}:${bulkSmsTokenSecret || ''}`);
