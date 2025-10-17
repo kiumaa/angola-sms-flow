@@ -64,6 +64,7 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCompliance from "./pages/AdminCompliance";
 import AdminAutomations from "./pages/AdminAutomations";
 import AdminWorkflows from "./pages/AdminWorkflows";
+import AdminEkwanzaPayments from "./pages/AdminEkwanzaPayments";
 
 // Import components for support system
 import Support from "./pages/Support";
@@ -218,6 +219,7 @@ function App() {
                 <Route path="users" element={<LazyAdminUsers />} />
                 <Route path="packages" element={<LazyAdminPackages />} />
                 <Route path="transactions" element={<LazyAdminTransactions />} />
+                <Route path="ekwanza-payments" element={<AdminEkwanzaPayments />} />
                 <Route path="credit-requests" element={<LazyAdminCreditRequests />} />
                 <Route path="sender-ids" element={<LazyAdminSenderIDs />} />
                 <Route path="sms-configuration" element={<LazyAdminSMSConfiguration />} />

@@ -21,7 +21,8 @@ import {
   Globe,
   Eye,
   Headphones,
-  Bell
+  Bell,
+  Wallet
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -137,6 +138,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Transações',
     href: '/admin/transactions',
     icon: CreditCard,
+    category: 'financial'
+  },
+  {
+    key: 'ekwanza',
+    label: 'Pagamentos É-kwanza',
+    href: '/admin/ekwanza-payments',
+    icon: Wallet,
     category: 'financial'
   },
   {
