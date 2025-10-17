@@ -193,10 +193,8 @@ export const EnhancedPaymentInstructions = ({
                 </div>
               </div>
                 
-                {selectedPaymentMethod === 'bank_transfer' ? (
+                {selectedPaymentMethod === 'bank_transfer' && (
                   <Check className="h-5 w-5 text-primary" />
-                ) : (
-                  <Badge className="bg-green-500/20 text-green-400">Recomendado</Badge>
                 )}
               </div>
             </motion.button>
@@ -226,10 +224,8 @@ export const EnhancedPaymentInstructions = ({
                 </div>
               </div>
                 
-                {selectedPaymentMethod === 'qrcode' ? (
+                {selectedPaymentMethod === 'qrcode' && (
                   <Check className="h-5 w-5 text-primary" />
-                ) : (
-                  <Badge className="bg-blue-500/20 text-blue-400">Instantâneo</Badge>
                 )}
               </div>
             </motion.button>
@@ -263,10 +259,8 @@ export const EnhancedPaymentInstructions = ({
                 </div>
               </div>
                 
-                {selectedPaymentMethod === 'mcx' ? (
+                {selectedPaymentMethod === 'mcx' && (
                   <Check className="h-5 w-5 text-primary" />
-                ) : (
-                  <Badge className="bg-orange-500/20 text-orange-400">Rápido</Badge>
                 )}
               </div>
             </motion.button>
@@ -296,10 +290,8 @@ export const EnhancedPaymentInstructions = ({
                   </div>
                 </div>
                 
-                {selectedPaymentMethod === 'referencia' ? (
+                {selectedPaymentMethod === 'referencia' && (
                   <Check className="h-5 w-5 text-primary" />
-                ) : (
-                  <Badge className="bg-purple-500/20 text-purple-400">Fácil</Badge>
                 )}
               </div>
             </motion.button>
