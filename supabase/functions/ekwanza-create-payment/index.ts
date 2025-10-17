@@ -112,6 +112,19 @@ serve(async (req) => {
 
     if (transactionError || !transaction) {
       console.error('Error creating transaction:', transactionError)
+      
+      // Check for rate limit error (P0001)
+      if (transactionError?.code === 'P0001' && transactionError?.message?.includes('rate limit')) {
+        return new Response(JSON.stringify({ 
+          error: 'RATE_LIMIT',
+          message: 'Limite de tentativas atingido. Aguarde ~1 minuto e tente novamente.',
+          retry_after: 60
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      
       return new Response(JSON.stringify({ error: 'Error creating transaction' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -165,8 +178,11 @@ serve(async (req) => {
       
       // Check for DNS/network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        errorDetails.type = 'network_error'
-        errorDetails.suggestion = 'Verifique a configuração EKWANZA_BASE_URL'
+        errorDetails.type = 'NETWORK'
+        errorDetails.suggestion = 'Verificar configuração do endpoint EKWANZA_BASE_URL'
+      } else if (error instanceof TypeError && (error.message.includes('dns') || error.message.includes('lookup'))) {
+        errorDetails.type = 'NETWORK'
+        errorDetails.suggestion = 'Erro de DNS - verificar endpoint É-kwanza'
       }
       
       console.error('Error details:', errorDetails)
@@ -178,9 +194,9 @@ serve(async (req) => {
         .eq('id', transaction.id)
       
       return new Response(JSON.stringify({ 
-        error: 'Falha na criação do pagamento É-kwanza',
+        error: errorDetails.type || 'API_ERROR',
+        message: 'Falha de conexão com o provedor É-kwanza (DNS/Conectividade)',
         details: errorDetails.message,
-        type: errorDetails.type || 'api_error',
         suggestion: errorDetails.suggestion
       }), {
         status: 502,

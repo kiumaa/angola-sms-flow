@@ -49,32 +49,47 @@ export const useEkwanzaPayment = () => {
       if (error) {
         console.error('Error creating É-kwanza payment:', error);
         
-        // Enhanced error message for network/DNS issues
+        // Map specific error types to user-friendly messages
         let errorDescription = error.message || "Não foi possível criar o pagamento.";
         
-        if (error.message?.includes('fetch') || error.message?.includes('network')) {
-          errorDescription = "Falha de conexão com o provedor É-kwanza. Por favor, tente novamente ou use outro método de pagamento.";
+        // Check if it's a FunctionsHttpError with status
+        const status = (error as any)?.status;
+        
+        if (status === 429) {
+          errorDescription = "⏱️ Limite de tentativas atingido. Aguarde 1 minuto e tente novamente.";
+        } else if (status === 502 || error.message?.includes('fetch') || error.message?.includes('network')) {
+          errorDescription = "🌐 Falha de conexão com o provedor É-kwanza (DNS/Conectividade). Por favor, tente outro método de pagamento como Transferência Bancária.";
         }
         
         toast({
           title: "❌ Erro ao Criar Pagamento",
           description: errorDescription,
           variant: "destructive",
-          duration: 6000,
+          duration: 7000,
         });
         return null;
       }
 
       if (!data.success) {
         // Extract detailed error info if available
-        const errorMsg = data.error || "Não foi possível criar o pagamento.";
-        const suggestionMsg = data.suggestion ? ` ${data.suggestion}` : "";
+        const errorType = data.error;
+        let errorMsg = data.message || "Não foi possível criar o pagamento.";
+        
+        // Map error types to user messages
+        if (errorType === 'RATE_LIMIT') {
+          errorMsg = "⏱️ Limite de tentativas atingido. Aguarde ~1 minuto e tente novamente.";
+        } else if (errorType === 'NETWORK') {
+          errorMsg = "🌐 Falha de conexão com o provedor É-kwanza. Por favor, tente outro método de pagamento.";
+        }
+        
+        // Add suggestion if available
+        const suggestionMsg = data.suggestion ? `\n\n💡 ${data.suggestion}` : "";
         
         toast({
           title: "❌ Erro ao Criar Pagamento",
           description: errorMsg + suggestionMsg,
           variant: "destructive",
-          duration: 6000,
+          duration: 7000,
         });
         return null;
       }
