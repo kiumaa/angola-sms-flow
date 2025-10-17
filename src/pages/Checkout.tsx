@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { showInfoToast } from "@/components/shared/FeedbackToast";
 import { usePackages } from "@/hooks/usePackages";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserCredits } from "@/hooks/useUserCredits";
@@ -96,6 +97,14 @@ const Checkout = () => {
       setPaymentData(payment);
       setShowEkwanzaModal(true);
       startPolling(payment.payment_id);
+    } else if (paymentMethod === 'referencia') {
+      // If Referência failed, suggest MCX as fallback
+      showInfoToast(
+        "💡 Sugestão de Método Alternativo",
+        "A Referência EMIS não está disponível. Recomendamos usar Multicaixa Express (MCX) ou Transferência Bancária como alternativa."
+      );
+      // Auto-switch to MCX
+      setSelectedPaymentMethod('mcx');
     }
   };
 

@@ -176,10 +176,27 @@ serve(async (req) => {
         reference_code
       }
       
-      // Check for DNS/network errors
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        errorDetails.type = 'NETWORK'
-        errorDetails.suggestion = 'Verificar EKWANZA_BASE_URL'
+      // Map specific error types
+      if (error instanceof Error) {
+        // 404 Endpoint not found
+        if (error.message.includes('404 ENDPOINT')) {
+          errorDetails.type = 'ENDPOINT_NOT_FOUND'
+          errorDetails.suggestion = 'Verifique o EKWANZA_REF_PAYMENT_METHOD e a rota exata com o provedor.'
+        }
+        // 400/401/403 Provider errors
+        else if (error.message.match(/40[013]/)) {
+          errorDetails.type = 'PROVIDER_ERROR'
+          errorDetails.suggestion = 'Erro do provedor É-kwanza. Verifique configuração.'
+        }
+        // Real network/DNS errors
+        else if (error instanceof TypeError && error.message.includes('fetch')) {
+          errorDetails.type = 'NETWORK'
+          errorDetails.suggestion = 'Verificar EKWANZA_BASE_URL'
+        }
+        // Generic API errors
+        else if (error.message.includes('API error')) {
+          errorDetails.type = 'API_ERROR'
+        }
       }
       
       console.error('Error details:', errorDetails)
@@ -190,9 +207,19 @@ serve(async (req) => {
         .update({ status: 'failed' })
         .eq('id', transaction.id)
       
+      // Build error response based on type
+      let message = 'Erro ao processar pagamento'
+      if (errorDetails.type === 'ENDPOINT_NOT_FOUND') {
+        message = 'Endpoint de Referência não encontrado (404).'
+      } else if (errorDetails.type === 'PROVIDER_ERROR') {
+        message = 'Erro do provedor É-kwanza.'
+      } else if (errorDetails.type === 'NETWORK') {
+        message = 'Falha de conexão com o provedor É-kwanza (DNS/Conectividade)'
+      }
+      
       return new Response(JSON.stringify({ 
         error: errorDetails.type || 'API_ERROR',
-        message: 'Falha de conexão com o provedor É-kwanza (DNS/Conectividade)',
+        message,
         details: errorDetails.message,
         suggestion: errorDetails.suggestion
       }), {
@@ -389,7 +416,7 @@ async function createMCXPayment(
   return data
 }
 
-// Helper: Create Referência EMIS payment
+// Helper: Create Referência EMIS payment with retry logic
 async function createReferenciaPayment(
   amount: number,
   referenceCode: string
@@ -401,7 +428,6 @@ async function createReferenciaPayment(
   // Get OAuth2 token
   const accessToken = await getOAuth2Token()
   
-  const url = `${baseUrl}/api/v1/REF`
   const body = {
     paymentMethodId: paymentMethodId,
     amount: amount,
@@ -410,24 +436,57 @@ async function createReferenciaPayment(
     description: `Créditos SMS AO`
   }
   
-  console.log('📄 Creating Referência payment:', { body, url })
+  // Try different URL variants (case sensitivity, trailing slash)
+  const urlVariants = [
+    '/api/v1/REF',
+    '/api/v1/Ref',
+    '/api/v1/REF/'
+  ]
   
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  })
+  let lastError: { status: number; text: string } | null = null
   
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error('❌ Referência API error:', response.status, errorText)
-    throw new Error(`É-kwanza Referência API error: ${response.status}`)
+  for (const path of urlVariants) {
+    const url = `${baseUrl}${path}`
+    
+    console.log(`📄 Attempting Referência payment: ${url}`)
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`✅ Referência payment created via ${path}:`, data)
+        return data
+      }
+      
+      const errorText = await response.text()
+      lastError = { status: response.status, text: errorText.substring(0, 200) }
+      
+      console.error(`❌ Referência variant ${path} failed:`, response.status, errorText.substring(0, 200))
+      
+      // If not 404, stop trying (it's a different error)
+      if (response.status !== 404) {
+        throw new Error(`É-kwanza Referência API error: ${response.status} ${errorText.substring(0, 100)}`)
+      }
+    } catch (fetchError) {
+      // Network error - propagate it
+      if (fetchError instanceof TypeError) {
+        throw fetchError
+      }
+      // Re-throw non-404 API errors
+      throw fetchError
+    }
   }
   
-  const data = await response.json()
-  console.log('✅ Referência payment created:', data)
-  return data
+  // All variants failed with 404
+  console.error('❌ All Referência URL variants returned 404:', lastError)
+  throw new Error('É-kwanza Referência API error: 404 ENDPOINT')
 }

@@ -73,21 +73,33 @@ export const useEkwanzaPayment = () => {
         if (data.error === 'RATE_LIMIT') {
           title = "⏳ Limite Atingido";
           description = data.message || "Limite de tentativas atingido. Aguarde 1 minuto e tente novamente.";
-        } else if (data.error === 'NETWORK') {
-          description = data.message || "Falha de conexão com o provedor É-kwanza (DNS/Conectividade).";
+        } else if (data.error === 'ENDPOINT_NOT_FOUND') {
+          title = "🚫 Rota de Referência Indisponível";
+          description = "O endpoint de Referência EMIS não está disponível no momento. Tente Multicaixa Express ou Transferência Bancária como alternativa.";
           if (data.suggestion) {
-            description += ` Sugestão: ${data.suggestion}`;
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        } else if (data.error === 'PROVIDER_ERROR') {
+          title = "⚠️ Erro do Provedor";
+          description = data.message || "O provedor É-kwanza retornou um erro. Tente outro método de pagamento.";
+          if (data.details) {
+            description += `\n\nDetalhes: ${data.details.substring(0, 100)}`;
+          }
+        } else if (data.error === 'NETWORK') {
+          description = data.message || "Falha de conexão com o provedor.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
           }
           description += "\n\nTente usar Transferência Bancária como alternativa.";
         } else if (data.suggestion) {
-          description += ` Sugestão: ${data.suggestion}`;
+          description += `\n\n💡 ${data.suggestion}`;
         }
         
         toast({
           title,
           description,
           variant: "destructive",
-          duration: 7000,
+          duration: 8000,
         });
         return null;
       }
