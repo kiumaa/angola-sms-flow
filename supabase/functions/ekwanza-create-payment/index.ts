@@ -296,7 +296,7 @@ function getBaseUrl(): string {
   
   // Always use EKWANZA_BASE_URL if set, otherwise hardcoded fallback
   // NEVER derive from EKWANZA_OAUTH_URL (which is Microsoft Azure AD, not É-kwanza API)
-  const finalUrl = baseUrl || 'https://partnersapi.e-kwanza.ao'
+  const finalUrl = baseUrl || 'https://ekz-partnersapi.e-kwanza.ao'
   
   if (!baseUrl) {
     console.log('⚠️  EKWANZA_BASE_URL not set, using hardcoded fallback:', finalUrl)
