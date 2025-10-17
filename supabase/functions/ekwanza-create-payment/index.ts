@@ -179,10 +179,7 @@ serve(async (req) => {
       // Check for DNS/network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
         errorDetails.type = 'NETWORK'
-        errorDetails.suggestion = 'Verificar configuração do endpoint EKWANZA_BASE_URL'
-      } else if (error instanceof TypeError && (error.message.includes('dns') || error.message.includes('lookup'))) {
-        errorDetails.type = 'NETWORK'
-        errorDetails.suggestion = 'Erro de DNS - verificar endpoint É-kwanza'
+        errorDetails.suggestion = 'Verificar EKWANZA_BASE_URL'
       }
       
       console.error('Error details:', errorDetails)
