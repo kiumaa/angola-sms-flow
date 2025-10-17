@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   CreditCard, 
   Copy, 
@@ -15,9 +16,12 @@ import {
   ArrowRight,
   HelpCircle,
   Phone,
-  Building2
+  Building2,
+  Smartphone,
+  Hash
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 
 interface BankDetails {
@@ -51,6 +55,8 @@ export const EnhancedPaymentInstructions = ({
   const [showDetails, setShowDetails] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [mobileError, setMobileError] = useState('');
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -62,6 +68,47 @@ export const EnhancedPaymentInstructions = ({
       description: `${field} copiado para a área de transferência.`,
       duration: 2000,
     });
+  };
+
+  const validatePhone = (phone: string) => {
+    // Remove espaços e validação para formato angolano 9XX XXX XXX
+    const cleaned = phone.replace(/\s/g, '');
+    
+    if (!cleaned) {
+      setMobileError('');
+      return false;
+    }
+    
+    if (!/^9\d{8}$/.test(cleaned)) {
+      setMobileError('Formato inválido. Use: 9XX XXX XXX');
+      return false;
+    }
+    
+    setMobileError('');
+    return true;
+  };
+
+  const handleConfirmPayment = () => {
+    if (!selectedPaymentMethod) return;
+    
+    if (selectedPaymentMethod === 'bank_transfer') {
+      onConfirmOrder();
+      return;
+    }
+    
+    // Validar telefone para QR Code e MCX
+    if ((selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx') && !mobileNumber) {
+      setMobileError('Número de telefone é obrigatório');
+      return;
+    }
+    
+    if ((selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx') && !validatePhone(mobileNumber)) {
+      return;
+    }
+    
+    if (onEkwanzaPayment) {
+      onEkwanzaPayment(selectedPaymentMethod, mobileNumber || undefined);
+    }
   };
 
   const generateQRCodeData = () => {
@@ -115,52 +162,192 @@ export const EnhancedPaymentInstructions = ({
       
       <CardContent className="space-y-6">
         {/* Payment Method Selection */}
-        <motion.div 
-          className="p-6 rounded-2xl border-2 border-primary bg-primary/5"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-2xl bg-gradient-primary shadow-glow">
-              <Building2 className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-medium">Transferência Bancária</h3>
-              <p className="text-sm text-muted-foreground">
-                Recomendado • Processamento automático
-              </p>
-            </div>
-            <Badge className="ml-auto bg-green-500/20 text-green-400">
-              Mais Rápido
-            </Badge>
-          </div>
+        <div className="space-y-4">
+          <h4 className="font-medium">Escolha o Método de Pagamento</h4>
           
-          <div className="grid grid-cols-3 gap-3">
-            {securityFeatures.map((feature, index) => (
-              <motion.div 
-                key={index}
-                className="flex items-center gap-2"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <feature.icon className={`h-4 w-4 ${feature.color}`} />
-                <span className="text-xs">{feature.text}</span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+          <div className="space-y-3">
+            {/* Transferência Bancária */}
+            <motion.button
+              onClick={() => onPaymentMethodChange?.('bank_transfer')}
+              className={cn(
+                "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left",
+                selectedPaymentMethod === 'bank_transfer'
+                  ? "border-primary bg-primary/10 shadow-glow"
+                  : "border-muted/20 hover:border-primary/50"
+              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-primary">
+                    <Building2 className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Transferência Bancária</h5>
+                    <p className="text-sm text-muted-foreground">
+                      Transferência tradicional via banco
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedPaymentMethod === 'bank_transfer' ? (
+                  <Check className="h-5 w-5 text-primary" />
+                ) : (
+                  <Badge className="bg-green-500/20 text-green-400">Recomendado</Badge>
+                )}
+              </div>
+            </motion.button>
 
-        {/* Bank Details Section */}
-        <motion.div 
-          className="space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className="flex items-center justify-between">
-            <h4 className="font-medium">Dados para Transferência</h4>
+            {/* QR Code É-kwanza */}
+            <motion.button
+              onClick={() => onPaymentMethodChange?.('qrcode')}
+              className={cn(
+                "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left",
+                selectedPaymentMethod === 'qrcode'
+                  ? "border-primary bg-primary/10 shadow-glow"
+                  : "border-muted/20 hover:border-primary/50"
+              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-primary">
+                    <QrCode className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="font-medium">QR Code É-kwanza</h5>
+                    <p className="text-sm text-muted-foreground">
+                      Escaneie e pague pelo app Multicaixa
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedPaymentMethod === 'qrcode' ? (
+                  <Check className="h-5 w-5 text-primary" />
+                ) : (
+                  <Badge className="bg-blue-500/20 text-blue-400">Instantâneo</Badge>
+                )}
+              </div>
+            </motion.button>
+
+            {/* Multicaixa Express */}
+            <motion.button
+              onClick={() => onPaymentMethodChange?.('mcx')}
+              className={cn(
+                "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left",
+                selectedPaymentMethod === 'mcx'
+                  ? "border-primary bg-primary/10 shadow-glow"
+                  : "border-muted/20 hover:border-primary/50"
+              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-primary">
+                    <Smartphone className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Multicaixa Express</h5>
+                    <p className="text-sm text-muted-foreground">
+                      Pagamento via Multicaixa Express
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedPaymentMethod === 'mcx' ? (
+                  <Check className="h-5 w-5 text-primary" />
+                ) : (
+                  <Badge className="bg-orange-500/20 text-orange-400">Rápido</Badge>
+                )}
+              </div>
+            </motion.button>
+
+            {/* Referência EMIS */}
+            <motion.button
+              onClick={() => onPaymentMethodChange?.('referencia')}
+              className={cn(
+                "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left",
+                selectedPaymentMethod === 'referencia'
+                  ? "border-primary bg-primary/10 shadow-glow"
+                  : "border-muted/20 hover:border-primary/50"
+              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-primary">
+                    <Hash className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Referência EMIS</h5>
+                    <p className="text-sm text-muted-foreground">
+                      Gere uma referência para pagamento
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedPaymentMethod === 'referencia' ? (
+                  <Check className="h-5 w-5 text-primary" />
+                ) : (
+                  <Badge className="bg-purple-500/20 text-purple-400">Fácil</Badge>
+                )}
+              </div>
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Mobile Number Input (for QR Code and MCX) */}
+        <AnimatePresence>
+          {(selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx') && (
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Label htmlFor="mobile">Número de Telefone</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="mobile"
+                  type="tel"
+                  placeholder="9XX XXX XXX"
+                  value={mobileNumber}
+                  onChange={(e) => {
+                    setMobileNumber(e.target.value);
+                    validatePhone(e.target.value);
+                  }}
+                  className={cn(
+                    "pl-10",
+                    mobileError && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+              </div>
+              {mobileError && (
+                <p className="text-xs text-red-500">{mobileError}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Digite o número do telefone associado ao Multicaixa Express
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bank Details Section (only for bank_transfer) */}
+        {selectedPaymentMethod === 'bank_transfer' && (
+          <motion.div 
+            className="space-y-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium">Dados para Transferência</h4>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -229,11 +416,10 @@ export const EnhancedPaymentInstructions = ({
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
 
-        {/* Tutorial Section */}
-        <AnimatePresence>
-          {showTutorial && (
+          {/* Tutorial Section */}
+          <AnimatePresence>
+            {showTutorial && (
             <motion.div 
               className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-4"
               initial={{ opacity: 0, height: 0 }}
@@ -271,92 +457,9 @@ export const EnhancedPaymentInstructions = ({
               </div>
             </motion.div>
           )}
-         </AnimatePresence>
-
-        {/* Outros Métodos de Pagamento (Em Breve) */}
-        <motion.div 
-          className="space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          <h4 className="font-medium text-muted-foreground">Outros Métodos de Pagamento (Em Breve)</h4>
-          
-          <div className="space-y-3">
-            {[
-              {
-                name: "Multicaixa Express",
-                description: "Pagamento via Multicaixa Express",
-                logo: "/multicaixa-express-logo.png",
-                color: "from-orange-500/10 to-orange-500/5",
-                icon: "Pagamento via app móvel"
-              },
-              {
-                name: "Pagamento por Referência",
-                description: "Gere uma referência para pagamento",
-                logo: "/multicaixa-logo.png",
-                color: "from-orange-500/10 to-orange-500/5",
-                icon: "Referência bancária"
-              },
-              {
-                name: "Cartão (via Stripe)",
-                description: "Pagamento seguro com cartão de crédito",
-                logo: "/stripe-logo.png",
-                color: "from-blue-500/10 to-blue-500/5",
-                icon: "Cartão internacional"
-              }
-            ].map((method, index) => (
-              <motion.div
-                key={index}
-                className={`
-                  p-4 rounded-2xl bg-gradient-to-r ${method.color} 
-                  border border-muted/20 opacity-60 cursor-not-allowed
-                  relative overflow-hidden
-                `}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 0.6, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center p-2">
-                      <img 
-                        src={method.logo} 
-                        alt={method.name}
-                        className="w-full h-full object-contain"
-                        loading="eager"
-                        onError={(e) => {
-                          console.error(`Erro ao carregar logo: ${method.name}`, e);
-                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjOTk5IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=';
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <h5 className="font-medium text-foreground/70">{method.name}</h5>
-                      <p className="text-sm text-muted-foreground">{method.description}</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
-                    Em Breve
-                  </Badge>
-                </div>
-                
-                {/* Overlay para indicar indisponibilidade */}
-                <div className="absolute inset-0 bg-muted/10 backdrop-blur-[1px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                  <span className="text-sm font-medium text-muted-foreground bg-background/80 px-3 py-1 rounded-full">
-                    Disponível em breve
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">
-              Novos métodos de pagamento serão adicionados em breve para sua comodidade
-            </p>
-          </div>
+          </AnimatePresence>
         </motion.div>
+        )}
 
         {/* Confirm Button */}
         <motion.div 
@@ -366,8 +469,8 @@ export const EnhancedPaymentInstructions = ({
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <Button
-            onClick={onConfirmOrder}
-            disabled={isProcessing}
+            onClick={handleConfirmPayment}
+            disabled={isProcessing || !selectedPaymentMethod}
             className="w-full button-futuristic text-lg py-6 group"
             size="lg"
           >
@@ -378,7 +481,7 @@ export const EnhancedPaymentInstructions = ({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                Confirmar Pedido
+                {selectedPaymentMethod === 'bank_transfer' ? 'Confirmar Pedido' : 'Gerar Pagamento É-kwanza'}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </div>
             )}
