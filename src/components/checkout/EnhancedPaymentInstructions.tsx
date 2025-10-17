@@ -215,12 +215,8 @@ export const EnhancedPaymentInstructions = ({
             >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-white/95 dark:bg-white">
-                  <img 
-                    src={multicaixaLogo} 
-                    alt="Multicaixa"
-                    className="h-10 w-10 object-contain"
-                  />
+                <div className="p-3 rounded-xl bg-gradient-primary">
+                  <QrCode className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <h5 className="font-medium">QR Code É-kwanza</h5>
