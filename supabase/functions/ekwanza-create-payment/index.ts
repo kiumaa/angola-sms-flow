@@ -265,24 +265,19 @@ serve(async (req) => {
 
 // Helper: Get base URL with fallback
 function getBaseUrl(): string {
-  let baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const baseUrl = Deno.env.get('EKWANZA_BASE_URL')
   
-  // Fallback: derive from OAuth URL if base URL is invalid
-  if (!baseUrl || baseUrl.includes('ekz-partnersapi')) {
-    const oauthUrl = Deno.env.get('EKWANZA_OAUTH_URL')
-    if (oauthUrl) {
-      try {
-        const parsedUrl = new URL(oauthUrl)
-        baseUrl = parsedUrl.origin
-        console.log('⚠️  Using fallback baseUrl from OAuth:', baseUrl)
-      } catch (e) {
-        console.error('Failed to parse OAuth URL for fallback:', e)
-      }
-    }
+  // Always use EKWANZA_BASE_URL if set, otherwise hardcoded fallback
+  // NEVER derive from EKWANZA_OAUTH_URL (which is Microsoft Azure AD, not É-kwanza API)
+  const finalUrl = baseUrl || 'https://partnersapi.e-kwanza.ao'
+  
+  if (!baseUrl) {
+    console.log('⚠️  EKWANZA_BASE_URL not set, using hardcoded fallback:', finalUrl)
+  } else {
+    console.log('📍 É-kwanza baseUrl:', finalUrl)
   }
   
-  console.log('📍 É-kwanza baseUrl:', baseUrl)
-  return baseUrl || 'https://partnersapi.e-kwanza.ao'
+  return finalUrl
 }
 
 // Helper: Create QR Code payment via Ticket API
