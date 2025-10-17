@@ -23,6 +23,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
+import multicaixaExpressLogo from "@/assets/multicaixa-express-logo.png";
+import multicaixaLogo from "@/assets/multicaixa-logo.png";
 
 interface BankDetails {
   bank: string;
@@ -178,18 +180,18 @@ export const EnhancedPaymentInstructions = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-primary">
-                    <Building2 className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h5 className="font-medium">Transferência Bancária</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Transferência tradicional via banco
-                    </p>
-                  </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-primary">
+                  <Building2 className="h-6 w-6 text-white" />
                 </div>
+                <div>
+                  <h5 className="font-medium">Transferência Bancária</h5>
+                  <p className="text-sm text-muted-foreground">
+                    Transferência tradicional via banco
+                  </p>
+                </div>
+              </div>
                 
                 {selectedPaymentMethod === 'bank_transfer' ? (
                   <Check className="h-5 w-5 text-primary" />
@@ -211,18 +213,22 @@ export const EnhancedPaymentInstructions = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-primary">
-                    <QrCode className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h5 className="font-medium">QR Code É-kwanza</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Escaneie e pague pelo app Multicaixa
-                    </p>
-                  </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-white/95 dark:bg-white">
+                  <img 
+                    src={multicaixaLogo} 
+                    alt="Multicaixa"
+                    className="h-10 w-10 object-contain"
+                  />
                 </div>
+                <div>
+                  <h5 className="font-medium">QR Code É-kwanza</h5>
+                  <p className="text-sm text-muted-foreground">
+                    Escaneie e pague pelo app Multicaixa
+                  </p>
+                </div>
+              </div>
                 
                 {selectedPaymentMethod === 'qrcode' ? (
                   <Check className="h-5 w-5 text-primary" />
@@ -244,18 +250,22 @@ export const EnhancedPaymentInstructions = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-primary">
-                    <Smartphone className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h5 className="font-medium">Multicaixa Express</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Pagamento via Multicaixa Express
-                    </p>
-                  </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-white/95 dark:bg-white">
+                  <img 
+                    src={multicaixaExpressLogo} 
+                    alt="Multicaixa Express"
+                    className="h-10 w-10 object-contain"
+                  />
                 </div>
+                <div>
+                  <h5 className="font-medium">Multicaixa Express</h5>
+                  <p className="text-sm text-muted-foreground">
+                    Pagamento via Multicaixa Express
+                  </p>
+                </div>
+              </div>
                 
                 {selectedPaymentMethod === 'mcx' ? (
                   <Check className="h-5 w-5 text-primary" />
