@@ -891,6 +891,80 @@ export type Database = {
         }
         Relationships: []
       }
+      ekwanza_payments: {
+        Row: {
+          amount: number
+          callback_received_at: string | null
+          created_at: string
+          ekwanza_code: string | null
+          ekwanza_operation_code: string | null
+          expiration_date: string | null
+          id: string
+          mobile_number: string | null
+          paid_at: string | null
+          payment_method: string
+          qr_code_base64: string | null
+          raw_callback: Json | null
+          raw_response: Json | null
+          reference_code: string
+          reference_number: string | null
+          status: string
+          transaction_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          callback_received_at?: string | null
+          created_at?: string
+          ekwanza_code?: string | null
+          ekwanza_operation_code?: string | null
+          expiration_date?: string | null
+          id?: string
+          mobile_number?: string | null
+          paid_at?: string | null
+          payment_method: string
+          qr_code_base64?: string | null
+          raw_callback?: Json | null
+          raw_response?: Json | null
+          reference_code: string
+          reference_number?: string | null
+          status?: string
+          transaction_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          callback_received_at?: string | null
+          created_at?: string
+          ekwanza_code?: string | null
+          ekwanza_operation_code?: string | null
+          expiration_date?: string | null
+          id?: string
+          mobile_number?: string | null
+          paid_at?: string | null
+          payment_method?: string
+          qr_code_base64?: string | null
+          raw_callback?: Json | null
+          raw_response?: Json | null
+          reference_code?: string
+          reference_number?: string | null
+          status?: string
+          transaction_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ekwanza_payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       function_call_audit: {
         Row: {
           called_at: string
