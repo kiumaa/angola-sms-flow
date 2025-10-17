@@ -33,13 +33,19 @@ interface EnhancedPaymentInstructionsProps {
   amount: number;
   isProcessing: boolean;
   onConfirmOrder: () => void;
+  onEkwanzaPayment?: (method: 'qrcode' | 'mcx' | 'referencia', mobileNumber?: string) => void;
+  selectedPaymentMethod?: 'qrcode' | 'mcx' | 'referencia' | 'bank_transfer' | null;
+  onPaymentMethodChange?: (method: 'qrcode' | 'mcx' | 'referencia' | 'bank_transfer') => void;
 }
 
 export const EnhancedPaymentInstructions = ({ 
   bankDetails, 
   amount, 
   isProcessing, 
-  onConfirmOrder 
+  onConfirmOrder,
+  onEkwanzaPayment,
+  selectedPaymentMethod,
+  onPaymentMethodChange
 }: EnhancedPaymentInstructionsProps) => {
   const { toast } = useToast();
   const [showDetails, setShowDetails] = useState(false);

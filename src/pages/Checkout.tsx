@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { CheckoutProgressSteps } from "@/components/checkout/CheckoutProgressSteps";
 import { EnhancedOrderSummary } from "@/components/checkout/EnhancedOrderSummary";
 import { EnhancedPaymentInstructions } from "@/components/checkout/EnhancedPaymentInstructions";
+import { EkwanzaPaymentModal } from "@/components/checkout/EkwanzaPaymentModal";
+import { useEkwanzaPayment, type PaymentMethod } from "@/hooks/useEkwanzaPayment";
+import type { PaymentResponse } from "@/hooks/useEkwanzaPayment";
 import { motion } from "motion/react";
 
 const Checkout = () => {
@@ -19,9 +22,14 @@ const Checkout = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { packages, loading } = usePackages();
-  const { credits } = useUserCredits();
+  const { credits, refresh: refreshCredits } = useUserCredits();
+  const { createPayment, checkPaymentStatus, isCreating } = useEkwanzaPayment();
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | 'bank_transfer' | null>(null);
+  const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
+  const [showEkwanzaModal, setShowEkwanzaModal] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (packages.length > 0 && packageId) {
@@ -30,12 +38,72 @@ const Checkout = () => {
     }
   }, [packages, packageId]);
 
-  const handlePurchase = async () => {
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  const startPolling = (paymentId: string) => {
+    // Poll every 10 seconds
+    const interval = setInterval(async () => {
+      const status = await checkPaymentStatus(paymentId);
+      
+      if (status?.status === 'paid') {
+        clearInterval(interval);
+        setPollingInterval(null);
+        
+        toast({
+          title: "✅ Pagamento Confirmado!",
+          description: "Seus créditos foram adicionados com sucesso.",
+          duration: 5000,
+        });
+        
+        setShowEkwanzaModal(false);
+        refreshCredits();
+        navigate(`/checkout/success/${paymentData?.transaction_id}`);
+      } else if (status?.status === 'expired') {
+        clearInterval(interval);
+        setPollingInterval(null);
+        
+        toast({
+          title: "⏰ Pagamento Expirado",
+          description: "O tempo para completar o pagamento expirou. Crie um novo pagamento.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        
+        setShowEkwanzaModal(false);
+      }
+    }, 10000); // 10 seconds
+    
+    setPollingInterval(interval);
+  };
+
+  const handleEkwanzaPayment = async (paymentMethod: PaymentMethod, mobileNumber?: string) => {
+    if (!selectedPackage || !user) return;
+
+    const payment = await createPayment({
+      package_id: selectedPackage.id,
+      payment_method: paymentMethod,
+      mobile_number: mobileNumber
+    });
+
+    if (payment) {
+      setPaymentData(payment);
+      setShowEkwanzaModal(true);
+      startPolling(payment.payment_id);
+    }
+  };
+
+  const handleBankTransferPayment = async () => {
     if (!selectedPackage || !user) return;
 
     setIsProcessing(true);
     try {
-      // Create transaction record
       const { data, error } = await supabase
         .from('transactions')
         .insert({
@@ -210,11 +278,32 @@ const Checkout = () => {
             <EnhancedPaymentInstructions
               bankDetails={bankDetails}
               amount={selectedPackage.price_kwanza}
-              isProcessing={isProcessing}
-              onConfirmOrder={handlePurchase}
+              isProcessing={isProcessing || isCreating}
+              onConfirmOrder={handleBankTransferPayment}
+              onEkwanzaPayment={handleEkwanzaPayment}
+              selectedPaymentMethod={selectedPaymentMethod}
+              onPaymentMethodChange={setSelectedPaymentMethod}
             />
           </motion.div>
         </div>
+
+        {/* É-kwanza Payment Modal */}
+        <EkwanzaPaymentModal
+          isOpen={showEkwanzaModal}
+          onClose={() => {
+            setShowEkwanzaModal(false);
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              setPollingInterval(null);
+            }
+          }}
+          paymentData={paymentData}
+          onStatusChange={(status) => {
+            if (status === 'paid') {
+              refreshCredits();
+            }
+          }}
+        />
       </motion.div>
     </DashboardLayout>
   );
