@@ -48,21 +48,33 @@ export const useEkwanzaPayment = () => {
 
       if (error) {
         console.error('Error creating É-kwanza payment:', error);
+        
+        // Enhanced error message for network/DNS issues
+        let errorDescription = error.message || "Não foi possível criar o pagamento.";
+        
+        if (error.message?.includes('fetch') || error.message?.includes('network')) {
+          errorDescription = "Falha de conexão com o provedor É-kwanza. Por favor, tente novamente ou use outro método de pagamento.";
+        }
+        
         toast({
           title: "❌ Erro ao Criar Pagamento",
-          description: error.message || "Não foi possível criar o pagamento. Tente novamente.",
+          description: errorDescription,
           variant: "destructive",
-          duration: 5000,
+          duration: 6000,
         });
         return null;
       }
 
       if (!data.success) {
+        // Extract detailed error info if available
+        const errorMsg = data.error || "Não foi possível criar o pagamento.";
+        const suggestionMsg = data.suggestion ? ` ${data.suggestion}` : "";
+        
         toast({
           title: "❌ Erro ao Criar Pagamento",
-          description: data.error || "Não foi possível criar o pagamento.",
+          description: errorMsg + suggestionMsg,
           variant: "destructive",
-          duration: 5000,
+          duration: 6000,
         });
         return null;
       }

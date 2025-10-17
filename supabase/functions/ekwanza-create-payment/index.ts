@@ -154,7 +154,22 @@ serve(async (req) => {
         )
       }
     } catch (error) {
-      console.error('É-kwanza API error:', error)
+      console.error('❌ É-kwanza API error:', error)
+      
+      // Extract detailed error info
+      const errorDetails: any = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        payment_method,
+        reference_code
+      }
+      
+      // Check for DNS/network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorDetails.type = 'network_error'
+        errorDetails.suggestion = 'Verifique a configuração EKWANZA_BASE_URL'
+      }
+      
+      console.error('Error details:', errorDetails)
       
       // Rollback transaction
       await supabaseAdmin
@@ -163,8 +178,10 @@ serve(async (req) => {
         .eq('id', transaction.id)
       
       return new Response(JSON.stringify({ 
-        error: 'Payment creation failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Falha na criação do pagamento É-kwanza',
+        details: errorDetails.message,
+        type: errorDetails.type || 'api_error',
+        suggestion: errorDetails.suggestion
       }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -233,18 +250,40 @@ serve(async (req) => {
   }
 })
 
+// Helper: Get base URL with fallback
+function getBaseUrl(): string {
+  let baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  
+  // Fallback: derive from OAuth URL if base URL is invalid
+  if (!baseUrl || baseUrl.includes('ekz-partnersapi')) {
+    const oauthUrl = Deno.env.get('EKWANZA_OAUTH_URL')
+    if (oauthUrl) {
+      try {
+        const parsedUrl = new URL(oauthUrl)
+        baseUrl = parsedUrl.origin
+        console.log('⚠️  Using fallback baseUrl from OAuth:', baseUrl)
+      } catch (e) {
+        console.error('Failed to parse OAuth URL for fallback:', e)
+      }
+    }
+  }
+  
+  console.log('📍 É-kwanza baseUrl:', baseUrl)
+  return baseUrl || 'https://partnersapi.e-kwanza.ao'
+}
+
 // Helper: Create QR Code payment via Ticket API
 async function createQRCodePayment(
   amount: number,
   referenceCode: string,
   mobileNumber: string
 ): Promise<any> {
-  const baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const baseUrl = getBaseUrl()
   const notificationToken = Deno.env.get('EKWANZA_NOTIFICATION_TOKEN')
   
   const url = `${baseUrl}/Ticket/${notificationToken}?amount=${amount}&referenceCode=${referenceCode}&mobileNumber=${mobileNumber}`
   
-  console.log('Creating QR Code payment:', { amount, referenceCode, mobileNumber })
+  console.log('🎫 Creating QR Code payment:', { amount, referenceCode, mobileNumber, url })
   
   const response = await fetch(url, {
     method: 'POST',
@@ -255,12 +294,12 @@ async function createQRCodePayment(
   
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('QR Code API error:', response.status, errorText)
+    console.error('❌ QR Code API error:', response.status, errorText)
     throw new Error(`É-kwanza QR Code API error: ${response.status}`)
   }
   
   const data = await response.json()
-  console.log('QR Code payment created:', data)
+  console.log('✅ QR Code payment created:', data)
   return data
 }
 
@@ -303,7 +342,7 @@ async function createMCXPayment(
   referenceCode: string,
   mobileNumber: string
 ): Promise<any> {
-  const baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const baseUrl = getBaseUrl()
   const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER')
   const paymentMethodId = Deno.env.get('EKWANZA_GPO_PAYMENT_METHOD')
   
@@ -320,7 +359,7 @@ async function createMCXPayment(
     description: `Créditos SMS AO`
   }
   
-  console.log('Creating MCX payment:', body)
+  console.log('💳 Creating MCX payment:', { body, url })
   
   const response = await fetch(url, {
     method: 'POST',
@@ -333,12 +372,12 @@ async function createMCXPayment(
   
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('MCX API error:', response.status, errorText)
+    console.error('❌ MCX API error:', response.status, errorText)
     throw new Error(`É-kwanza MCX API error: ${response.status}`)
   }
   
   const data = await response.json()
-  console.log('MCX payment created:', data)
+  console.log('✅ MCX payment created:', data)
   return data
 }
 
@@ -347,7 +386,7 @@ async function createReferenciaPayment(
   amount: number,
   referenceCode: string
 ): Promise<any> {
-  const baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const baseUrl = getBaseUrl()
   const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER')
   const paymentMethodId = Deno.env.get('EKWANZA_REF_PAYMENT_METHOD')
   
@@ -363,7 +402,7 @@ async function createReferenciaPayment(
     description: `Créditos SMS AO`
   }
   
-  console.log('Creating Referência payment:', body)
+  console.log('📄 Creating Referência payment:', { body, url })
   
   const response = await fetch(url, {
     method: 'POST',
@@ -376,11 +415,11 @@ async function createReferenciaPayment(
   
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('Referência API error:', response.status, errorText)
+    console.error('❌ Referência API error:', response.status, errorText)
     throw new Error(`É-kwanza Referência API error: ${response.status}`)
   }
   
   const data = await response.json()
-  console.log('Referência payment created:', data)
+  console.log('✅ Referência payment created:', data)
   return data
 }

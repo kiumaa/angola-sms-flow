@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.ekwanza-check-status]
 verify_jwt = true
+
+[functions.ekwanza-network-diagnostics]
+verify_jwt = true

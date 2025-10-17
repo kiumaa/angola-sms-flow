@@ -128,6 +128,7 @@ serve(async (req) => {
         console.log('É-kwanza API status:', apiStatus)
         
         const newStatus = mapEkwanzaStatus(apiStatus.state)
+        let paidAtValue = payment.paid_at
         
         // Update status if changed
         if (newStatus !== payment.status) {
@@ -140,6 +141,7 @@ serve(async (req) => {
           
           if (newStatus === 'paid' && apiStatus.paidAt) {
             updateData.paid_at = apiStatus.paidAt
+            paidAtValue = apiStatus.paidAt
           }
           
           await supabaseAdmin
@@ -159,7 +161,7 @@ serve(async (req) => {
           amount: payment.amount,
           expiration_date: payment.expiration_date,
           created_at: payment.created_at,
-          paid_at: updateData.paid_at || payment.paid_at,
+          paid_at: paidAtValue,
           payment_method: payment.payment_method
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -195,14 +197,35 @@ serve(async (req) => {
   }
 })
 
+// Get base URL with fallback
+function getBaseUrl(): string {
+  let baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  
+  if (!baseUrl || baseUrl.includes('ekz-partnersapi')) {
+    const oauthUrl = Deno.env.get('EKWANZA_OAUTH_URL')
+    if (oauthUrl) {
+      try {
+        const parsedUrl = new URL(oauthUrl)
+        baseUrl = parsedUrl.origin
+        console.log('⚠️  Using fallback baseUrl from OAuth:', baseUrl)
+      } catch (e) {
+        console.error('Failed to parse OAuth URL for fallback:', e)
+      }
+    }
+  }
+  
+  console.log('📍 É-kwanza baseUrl:', baseUrl)
+  return baseUrl || 'https://partnersapi.e-kwanza.ao'
+}
+
 // Check payment status via É-kwanza API
 async function checkEkwanzaStatus(ekwanzaCode: string): Promise<any> {
-  const baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const baseUrl = getBaseUrl()
   const notificationToken = Deno.env.get('EKWANZA_NOTIFICATION_TOKEN')
   
   const url = `${baseUrl}/Ticket/${ekwanzaCode}/State`
   
-  console.log('Checking É-kwanza status for code:', ekwanzaCode)
+  console.log('🔍 Checking É-kwanza status:', { ekwanzaCode, url })
   
   const response = await fetch(url, {
     method: 'GET',
@@ -214,7 +237,7 @@ async function checkEkwanzaStatus(ekwanzaCode: string): Promise<any> {
   
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('É-kwanza status API error:', response.status, errorText)
+    console.error('❌ É-kwanza status API error:', response.status, errorText)
     throw new Error(`É-kwanza status check failed: ${response.status}`)
   }
   
@@ -277,13 +300,14 @@ async function processPaymentConfirmation(supabase: any, payment: any): Promise<
       
       // Log for manual review
       await supabase.from('admin_audit_logs').insert({
-        admin_id: '00000000-0000-0000-0000-000000000000',
+        admin_id: null,
         action: 'ekwanza_polling_credit_add_failed',
         details: { 
           payment_id: payment.id,
           user_id: transaction.user_id,
           credits: transaction.credits_purchased,
-          error: creditError.message
+          error: creditError.message,
+          operation_context: 'system'
         }
       })
     } else {
@@ -291,14 +315,15 @@ async function processPaymentConfirmation(supabase: any, payment: any): Promise<
       
       // Log successful confirmation via polling
       await supabase.from('admin_audit_logs').insert({
-        admin_id: '00000000-0000-0000-0000-000000000000',
+        admin_id: null,
         action: 'ekwanza_polling_confirmed',
         target_user_id: transaction.user_id,
         details: {
           payment_id: payment.id,
           transaction_id: payment.transaction_id,
           credits: transaction.credits_purchased,
-          payment_method: payment.payment_method
+          payment_method: payment.payment_method,
+          operation_context: 'system'
         }
       })
     }
