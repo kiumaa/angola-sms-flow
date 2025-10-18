@@ -178,8 +178,16 @@ serve(async (req) => {
       
       // Map specific error types
       if (error instanceof Error) {
+        const errorMsg = error.message.toLowerCase()
+        
+        // Network/DNS errors (broader detection)
+        if (error instanceof TypeError || 
+            /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error.message)) {
+          errorDetails.type = 'NETWORK'
+          errorDetails.suggestion = 'Tente Multicaixa Express ou Transferência Bancária, ou entre em contato para whitelist de IP.'
+        }
         // 404 Endpoint not found
-        if (error.message.includes('404 ENDPOINT')) {
+        else if (error.message.includes('404 ENDPOINT')) {
           errorDetails.type = 'ENDPOINT_NOT_FOUND'
           errorDetails.suggestion = 'Endpoint de Referência não disponível. Use Multicaixa Express como alternativa.'
         }
@@ -187,11 +195,6 @@ serve(async (req) => {
         else if (error.message.match(/40[013]/)) {
           errorDetails.type = 'PROVIDER_ERROR'
           errorDetails.suggestion = 'Erro do provedor É-kwanza. Verifique configuração.'
-        }
-        // Real network/DNS errors
-        else if (error instanceof TypeError && error.message.includes('Network/DNS error')) {
-          errorDetails.type = 'NETWORK'
-          errorDetails.suggestion = 'Falha ao conectar com o provedor. Pode ser necessário whitelist de IP estático.'
         }
         // Generic API errors
         else if (error.message.includes('API error')) {
@@ -358,10 +361,14 @@ async function createQRCodePayment(
       
       lastError = { baseUrl, status: response.status, text: errorText }
     } catch (error) {
-      // DNS/Network error - try next URL
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.error(`❌ Network error on ${baseUrl}:`, error.message)
-        lastError = { baseUrl, error: 'NETWORK', message: error.message }
+      // Detect DNS/Network errors more broadly
+      const isNetworkError = error instanceof TypeError || 
+        /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error instanceof Error ? error.message : '')
+      
+      if (isNetworkError) {
+        console.error(`❌ Network/DNS error on ${baseUrl}:`, error instanceof Error ? error.message : error)
+        console.log(`🔄 Trying next baseUrl...`)
+        lastError = { baseUrl, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
         continue
       }
       // Re-throw non-network errors
@@ -462,10 +469,14 @@ async function createMCXPayment(
       
       lastError = { baseUrl, status: response.status, text: errorText }
     } catch (error) {
-      // DNS/Network error - try next URL
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.error(`❌ Network error on ${baseUrl}:`, error.message)
-        lastError = { baseUrl, error: 'NETWORK', message: error.message }
+      // Detect DNS/Network errors more broadly
+      const isNetworkError = error instanceof TypeError || 
+        /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error instanceof Error ? error.message : '')
+      
+      if (isNetworkError) {
+        console.error(`❌ Network/DNS error on ${baseUrl}:`, error instanceof Error ? error.message : error)
+        console.log(`🔄 Trying next baseUrl...`)
+        lastError = { baseUrl, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
         continue
       }
       // Re-throw non-network errors
@@ -541,10 +552,14 @@ async function createReferenciaPayment(
           break
         }
       } catch (error) {
-        // DNS/Network error - try next URL
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-          console.error(`❌ Network error on ${baseUrl}:`, error.message)
-          lastError = { baseUrl, path, error: 'NETWORK', message: error.message }
+        // Detect DNS/Network errors more broadly
+        const isNetworkError = error instanceof TypeError || 
+          /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error instanceof Error ? error.message : '')
+        
+        if (isNetworkError) {
+          console.error(`❌ Network/DNS error on ${baseUrl}${path}:`, error instanceof Error ? error.message : error)
+          console.log(`🔄 Trying next baseUrl...`)
+          lastError = { baseUrl, path, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
           break // Try next baseUrl
         }
         // Re-throw non-network errors
