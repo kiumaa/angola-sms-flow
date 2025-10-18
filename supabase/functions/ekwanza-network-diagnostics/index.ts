@@ -55,6 +55,14 @@ serve(async (req) => {
     const resource = Deno.env.get('EKWANZA_RESOURCE')
     const notificationToken = Deno.env.get('EKWANZA_NOTIFICATION_TOKEN')
     
+    // SECURITY: Log sanitized credentials (never log full secrets)
+    console.log('OAuth Config:', {
+      oauth_url: oauthUrl,
+      client_id: clientId?.substring(0, 8) + '***',
+      client_secret: '[REDACTED]',
+      resource: resource
+    })
+    
     // Test 1: OAuth endpoint
     console.log('Testing OAuth endpoint...')
     try {
@@ -64,6 +72,9 @@ serve(async (req) => {
         client_secret: clientSecret!,
         resource: resource!
       })
+      
+      // SECURITY: Never log the full request body with credentials
+      console.log('Requesting OAuth2 token... (credentials redacted)')
       
       const oauthResponse = await fetch(oauthUrl!, {
         method: 'POST',
@@ -130,6 +141,8 @@ serve(async (req) => {
           client_secret: clientSecret!,
           resource: resource!
         })
+        // SECURITY: Never log OAuth request with credentials
+        console.log('Obtaining access token... (credentials redacted)')
         const tokenResp = await fetch(oauthUrl!, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -138,6 +151,7 @@ serve(async (req) => {
         if (tokenResp.ok) {
           const tokenData = await tokenResp.json()
           accessToken = tokenData.access_token
+          console.log('Access token obtained:', accessToken.substring(0, 12) + '***')
         }
       }
       

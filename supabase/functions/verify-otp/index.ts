@@ -114,6 +114,27 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+    
+    // SECURITY: Check attempt limit before validating
+    if (otpRequest && (otpRequest.attempts || 0) >= 5) {
+      console.log(`OTP verification blocked: too many attempts for phone ${phone}`);
+      // Mark OTP as used to prevent further attempts
+      await supabase
+        .from('otp_requests')
+        .update({ used: true })
+        .eq('id', otpRequest.id);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Muitas tentativas de verificação. Solicite um novo código.' 
+        }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     console.log(`OTP verification for ${phone}: found valid OTP = ${!!otpRequest}`);
 
@@ -133,6 +154,25 @@ serve(async (req) => {
 
     if (!otpRequest) {
       console.log(`No valid OTP found for phone ${phone} with provided code`);
+      
+      // SECURITY: Increment attempts on ALL recent OTPs for this phone to prevent timing attacks
+      const { data: recentOtp } = await supabase
+        .from('otp_requests')
+        .select('id, attempts')
+        .eq('phone', phone)
+        .eq('used', false)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (recentOtp) {
+        await supabase
+          .from('otp_requests')
+          .update({ attempts: (recentOtp.attempts || 0) + 1 })
+          .eq('id', recentOtp.id);
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -144,6 +184,12 @@ serve(async (req) => {
         }
       );
     }
+    
+    // SECURITY: Increment attempts counter for successful match
+    await supabase
+      .from('otp_requests')
+      .update({ attempts: (otpRequest.attempts || 0) + 1 })
+      .eq('id', otpRequest.id);
 
     // Mark OTP as used and clean up other OTPs for this phone
     const { error: updateError } = await supabase
