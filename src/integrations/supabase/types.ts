@@ -22,6 +22,7 @@ export type Database = {
           details: Json | null
           id: string
           ip_address: unknown | null
+          operation_context: string | null
           target_user_id: string | null
           user_agent: string | null
         }
@@ -32,6 +33,7 @@ export type Database = {
           details?: Json | null
           id?: string
           ip_address?: unknown | null
+          operation_context?: string | null
           target_user_id?: string | null
           user_agent?: string | null
         }
@@ -42,6 +44,7 @@ export type Database = {
           details?: Json | null
           id?: string
           ip_address?: unknown | null
+          operation_context?: string | null
           target_user_id?: string | null
           user_agent?: string | null
         }

@@ -388,14 +388,21 @@ async function getOAuth2Token(): Promise<string> {
   const clientSecret = Deno.env.get('EKWANZA_CLIENT_SECRET')
   const resource = Deno.env.get('EKWANZA_RESOURCE')
   
+  // SECURITY: Log sanitized credentials (never log full secrets)
+  console.log('OAuth Request Config:', {
+    oauth_url: oauthUrl,
+    client_id: clientId?.substring(0, 8) + '***',
+    client_secret: '[REDACTED]',
+    resource: resource,
+    grant_type: 'client_credentials'
+  })
+  
   const params = new URLSearchParams({
     grant_type: 'client_credentials',
     client_id: clientId!,
     client_secret: clientSecret!,
     resource: resource!
   })
-  
-  console.log('Requesting OAuth2 token...')
   
   const response = await fetch(oauthUrl!, {
     method: 'POST',
@@ -405,7 +412,7 @@ async function getOAuth2Token(): Promise<string> {
   
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('OAuth2 error:', response.status, errorText)
+    console.error('OAuth2 error:', response.status, errorText.substring(0, 100))
     throw new Error(`OAuth2 failed: ${response.status}`)
   }
   
