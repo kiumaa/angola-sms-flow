@@ -5,24 +5,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Get base URL with fallback
-function getBaseUrl(): string {
-  let baseUrl = Deno.env.get('EKWANZA_BASE_URL')
-  
-  if (!baseUrl || baseUrl.includes('ekz-partnersapi')) {
-    const oauthUrl = Deno.env.get('EKWANZA_OAUTH_URL')
-    if (oauthUrl) {
-      try {
-        const parsedUrl = new URL(oauthUrl)
-        baseUrl = parsedUrl.origin
-        console.log('⚠️  Using fallback baseUrl from OAuth:', baseUrl)
-      } catch (e) {
-        console.error('Failed to parse OAuth URL for fallback:', e)
-      }
+// Test DNS resolution for both domains
+async function testDNS(domain: string): Promise<boolean> {
+  try {
+    const response = await fetch(`https://${domain}`, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000) // 5s timeout
+    })
+    return true // DNS resolved if we got any response
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('dns')) {
+      return false // DNS failed
     }
+    return true // Other errors mean DNS worked
   }
-  
-  return baseUrl || 'https://partnersapi.e-kwanza.ao'
 }
 
 serve(async (req) => {
@@ -35,11 +31,24 @@ serve(async (req) => {
     
     const results: any = {
       timestamp: new Date().toISOString(),
-      baseUrl: getBaseUrl(),
-      tests: {}
+      tests: {},
+      dns: {}
     }
     
-    const baseUrl = getBaseUrl()
+    // Test DNS for both domains
+    console.log('Testing DNS resolution...')
+    results.dns.ekz_partnersapi = await testDNS('ekz-partnersapi.e-kwanza.ao')
+    results.dns.partnersapi = await testDNS('partnersapi.e-kwanza.ao')
+    
+    // Use the domain that has working DNS
+    const baseUrl = results.dns.ekz_partnersapi 
+      ? 'https://ekz-partnersapi.e-kwanza.ao'
+      : results.dns.partnersapi
+      ? 'https://partnersapi.e-kwanza.ao'
+      : 'https://ekz-partnersapi.e-kwanza.ao' // fallback to try anyway
+    
+    results.baseUrl = baseUrl
+    
     const oauthUrl = Deno.env.get('EKWANZA_OAUTH_URL')
     const clientId = Deno.env.get('EKWANZA_CLIENT_ID')
     const clientSecret = Deno.env.get('EKWANZA_CLIENT_SECRET')
@@ -228,10 +237,16 @@ serve(async (req) => {
       total_tests: allTests.length,
       errors: errorTests.length,
       dns_errors: dnsErrors.length,
-      health: errorTests.length === 0 ? 'HEALTHY' : 
+      dns_ok_ekz: results.dns.ekz_partnersapi,
+      dns_ok_partners: results.dns.partnersapi,
+      oauth_ok: results.tests.oauth?.ok || false,
+      health: !results.dns.ekz_partnersapi && !results.dns.partnersapi ? 'DNS_FAILURE' :
+              errorTests.length === 0 ? 'HEALTHY' : 
               dnsErrors.length > 0 ? 'DNS_ISSUES' : 'API_ERRORS',
-      recommendation: dnsErrors.length > 0 
-        ? 'Verifique a configuração EKWANZA_BASE_URL. Use: https://partnersapi.e-kwanza.ao'
+      recommendation: !results.dns.ekz_partnersapi && !results.dns.partnersapi
+        ? 'CRÍTICO: Nenhum domínio É-kwanza resolve DNS. Necessário whitelist de IP estático do Supabase.'
+        : dnsErrors.length > 0 
+        ? `Use ${results.dns.ekz_partnersapi ? 'ekz-partnersapi' : 'partnersapi'}.e-kwanza.ao`
         : errorTests.length > 0
         ? 'Endpoints alcançáveis mas com erros de API. Verifique credenciais.'
         : 'Todos os endpoints estão acessíveis.'
