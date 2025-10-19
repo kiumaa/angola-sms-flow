@@ -61,6 +61,15 @@ export const EkwanzaPaymentModal = ({
     });
   };
 
+  // Detect MIME type from base64 signature
+  const detectBase64Mime = (b64: string): string => {
+    if (!b64) return 'image/png';
+    if (b64.startsWith('iVBORw0KGgo')) return 'image/png';
+    if (b64.startsWith('/9j/')) return 'image/jpeg';
+    if (b64.startsWith('Qk')) return 'image/bmp';
+    return 'image/png';
+  };
+
   if (!paymentData) return null;
 
   const getInstructions = () => {
@@ -163,7 +172,7 @@ export const EkwanzaPaymentModal = ({
             >
               <div className="p-4 bg-white rounded-2xl shadow-glow">
                 <img 
-                  src={`data:image/png;base64,${paymentData.qr_code}`}
+                  src={`data:${paymentData.qr_mime_type || detectBase64Mime(paymentData.qr_code)};base64,${paymentData.qr_code}`}
                   alt="QR Code de Pagamento"
                   className="w-64 h-64"
                 />

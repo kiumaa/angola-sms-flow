@@ -29,11 +29,21 @@ function parseMicrosoftJsonDate(dateStr: string | null): string | null {
   return isoDate;
 }
 
+// Helper to detect MIME type from base64 QR code
+function detectQrMimeType(base64: string | null): string {
+  if (!base64) return 'image/png';
+  if (base64.startsWith('iVBORw0KGgo')) return 'image/png';
+  if (base64.startsWith('/9j/')) return 'image/jpeg';
+  if (base64.startsWith('Qk')) return 'image/bmp';
+  return 'image/png';
+}
+
 // Helper function to normalize É-kwanza response field names (case-sensitive API)
 function normalizePaymentResponse(data: any) {
   const normalized = {
     code: data.Code || data.code || null,
     qrCode: data.QRCode || data.qrCode || null,
+    qrMimeType: detectQrMimeType(data.QRCode || data.qrCode),
     operationCode: data.OperationCode || data.operationCode || null,
     referenceNumber: data.ReferenceNumber || data.referenceNumber || null,
     expirationDate: parseMicrosoftJsonDate(data.ExpirationDate || data.expirationDate),
@@ -43,6 +53,7 @@ function normalizePaymentResponse(data: any) {
   console.log('🔄 Normalized É-kwanza response:', {
     hasCode: !!normalized.code,
     hasQRCode: !!normalized.qrCode,
+    qrMimeType: normalized.qrMimeType,
     hasExpiration: !!normalized.expirationDate,
     expirationDate: normalized.expirationDate
   });
@@ -239,31 +250,7 @@ serve(async (req) => {
           mobile_number!
         )
       } else if (payment_method === 'mcx') {
-        // PHASE 3: Test connectivity first
-        const baseUrls = getBaseUrls()
-        const isConnected = await testEkwanzaConnectivity(baseUrls[0], 5000);
-        
-        if (!isConnected) {
-          console.warn('MCX connectivity test failed');
-          
-          // Rollback transaction
-          await supabaseAdmin
-            .from('transactions')
-            .update({ status: 'failed' })
-            .eq('id', transaction.id);
-          
-          return new Response(JSON.stringify({
-            success: false,
-            error: 'NETWORK',
-            message: 'Não foi possível conectar ao servidor É-kwanza',
-            suggestion: 'Verifique sua conexão de internet ou tente Transferência Bancária',
-            details: 'O servidor do É-kwanza pode estar temporariamente indisponível ou seu IP pode precisar ser autorizado'
-          }), { 
-            status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          });
-        }
-        
+        // Let createMCXPayment handle retry/fallback across all domains
         ekwanzaResponse = await createMCXPayment(
           creditPackage.price_kwanza,
           reference_code,
@@ -366,6 +353,7 @@ serve(async (req) => {
       has_expiration: !!normalized.expirationDate,
       expiration_value: normalized.expirationDate,
       has_qr_code: !!normalized.qrCode,
+      qr_mime_type: normalized.qrMimeType,
       ekwanza_code: normalized.code
     });
 
@@ -421,6 +409,7 @@ serve(async (req) => {
       credits: creditPackage.credits,
       ekwanza_code: payment.ekwanza_code,
       qr_code: payment.qr_code_base64,
+      qr_mime_type: normalized.qrMimeType,
       reference_number: payment.reference_number,
       expiration_date: payment.expiration_date,
       reference_code: reference_code

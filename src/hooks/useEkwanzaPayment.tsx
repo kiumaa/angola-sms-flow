@@ -19,6 +19,7 @@ export interface PaymentResponse {
   credits: number;
   ekwanza_code?: string;
   qr_code?: string;
+  qr_mime_type?: string;
   reference_number?: string;
   expiration_date?: string;
   reference_code: string;
