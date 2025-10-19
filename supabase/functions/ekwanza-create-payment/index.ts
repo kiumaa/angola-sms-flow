@@ -12,6 +12,39 @@ interface CreatePaymentRequest {
   mobile_number?: string
 }
 
+// Helper function to normalize É-kwanza response field names (case-sensitive API)
+function normalizePaymentResponse(data: any) {
+  return {
+    code: data.Code || data.code || null,
+    qrCode: data.QRCode || data.qrCode || null,
+    operationCode: data.OperationCode || data.operationCode || null,
+    referenceNumber: data.ReferenceNumber || data.referenceNumber || null,
+    expirationDate: data.ExpirationDate || data.expirationDate || null,
+    message: data.Message || data.message || null
+  }
+}
+
+// Helper function to test É-kwanza connectivity
+async function testEkwanzaConnectivity(baseUrl: string, timeoutMs: number = 5000): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    const response = await fetch(baseUrl, { 
+      method: 'HEAD',
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    // 404 is actually OK - it means we reached the server
+    return response.ok || response.status === 404;
+  } catch (error) {
+    console.error('Connectivity test failed:', error);
+    return false;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -144,6 +177,31 @@ serve(async (req) => {
       reference_code
     })
 
+    // PHASE 2: Check if Referência EMIS is enabled
+    if (payment_method === 'referencia') {
+      const referenciaEnabled = Deno.env.get('ENABLE_REFERENCIA_EMIS') === 'true';
+      
+      if (!referenciaEnabled) {
+        console.log('Referência EMIS is disabled via environment variable');
+        
+        // Rollback transaction
+        await supabaseAdmin
+          .from('transactions')
+          .update({ status: 'failed' })
+          .eq('id', transaction.id);
+        
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'ENDPOINT_NOT_FOUND',
+          message: 'Referência EMIS temporariamente indisponível',
+          suggestion: 'Use Multicaixa Express (MCX) ou Transferência Bancária como alternativa'
+        }), { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        });
+      }
+    }
+
     // Call É-kwanza API based on payment method
     let ekwanzaResponse: any
     
@@ -155,6 +213,31 @@ serve(async (req) => {
           mobile_number!
         )
       } else if (payment_method === 'mcx') {
+        // PHASE 3: Test connectivity first
+        const baseUrls = getBaseUrls()
+        const isConnected = await testEkwanzaConnectivity(baseUrls[0], 5000);
+        
+        if (!isConnected) {
+          console.warn('MCX connectivity test failed');
+          
+          // Rollback transaction
+          await supabaseAdmin
+            .from('transactions')
+            .update({ status: 'failed' })
+            .eq('id', transaction.id);
+          
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'NETWORK',
+            message: 'Não foi possível conectar ao servidor É-kwanza',
+            suggestion: 'Verifique sua conexão de internet ou tente Transferência Bancária',
+            details: 'O servidor do É-kwanza pode estar temporariamente indisponível ou seu IP pode precisar ser autorizado'
+          }), { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
+        
         ekwanzaResponse = await createMCXPayment(
           creditPackage.price_kwanza,
           reference_code,
@@ -235,6 +318,9 @@ serve(async (req) => {
       })
     }
 
+    // PHASE 1: Normalize response from É-kwanza API
+    const normalized = normalizePaymentResponse(ekwanzaResponse);
+
     // Save payment in database
     const { data: payment, error: paymentError } = await supabaseAdmin
       .from('ekwanza_payments')
@@ -245,12 +331,12 @@ serve(async (req) => {
         amount: creditPackage.price_kwanza,
         reference_code: reference_code,
         mobile_number: mobile_number || null,
-        ekwanza_code: ekwanzaResponse.code || null,
-        ekwanza_operation_code: ekwanzaResponse.operationCode || null,
-        qr_code_base64: ekwanzaResponse.qrCode || null,
-        reference_number: ekwanzaResponse.referenceNumber || null,
+        ekwanza_code: normalized.code,
+        ekwanza_operation_code: normalized.operationCode,
+        qr_code_base64: normalized.qrCode,
+        reference_number: normalized.referenceNumber,
         status: 'pending',
-        expiration_date: ekwanzaResponse.expirationDate || null,
+        expiration_date: normalized.expirationDate,
         raw_response: ekwanzaResponse
       })
       .select()
@@ -340,10 +426,16 @@ async function createQRCodePayment(
     console.log('🎫 Attempting QR Code payment:', { baseUrl, referenceCode, mobileNumber })
     
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json()
@@ -371,6 +463,13 @@ async function createQRCodePayment(
         lastError = { baseUrl, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
         continue
       }
+      
+      if (error.name === 'AbortError') {
+        console.error(`❌ Timeout on ${baseUrl}`)
+        lastError = { baseUrl, error: 'TIMEOUT', message: 'Request took too long (>15s)' }
+        continue
+      }
+      
       // Re-throw non-network errors
       throw error
     }
@@ -451,14 +550,20 @@ async function createMCXPayment(
     console.log('💳 Attempting MCX payment:', { baseUrl, merchantNumber, referenceCode })
     
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json()
@@ -486,6 +591,13 @@ async function createMCXPayment(
         lastError = { baseUrl, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
         continue
       }
+      
+      if (error.name === 'AbortError') {
+        console.error(`❌ Timeout on ${baseUrl}`)
+        lastError = { baseUrl, error: 'TIMEOUT', message: 'Request took too long (>15s)' }
+        continue
+      }
+      
       // Re-throw non-network errors
       throw error
     }
@@ -528,6 +640,9 @@ async function createReferenciaPayment(
       console.log(`📄 Attempting Referência payment:`, { baseUrl, path, merchantNumber, referenceCode })
       
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -535,8 +650,11 @@ async function createReferenciaPayment(
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          body: JSON.stringify(body)
+          body: JSON.stringify(body),
+          signal: controller.signal
         })
+        
+        clearTimeout(timeoutId);
         
         if (response.ok) {
           const data = await response.json()
@@ -569,6 +687,13 @@ async function createReferenciaPayment(
           lastError = { baseUrl, path, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
           break // Try next baseUrl
         }
+        
+        if (error.name === 'AbortError') {
+          console.error(`❌ Timeout on ${baseUrl}${path}`)
+          lastError = { baseUrl, path, error: 'TIMEOUT', message: 'Request took too long (>15s)' }
+          break
+        }
+        
         // Re-throw non-network errors
         throw error
       }
