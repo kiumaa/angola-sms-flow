@@ -4,8 +4,11 @@
 
 ### ✅ QR Code É-kwanza (FUNCIONANDO)
 - **Status**: Totalmente funcional
-- **Última atualização**: Janeiro 2025
-- **Observação**: Correção de mapeamento case-sensitive implementada
+- **Última atualização**: Janeiro 2025 (Fase 1 + Correção de Timestamp)
+- **Observações**: 
+  - Correção de mapeamento case-sensitive implementada
+  - **NOVO**: Conversão automática de Microsoft JSON Date para ISO 8601
+  - **NOVO**: Logging detalhado de normalização e validação de datas
 
 ### ⚠️ Multicaixa Express (MCX) - PROBLEMAS DE REDE
 - **Status**: Erro de conectividade/DNS
@@ -33,33 +36,87 @@
 
 ## Problemas Conhecidos
 
-### 1. QR Code Não Aparece no Modal
+### 1. ❌ CRÍTICO: Erro de Timestamp no PostgreSQL (CORRIGIDO)
+**Sintoma**: 
+```
+Error saving payment: invalid input syntax for type timestamp with time zone: "/Date(1760873332995)/"
+```
+
+**Causa Raiz**: A API do É-kwanza retorna datas no formato Microsoft JSON Date:
+```json
+{
+  "ExpirationDate": "/Date(1760873332995)/"
+}
+```
+
+Mas o PostgreSQL requer formato ISO 8601: `2025-10-19T12:08:52.995Z`
+
+**Solução Implementada**:
+1. Função `parseMicrosoftJsonDate()` que extrai timestamp e converte para ISO 8601
+2. Validação de formato com logging de avisos
+3. Tratamento de casos null/inválidos
+4. Logging detalhado da conversão para debugging
+
+**Código da Solução**:
+```typescript
+function parseMicrosoftJsonDate(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+  
+  const match = dateStr.match(/\/Date\((\d+)\)\//);
+  if (!match) {
+    console.warn('⚠️ Date format not recognized:', dateStr);
+    return null;
+  }
+  
+  const timestamp = parseInt(match[1], 10);
+  const isoDate = new Date(timestamp).toISOString();
+  console.log('📅 Date converted:', { original: dateStr, timestamp, iso: isoDate });
+  return isoDate;
+}
+```
+
+**Status**: ✅ Corrigido (Janeiro 2025 - Fase 1)
+
+---
+
+### 2. QR Code Não Aparece no Modal
 **Sintoma**: Pagamento é criado com sucesso mas a imagem do QR code não aparece
 
 **Causa**: A API do É-kwanza retorna campos com capitalização diferente:
 - Retorna: `QRCode` (maiúscula)
 - Código esperava: `qrCode` (camelCase)
 
-**Solução**: Implementada normalização automática de respostas da API
+**Solução**: Implementada normalização automática de respostas da API (incluindo conversão de datas)
 
 **Status**: ✅ Corrigido
 
 ---
 
-### 2. MCX Express - Erro de Rede/DNS
+### 3. MCX Express - Erro de Rede/DNS
 **Sintoma**: 
 ```
-Falha de DNS/conectividade com o provedor É-kwanza
-TypeError: Network error
+Não foi possível conectar ao servidor É-kwanza
+TypeError: Network error / DNS error
 ```
 
 **Causa Raiz**: IP do servidor não autorizado ou problema de DNS
 
-**Diagnósticos Executados**:
+**Diagnósticos Executados** (Fases 2 e 3):
 - ✅ Teste de conectividade antes de criar pagamento
 - ✅ Timeout de 15 segundos implementado
 - ✅ Retry logic com múltiplos baseUrls
+- ✅ Logging detalhado de erros de rede
+- ✅ Mensagens de erro amigáveis ao usuário
 - ❌ Conectividade com `ekz-partnersapi.e-kwanza.ao` falha
+
+**Logs de Diagnóstico**:
+```javascript
+🌐 Network connectivity issue detected: {
+  error_type: "DNS/Network failure",
+  suggestion: "IP whitelist may be required",
+  alternative_methods: ["bank_transfer", "contact_support"]
+}
+```
 
 **Ações Necessárias**:
 1. Contactar É-kwanza e fornecer IP do servidor Lovable
@@ -70,7 +127,7 @@ TypeError: Network error
 
 ---
 
-### 3. Referência EMIS - Endpoint 404
+### 4. Referência EMIS - Endpoint 404
 **Sintoma**: 
 ```
 Referência EMIS temporariamente indisponível
@@ -84,7 +141,10 @@ Referência EMIS temporariamente indisponível
 - Testados 2 baseUrls diferentes
 - Todos retornam 404
 
-**Solução Temporária**: Método desabilitado
+**Solução Temporária** (Fase 2): 
+- Método desabilitado via `ENABLE_REFERENCIA_EMIS=false`
+- Rollback automático de transação quando desabilitado
+- Remoção da opção na interface do usuário
 
 **Ação Futura**: Contactar É-kwanza para confirmar endpoint correto
 
@@ -198,16 +258,25 @@ ENABLE_REFERENCIA_EMIS=false  # Desabilitado por 404
 - Erros de rede vs erros de API
 - Taxa de conversão de pagamentos
 
-### Logs a Observar
-```javascript
-// Logs de sucesso
-"✅ QR Code payment created via https://..."
-"✅ MCX payment created via https://..."
-"OAuth2 token obtained successfully"
+### Logs a Observar (Fase 3 - Logging Detalhado)
 
-// Logs de erro
+**Logs de Sucesso - Com Conversão de Data:**
+```javascript
+"🔄 Normalized É-kwanza response: { hasCode: true, hasQRCode: true, hasExpiration: true }"
+"📅 Date converted: { original: '/Date(1760873332995)/', iso: '2025-10-19T12:08:52.995Z' }"
+"💾 Attempting to save payment to database: { payment_method: 'qrcode', has_expiration: true }"
+"✅ Payment saved to database successfully: fa0aa758-..."
+"✅ QR Code payment created via https://..."
+"OAuth2 token obtained successfully"
+```
+
+**Logs de Erro - Com Detalhamento:**
+```javascript
+"❌ É-kwanza API error: { error: 'dns error', timestamp: '2025-10-19T12:10:44.298Z' }"
+"🌐 Network connectivity issue detected: { error_type: 'DNS/Network failure' }"
+"❌ Error saving payment to database: { code: '22007', message: 'invalid timestamp' }"
+"⚠️ Date format not recognized: '/Date(invalid)/'"
 "❌ Network/DNS error on https://..."
-"❌ MCX failed on https://..."
 "❌ All URLs failed"
 ```
 
@@ -215,12 +284,19 @@ ENABLE_REFERENCIA_EMIS=false  # Desabilitado por 404
 
 ## Histórico de Mudanças
 
-### Janeiro 2025
-- **19/01**: Implementadas todas as 4 fases do plano
+### Janeiro 2025 - Fase de Correção Completa
+- **19/01 (Fase 1)**: Correção CRÍTICA de formato de timestamp
+  - Implementada conversão de Microsoft JSON Date para ISO 8601
+  - Função `parseMicrosoftJsonDate()` com validação e logging
+  - Normalização aprimorada com logs detalhados
+  - Correção de erro PostgreSQL timestamp
+  
+- **19/01 (Fases 2-4)**: Implementadas todas as fases do plano
   - Correção QR Code case-sensitivity
-  - Desativação de Referência EMIS
-  - Melhorias MCX Express com timeouts
-  - Criação desta documentação
+  - Desativação de Referência EMIS com rollback
+  - Melhorias MCX Express com timeouts e conectividade
+  - Logging detalhado em todas as operações
+  - Criação e atualização desta documentação
   
 ### Dezembro 2024
 - Implementação inicial dos 3 métodos de pagamento
@@ -229,11 +305,27 @@ ENABLE_REFERENCIA_EMIS=false  # Desabilitado por 404
 
 ## FAQ
 
+**P: Por que estava a dar erro de timestamp no PostgreSQL?**
+R: A É-kwanza retorna datas no formato Microsoft JSON (`/Date(timestamp)/`) mas o PostgreSQL requer ISO 8601. Implementamos conversão automática via `parseMicrosoftJsonDate()`.
+
+**P: Como posso verificar se a conversão de data está funcionando?**
+R: Procure nos logs por `📅 Date converted:` que mostra a data original e a convertida.
+
 **P: Por que o QR Code funciona mas o MCX não?**
-R: O QR Code usa o endpoint `/Ticket` que não requer OAuth2 e tem menos restrições de IP. O MCX usa `/api/v1/GPO` que é mais restritivo.
+R: O QR Code usa o endpoint `/Ticket` que não requer OAuth2 e tem menos restrições de IP. O MCX usa `/api/v1/GPO` que é mais restritivo e está com problemas de DNS.
 
 **P: Quando a Referência EMIS vai voltar?**
 R: Assim que o É-kwanza confirmar o endpoint correto ou criar a rota `/api/v1/REF`.
 
 **P: É seguro usar Transferência Bancária?**
 R: Sim, é o método mais confiável e não depende de APIs externas.
+
+**P: Como interpretar os novos símbolos nos logs?**
+R: 
+- ✅ = Sucesso
+- ❌ = Erro
+- ⚠️ = Aviso
+- 📅 = Conversão de data
+- 💾 = Operação de banco de dados
+- 🌐 = Problema de rede
+- 🔄 = Normalização de resposta

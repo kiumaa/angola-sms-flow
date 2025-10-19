@@ -12,16 +12,42 @@ interface CreatePaymentRequest {
   mobile_number?: string
 }
 
+// PHASE 1: Helper function to parse Microsoft JSON Date format
+function parseMicrosoftJsonDate(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+  
+  // Formato: /Date(1760873332995)/
+  const match = dateStr.match(/\/Date\((\d+)\)\//);
+  if (!match) {
+    console.warn('⚠️ Date format not recognized:', dateStr);
+    return null;
+  }
+  
+  const timestamp = parseInt(match[1], 10);
+  const isoDate = new Date(timestamp).toISOString();
+  console.log('📅 Date converted:', { original: dateStr, timestamp, iso: isoDate });
+  return isoDate;
+}
+
 // Helper function to normalize É-kwanza response field names (case-sensitive API)
 function normalizePaymentResponse(data: any) {
-  return {
+  const normalized = {
     code: data.Code || data.code || null,
     qrCode: data.QRCode || data.qrCode || null,
     operationCode: data.OperationCode || data.operationCode || null,
     referenceNumber: data.ReferenceNumber || data.referenceNumber || null,
-    expirationDate: data.ExpirationDate || data.expirationDate || null,
+    expirationDate: parseMicrosoftJsonDate(data.ExpirationDate || data.expirationDate),
     message: data.Message || data.message || null
-  }
+  };
+  
+  console.log('🔄 Normalized É-kwanza response:', {
+    hasCode: !!normalized.code,
+    hasQRCode: !!normalized.qrCode,
+    hasExpiration: !!normalized.expirationDate,
+    expirationDate: normalized.expirationDate
+  });
+  
+  return normalized;
 }
 
 // Helper function to test É-kwanza connectivity
@@ -250,13 +276,19 @@ serve(async (req) => {
         )
       }
     } catch (error) {
-      console.error('❌ É-kwanza API error:', error)
+      console.error('❌ É-kwanza API error:', {
+        error: error instanceof Error ? error.message : error,
+        timestamp: new Date().toISOString(),
+        payment_method,
+        reference_code
+      })
       
-      // Extract detailed error info
+      // PHASE 2: Enhanced network error handling
       const errorDetails: any = {
         message: error instanceof Error ? error.message : 'Unknown error',
         payment_method,
-        reference_code
+        reference_code,
+        timestamp: new Date().toISOString()
       }
       
       // Map specific error types
@@ -267,7 +299,13 @@ serve(async (req) => {
         if (error instanceof TypeError || 
             /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error.message)) {
           errorDetails.type = 'NETWORK'
-          errorDetails.suggestion = 'Tente Multicaixa Express ou Transferência Bancária, ou entre em contato para whitelist de IP.'
+          errorDetails.suggestion = 'Verifique sua conexão de internet ou tente Transferência Bancária'
+          
+          console.error('🌐 Network connectivity issue detected:', {
+            error_type: 'DNS/Network failure',
+            suggestion: 'IP whitelist may be required',
+            alternative_methods: ['bank_transfer', 'contact_support']
+          })
         }
         // 404 Endpoint not found
         else if (error.message.includes('404 ENDPOINT')) {
@@ -285,7 +323,7 @@ serve(async (req) => {
         }
       }
       
-      console.error('Error details:', errorDetails)
+      console.error('📋 Error details summary:', errorDetails)
       
       // Rollback transaction
       await supabaseAdmin
@@ -293,7 +331,7 @@ serve(async (req) => {
         .update({ status: 'failed' })
         .eq('id', transaction.id)
       
-      // Build user-friendly response
+      // PHASE 2: Build user-friendly response with clear guidance
       let message = 'Erro ao processar pagamento'
       let suggestion = errorDetails.suggestion
       
@@ -302,8 +340,8 @@ serve(async (req) => {
       } else if (errorDetails.type === 'PROVIDER_ERROR') {
         message = 'Erro do provedor É-kwanza.'
       } else if (errorDetails.type === 'NETWORK') {
-        message = 'Falha de DNS/conectividade com o provedor É-kwanza.'
-        suggestion = 'Tente Multicaixa Express ou Transferência Bancária, ou entre em contato para whitelist de IP.'
+        message = 'Não foi possível conectar ao servidor É-kwanza.'
+        suggestion = 'Verifique sua conexão de internet ou use Transferência Bancária como alternativa.'
       }
       
       // Return 200 with structured error for better frontend handling
@@ -311,15 +349,25 @@ serve(async (req) => {
         success: false,
         error: errorDetails.type || 'API_ERROR',
         message,
-        suggestion
+        suggestion,
+        details: error instanceof Error ? error.message.substring(0, 100) : undefined
       }), {
-        status: 200, // Changed from 502 to 200 for cleaner frontend handling
+        status: 200, // 200 for cleaner frontend handling
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     // PHASE 1: Normalize response from É-kwanza API
     const normalized = normalizePaymentResponse(ekwanzaResponse);
+
+    // PHASE 3: Log payment data before saving to database
+    console.log('💾 Attempting to save payment to database:', {
+      payment_method,
+      has_expiration: !!normalized.expirationDate,
+      expiration_value: normalized.expirationDate,
+      has_qr_code: !!normalized.qrCode,
+      ekwanza_code: normalized.code
+    });
 
     // Save payment in database
     const { data: payment, error: paymentError } = await supabaseAdmin
@@ -343,12 +391,19 @@ serve(async (req) => {
       .single()
 
     if (paymentError || !payment) {
-      console.error('Error saving payment:', paymentError)
+      console.error('❌ Error saving payment to database:', {
+        error: paymentError,
+        code: paymentError?.code,
+        message: paymentError?.message,
+        details: paymentError?.details
+      })
       return new Response(JSON.stringify({ error: 'Error saving payment data' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+    
+    console.log('✅ Payment saved to database successfully:', payment.id);
 
     console.log(`É-kwanza payment created successfully:`, {
       payment_id: payment.id,
