@@ -265,7 +265,39 @@ export const EnhancedPaymentInstructions = ({
               </div>
             </motion.button>
 
-            {/* Referência EMIS - REMOVED: Endpoint 404 */}
+            {/* Referência EMIS - FASE DE TESTES */}
+            <motion.button
+              onClick={() => onPaymentMethodChange?.('referencia')}
+              className={cn(
+                "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left",
+                selectedPaymentMethod === 'referencia'
+                  ? "border-primary bg-primary/10 shadow-glow"
+                  : "border-muted/20 hover:border-primary/50"
+              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-primary">
+                    <Hash className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Referência EMIS</h5>
+                    <p className="text-sm text-muted-foreground">
+                      Pagamento via referência bancária
+                    </p>
+                    <Badge variant="outline" className="mt-1 text-xs">
+                      Em Teste
+                    </Badge>
+                  </div>
+                </div>
+                
+                {selectedPaymentMethod === 'referencia' && (
+                  <Check className="h-5 w-5 text-primary" />
+                )}
+              </div>
+            </motion.button>
           </div>
         </div>
 

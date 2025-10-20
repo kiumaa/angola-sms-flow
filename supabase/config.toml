@@ -71,3 +71,6 @@ verify_jwt = true
 
 [functions.ekwanza-network-diagnostics]
 verify_jwt = true
+
+[functions.get-server-ip]
+verify_jwt = true
