@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EkwanzaPaymentDetailsModal } from "@/components/admin/EkwanzaPaymentDetailsModal";
 import { EkwanzaStatsCards } from "@/components/admin/EkwanzaStatsCards";
+import { EkwanzaIPDiscovery } from "@/components/admin/EkwanzaIPDiscovery";
 
 interface EkwanzaPayment {
   id: string;
@@ -385,12 +386,17 @@ const AdminEkwanzaPayments = () => {
       {/* Tabs */}
       <Tabs value={filter} onValueChange={setFilter}>
         <TabsList>
+          <TabsTrigger value="setup">🚀 Configuração É-kwanza</TabsTrigger>
           <TabsTrigger value="pending">Pendentes ({stats.pending})</TabsTrigger>
           <TabsTrigger value="paid">Pagos ({stats.paid})</TabsTrigger>
           <TabsTrigger value="expired">Expirados ({stats.expired})</TabsTrigger>
           <TabsTrigger value="cancelled">Cancelados ({stats.cancelled})</TabsTrigger>
           <TabsTrigger value="all">Todos ({stats.total})</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="setup" className="mt-6">
+          <EkwanzaIPDiscovery />
+        </TabsContent>
 
         <TabsContent value={filter} className="mt-6">
           <Card>
