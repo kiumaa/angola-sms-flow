@@ -385,8 +385,8 @@ const AdminEkwanzaPayments = () => {
 
       {/* Tabs */}
       <Tabs value={filter} onValueChange={setFilter}>
-        <TabsList>
-          <TabsTrigger value="setup">🚀 Configuração É-kwanza</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="setup">🚀 Configuração</TabsTrigger>
           <TabsTrigger value="pending">Pendentes ({stats.pending})</TabsTrigger>
           <TabsTrigger value="paid">Pagos ({stats.paid})</TabsTrigger>
           <TabsTrigger value="expired">Expirados ({stats.expired})</TabsTrigger>
