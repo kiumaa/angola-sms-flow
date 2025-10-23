@@ -21,7 +21,7 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           operation_context: string | null
           target_user_id: string | null
           user_agent: string | null
@@ -32,7 +32,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           operation_context?: string | null
           target_user_id?: string | null
           user_agent?: string | null
@@ -43,7 +43,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           operation_context?: string | null
           target_user_id?: string | null
           user_agent?: string | null
@@ -86,7 +86,7 @@ export type Database = {
           bypass_reason: string | null
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string
         }
@@ -96,7 +96,7 @@ export type Database = {
           bypass_reason?: string | null
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id: string
         }
@@ -106,7 +106,7 @@ export type Database = {
           bypass_reason?: string | null
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string
         }
@@ -976,7 +976,7 @@ export type Database = {
           execution_time_ms: number | null
           function_name: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           parameters: Json | null
           success: boolean
         }
@@ -987,7 +987,7 @@ export type Database = {
           execution_time_ms?: number | null
           function_name: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           parameters?: Json | null
           success?: boolean
         }
@@ -998,7 +998,7 @@ export type Database = {
           execution_time_ms?: number | null
           function_name?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           parameters?: Json | null
           success?: boolean
         }
@@ -1152,7 +1152,7 @@ export type Database = {
           expires_at: string
           hashed_code: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           phone: string
           used: boolean
           user_id: string | null
@@ -1163,7 +1163,7 @@ export type Database = {
           expires_at?: string
           hashed_code: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           phone: string
           used?: boolean
           user_id?: string | null
@@ -1174,7 +1174,7 @@ export type Database = {
           expires_at?: string
           hashed_code?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           phone?: string
           used?: boolean
           user_id?: string | null
@@ -1246,6 +1246,45 @@ export type Database = {
           },
         ]
       }
+      payment_metrics: {
+        Row: {
+          amount: number | null
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          gateway_response: Json | null
+          id: string
+          payment_method: string
+          response_time_ms: number | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          gateway_response?: Json | null
+          id?: string
+          payment_method: string
+          response_time_ms?: number | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          gateway_response?: Json | null
+          id?: string
+          payment_method?: string
+          response_time_ms?: number | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pii_access_audit: {
         Row: {
           access_type: string
@@ -1253,7 +1292,7 @@ export type Database = {
           accessor_id: string | null
           column_accessed: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           masked_value: string | null
           record_id: string
           table_name: string
@@ -1265,7 +1304,7 @@ export type Database = {
           accessor_id?: string | null
           column_accessed: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           masked_value?: string | null
           record_id: string
           table_name: string
@@ -1277,7 +1316,7 @@ export type Database = {
           accessor_id?: string | null
           column_accessed?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           masked_value?: string | null
           record_id?: string
           table_name?: string
@@ -2070,14 +2109,8 @@ export type Database = {
         Args: { admin_user_id: string; request_id: string }
         Returns: boolean
       }
-      calculate_compliance_score: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      check_admin_rate_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      calculate_compliance_score: { Args: never; Returns: Json }
+      check_admin_rate_limit: { Args: never; Returns: boolean }
       check_rate_limit: {
         Args: {
           action_type: string
@@ -2087,67 +2120,40 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_session_security: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      clean_expired_otps: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_expired_lgpd_requests: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_expired_otps: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_old_campaigns: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_old_data: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_old_sms_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      count_contacts_in_list: {
-        Args: { list_id: string }
-        Returns: number
-      }
-      count_user_contacts: {
-        Args: { _user_id?: string }
-        Returns: number
-      }
-      debit_user_credits: {
-        Args:
-          | {
-              _account_id: string
-              _amount: number
-              _meta?: Json
-              _reason: string
-            }
-          | {
+      check_session_security: { Args: never; Returns: boolean }
+      clean_expired_otps: { Args: never; Returns: number }
+      cleanup_expired_lgpd_requests: { Args: never; Returns: number }
+      cleanup_expired_otps: { Args: never; Returns: number }
+      cleanup_old_campaigns: { Args: never; Returns: number }
+      cleanup_old_data: { Args: never; Returns: number }
+      cleanup_old_sms_logs: { Args: never; Returns: number }
+      count_contacts_in_list: { Args: { list_id: string }; Returns: number }
+      count_user_contacts: { Args: { _user_id?: string }; Returns: number }
+      debit_user_credits:
+        | {
+            Args: {
               _account_id: string
               _credits: number
               _metadata?: Json
               _reference?: string
               _user_id: string
             }
-        Returns: Json
-      }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _account_id: string
+              _amount: number
+              _meta?: Json
+              _reason: string
+            }
+            Returns: boolean
+          }
       decrypt_payment_reference: {
         Args: { encrypted_ref: string }
         Returns: string
       }
-      decrypt_pii: {
-        Args: { encrypted_text: string }
-        Returns: string
-      }
+      decrypt_pii: { Args: { encrypted_text: string }; Returns: string }
       decrypt_smtp_password: {
         Args: { encrypted_password: string }
         Returns: string
@@ -2160,14 +2166,8 @@ export type Database = {
         Args: { p_notification_id: string }
         Returns: number
       }
-      encrypt_payment_reference: {
-        Args: { ref_text: string }
-        Returns: string
-      }
-      encrypt_pii: {
-        Args: { plaintext: string }
-        Returns: string
-      }
+      encrypt_payment_reference: { Args: { ref_text: string }; Returns: string }
+      encrypt_pii: { Args: { plaintext: string }; Returns: string }
       encrypt_smtp_password: {
         Args: { password_text: string }
         Returns: string
@@ -2176,10 +2176,7 @@ export type Database = {
         Args: { password_text: string }
         Returns: string
       }
-      enhanced_sanitize_input: {
-        Args: { input_text: string }
-        Returns: string
-      }
+      enhanced_sanitize_input: { Args: { input_text: string }; Returns: string }
       enhanced_security_rate_limit: {
         Args: {
           max_attempts?: number
@@ -2188,18 +2185,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      export_user_data: {
-        Args: { export_user_id: string }
-        Returns: Json
-      }
-      get_active_gateway_override: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_account_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      export_user_data: { Args: { export_user_id: string }; Returns: Json }
+      get_active_gateway_override: { Args: never; Returns: string }
+      get_current_account_id: { Args: never; Returns: string }
       get_default_sender_id: {
         Args: { account_user_id?: string }
         Returns: string
@@ -2209,7 +2197,7 @@ export type Database = {
         Returns: string
       }
       get_masked_smtp_settings: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           from_email: string
@@ -2227,7 +2215,7 @@ export type Database = {
         }[]
       }
       get_public_brand_settings: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           dark_bg: string
           dark_primary: string
@@ -2246,7 +2234,7 @@ export type Database = {
         }[]
       }
       get_security_monitoring_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           action: string
           affected_tables: string[]
@@ -2260,7 +2248,7 @@ export type Database = {
         Returns: string
       }
       get_smtp_settings_for_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           from_email: string
           from_name: string
@@ -2275,7 +2263,7 @@ export type Database = {
         }[]
       }
       get_smtp_settings_for_edge_function: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           from_email: string
           from_name: string
@@ -2302,10 +2290,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      hash_otp_code: {
-        Args: { code: string }
-        Returns: string
-      }
+      hash_otp_code: { Args: { code: string }; Returns: string }
       log_mfa_bypass_attempt: {
         Args: { attempted_action_param: string; bypass_reason_param?: string }
         Returns: undefined
@@ -2322,22 +2307,10 @@ export type Database = {
         Args: { conversation_id_param: string; is_admin_param?: boolean }
         Returns: undefined
       }
-      mask_email: {
-        Args: { email: string }
-        Returns: string
-      }
-      mask_name: {
-        Args: { name: string }
-        Returns: string
-      }
-      mask_phone: {
-        Args: { phone: string }
-        Returns: string
-      }
-      migrate_sms_credentials_to_secrets: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      mask_email: { Args: { email: string }; Returns: string }
+      mask_name: { Args: { name: string }; Returns: string }
+      mask_phone: { Args: { phone: string }; Returns: string }
+      migrate_sms_credentials_to_secrets: { Args: never; Returns: undefined }
       process_lgpd_request: {
         Args: {
           action: string
@@ -2347,14 +2320,8 @@ export type Database = {
         }
         Returns: Json
       }
-      production_data_cleanup: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      production_system_health_check: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      production_data_cleanup: { Args: never; Returns: number }
+      production_system_health_check: { Args: never; Returns: Json }
       reject_credit_request: {
         Args: { admin_user_id: string; notes?: string; request_id: string }
         Returns: boolean
@@ -2363,22 +2330,13 @@ export type Database = {
         Args: { deletion_reason?: string }
         Returns: string
       }
-      run_all_cleanup_tasks: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      sanitize_html_input: {
-        Args: { input_text: string }
-        Returns: string
-      }
+      run_all_cleanup_tasks: { Args: never; Returns: Json }
+      sanitize_html_input: { Args: { input_text: string }; Returns: string }
       set_gateway_override: {
         Args: { _expires_at?: string; _override_type: string; _reason?: string }
         Returns: string
       }
-      system_health_check: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      system_health_check: { Args: never; Returns: Json }
       update_campaign_stats: {
         Args: { _campaign_id: string }
         Returns: undefined
@@ -2391,26 +2349,11 @@ export type Database = {
         }
         Returns: boolean
       }
-      validate_enhanced_session: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      validate_secure_sms_config: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      validate_security_configuration: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      validate_sms_configuration: {
-        Args: { config_id: string }
-        Returns: Json
-      }
-      validate_user_session: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      validate_enhanced_session: { Args: never; Returns: boolean }
+      validate_secure_sms_config: { Args: never; Returns: Json }
+      validate_security_configuration: { Args: never; Returns: Json }
+      validate_sms_configuration: { Args: { config_id: string }; Returns: Json }
+      validate_user_session: { Args: never; Returns: boolean }
       verify_otp_with_security: {
         Args: { client_ip: unknown; otp_code: string; phone_number: string }
         Returns: boolean

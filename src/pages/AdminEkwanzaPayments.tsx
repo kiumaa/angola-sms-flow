@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EkwanzaPaymentDetailsModal } from "@/components/admin/EkwanzaPaymentDetailsModal";
 import { EkwanzaStatsCards } from "@/components/admin/EkwanzaStatsCards";
 import { EkwanzaIPDiscovery } from "@/components/admin/EkwanzaIPDiscovery";
+import { PaymentHealthDashboard } from "@/components/admin/PaymentHealthDashboard";
 
 interface EkwanzaPayment {
   id: string;
