@@ -386,8 +386,9 @@ const AdminEkwanzaPayments = () => {
 
       {/* Tabs */}
       <Tabs value={filter} onValueChange={setFilter}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="setup">🚀 Configuração</TabsTrigger>
+          <TabsTrigger value="monitoring">📊 Monitoramento</TabsTrigger>
           <TabsTrigger value="pending">Pendentes ({stats.pending})</TabsTrigger>
           <TabsTrigger value="paid">Pagos ({stats.paid})</TabsTrigger>
           <TabsTrigger value="expired">Expirados ({stats.expired})</TabsTrigger>
@@ -397,6 +398,10 @@ const AdminEkwanzaPayments = () => {
 
         <TabsContent value="setup" className="mt-6">
           <EkwanzaIPDiscovery />
+        </TabsContent>
+
+        <TabsContent value="monitoring" className="mt-6">
+          <PaymentHealthDashboard />
         </TabsContent>
 
         <TabsContent value={filter} className="mt-6">
