@@ -197,25 +197,19 @@ serve(async (req) => {
   }
 })
 
-// Get base URL with fallback
+// Get base URL (NEVER use OAuth domain)
 function getBaseUrl(): string {
-  let baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const configuredUrl = Deno.env.get('EKWANZA_BASE_URL')
   
-  if (!baseUrl || baseUrl.includes('ekz-partnersapi')) {
-    const oauthUrl = Deno.env.get('EKWANZA_OAUTH_URL')
-    if (oauthUrl) {
-      try {
-        const parsedUrl = new URL(oauthUrl)
-        baseUrl = parsedUrl.origin
-        console.log('⚠️  Using fallback baseUrl from OAuth:', baseUrl)
-      } catch (e) {
-        console.error('Failed to parse OAuth URL for fallback:', e)
-      }
-    }
+  // Never use OAuth domain
+  if (configuredUrl && !configuredUrl.includes('oauth') && !configuredUrl.includes('login.microsoft')) {
+    console.log('📍 Using EKWANZA_BASE_URL:', configuredUrl)
+    return configuredUrl.replace(/\/$/, '')
   }
   
-  console.log('📍 É-kwanza baseUrl:', baseUrl)
-  return baseUrl || 'https://partnersapi.e-kwanza.ao'
+  // Fallback to known API domains
+  console.log('📍 Using fallback baseUrl: ekz-partnersapi.e-kwanza.ao')
+  return 'https://ekz-partnersapi.e-kwanza.ao'
 }
 
 // Check payment status via É-kwanza API

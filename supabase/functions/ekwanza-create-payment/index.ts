@@ -427,29 +427,29 @@ serve(async (req) => {
   }
 })
 
-// Helper: Get base URLs for retry
+// Helper: Get base URLs for retry (NEVER include OAuth domain)
 function getBaseUrls(): string[] {
-  const baseUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const configuredUrl = Deno.env.get('EKWANZA_BASE_URL')
+  const oauthUrl = Deno.env.get('EKWANZA_OAUTH_URL')
+  
   const urls: string[] = []
   
-  // 1. Use EKWANZA_BASE_URL if explicitly set
-  if (baseUrl) {
-    urls.push(baseUrl)
-    console.log('📍 Using EKWANZA_BASE_URL:', baseUrl)
+  // 1. Priority: Configured URL (if not OAuth domain)
+  if (configuredUrl && !configuredUrl.includes('oauth') && !configuredUrl.includes('login.microsoft')) {
+    urls.push(configuredUrl.replace(/\/$/, ''))
+    console.log('📍 Using EKWANZA_BASE_URL:', configuredUrl)
   }
   
   // 2. Try ekz-partnersapi domain
-  if (!urls.includes('https://ekz-partnersapi.e-kwanza.ao')) {
-    urls.push('https://ekz-partnersapi.e-kwanza.ao')
-  }
+  urls.push('https://ekz-partnersapi.e-kwanza.ao')
   
   // 3. Fallback to partnersapi domain
-  if (!urls.includes('https://partnersapi.e-kwanza.ao')) {
-    urls.push('https://partnersapi.e-kwanza.ao')
-  }
+  urls.push('https://partnersapi.e-kwanza.ao')
   
-  console.log('🔄 Will try URLs in order:', urls)
-  return urls
+  // Remove duplicates
+  const uniqueUrls = [...new Set(urls)]
+  console.log('🔄 Will try URLs in order:', uniqueUrls)
+  return uniqueUrls
 }
 
 // Helper: Create QR Code payment via Ticket API with retry
@@ -467,37 +467,43 @@ async function createQRCodePayment(
   for (const baseUrl of baseUrls) {
     const url = `${baseUrl}${path}`
     
-    console.log('🎫 Attempting QR Code payment:', { baseUrl, referenceCode, mobileNumber })
+    console.log('🔍 Tentando QR Code:', url)
     
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000)
       
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         signal: controller.signal
       })
       
-      clearTimeout(timeoutId);
+      clearTimeout(timeout)
+      
+      console.log(`📡 QR Response status: ${response.status} from ${baseUrl}`)
       
       if (response.ok) {
         const data = await response.json()
-        console.log(`✅ QR Code payment created via ${baseUrl}:`, data)
+        console.log(`✅ QR Code criado com sucesso via ${baseUrl}`)
+        console.log(`📊 QR Data keys: ${Object.keys(data).join(', ')}`)
         return data
+      } else {
+        const errorText = await response.text()
+        console.error(`❌ ${baseUrl} retornou ${response.status}: ${errorText.substring(0, 200)}`)
+        lastError = { status: response.status, body: errorText, url }
       }
-      
-      const errorText = await response.text()
-      console.error(`❌ QR Code failed on ${baseUrl}:`, response.status, errorText.substring(0, 200))
-      
-      // If not a DNS/network error, throw immediately
-      if (response.status !== 404 && response.status < 500) {
-        throw new Error(`É-kwanza QR Code API error: ${response.status}`)
-      }
-      
-      lastError = { baseUrl, status: response.status, text: errorText }
     } catch (error) {
-      // Detect DNS/Network errors more broadly
+      console.error(`❌ Erro ao conectar ${baseUrl}:`, error.message)
+      lastError = { error: error.message, url }
+    }
+  }
+  
+  console.error('❌ TODOS OS ENDPOINTS QR FALHARAM')
+  throw lastError || new Error('Todos os endpoints QR falharam')
       const isNetworkError = error instanceof TypeError || 
         /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error instanceof Error ? error.message : '')
       
@@ -564,7 +570,7 @@ async function getOAuth2Token(): Promise<string> {
   return data.access_token
 }
 
-// Helper: Create Multicaixa Express payment with retry
+// Helper: Create Multicaixa Express payment with retry and multi-path attempts
 async function createMCXPayment(
   amount: number,
   referenceCode: string,
@@ -586,70 +592,70 @@ async function createMCXPayment(
     description: `Créditos SMS AO`
   }
   
+  // Multiple path variants (case-sensitivity)
+  const pathVariants = [
+    '/api/v1/GPO',
+    '/api/v1/gpo',
+    '/api/v1/MCX',
+    '/api/v1/Mcx',
+    '/api/v1/mcx',
+    '/api/v1/payments/mcx'
+  ]
+  
   let lastError: any = null
   
   for (const baseUrl of baseUrls) {
-    const url = `${baseUrl}/api/v1/GPO`
-    
-    console.log('💳 Attempting MCX payment:', { baseUrl, merchantNumber, referenceCode })
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    for (const path of pathVariants) {
+      const url = `${baseUrl}${path}`
+      console.log(`🔍 Tentando MCX: ${url}`)
       
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal
-      })
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log(`✅ MCX payment created via ${baseUrl}:`, data)
-        return data
+      try {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 15000)
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        })
+        
+        clearTimeout(timeout)
+        
+        console.log(`📡 MCX Response: ${response.status} from ${url}`)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log(`✅ MCX FUNCIONA! URL: ${baseUrl}${path}`)
+          console.log(`📝 ATENÇÃO: Fixar EKWANZA_BASE_URL=${baseUrl}`)
+          return data
+        }
+        
+        // Se 404, tentar próximo path
+        if (response.status === 404) {
+          console.log(`⏭️ 404 em ${path}, tentando próximo...`)
+          continue
+        }
+        
+        // Se 4xx diferente de 404, abortar (erro de payload)
+        if (response.status >= 400 && response.status < 500) {
+          const errorText = await response.text()
+          console.error(`🚫 Erro do cliente (${response.status}): ${errorText.substring(0, 200)}`)
+          throw new Error(`MCX error: ${response.status}`)
+        }
+      } catch (error) {
+        console.error(`❌ Falha em ${url}:`, error.message)
+        lastError = { url, error: error.message }
       }
-      
-      const errorText = await response.text()
-      console.error(`❌ MCX failed on ${baseUrl}:`, response.status, errorText.substring(0, 200))
-      
-      // If not a DNS/network error, throw immediately
-      if (response.status !== 404 && response.status < 500) {
-        throw new Error(`É-kwanza MCX API error: ${response.status}`)
-      }
-      
-      lastError = { baseUrl, status: response.status, text: errorText }
-    } catch (error) {
-      // Detect DNS/Network errors more broadly
-      const isNetworkError = error instanceof TypeError || 
-        /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error instanceof Error ? error.message : '')
-      
-      if (isNetworkError) {
-        console.error(`❌ Network/DNS error on ${baseUrl}:`, error instanceof Error ? error.message : error)
-        console.log(`🔄 Trying next baseUrl...`)
-        lastError = { baseUrl, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
-        continue
-      }
-      
-      if (error.name === 'AbortError') {
-        console.error(`❌ Timeout on ${baseUrl}`)
-        lastError = { baseUrl, error: 'TIMEOUT', message: 'Request took too long (>15s)' }
-        continue
-      }
-      
-      // Re-throw non-network errors
-      throw error
     }
   }
   
-  // All URLs failed
-  console.error('❌ All MCX URLs failed:', lastError)
-  throw new TypeError('Network/DNS error: Could not reach É-kwanza API')
+  console.error('❌ MCX INDISPONÍVEL: Todos os endpoints testados falharam')
+  throw new Error('MCX_UNAVAILABLE')
 }
 
 // Helper: Create Referência EMIS payment with retry logic

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, QrCode, Phone, CreditCard, X, Loader2 } from "lucide-react";
+import { Copy, Check, QrCode, Phone, CreditCard, X, Loader2, ExternalLink, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "motion/react";
 import type { PaymentResponse } from "@/hooks/useEkwanzaPayment";
@@ -165,19 +165,79 @@ export const EkwanzaPaymentModal = ({
 
           {/* QR Code (apenas para qrcode) */}
           {paymentData.payment_method === 'qrcode' && paymentData.qr_code && (
-            <motion.div 
-              className="flex justify-center"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <div className="p-4 bg-white rounded-2xl shadow-glow">
-                <img 
-                  src={`data:${paymentData.qr_mime_type || detectBase64Mime(paymentData.qr_code)};base64,${paymentData.qr_code}`}
-                  alt="QR Code de Pagamento"
-                  className="w-64 h-64"
-                />
-              </div>
-            </motion.div>
+            <div className="space-y-4">
+              <motion.div 
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <div className="bg-white p-4 rounded-2xl shadow-glow" style={{ padding: '16px' }}>
+                  <img 
+                    src={`data:${paymentData.qr_mime_type || detectBase64Mime(paymentData.qr_code)};base64,${paymentData.qr_code}`}
+                    alt="QR Code de Pagamento"
+                    className="w-80 h-80"
+                    style={{ 
+                      imageRendering: 'pixelated',
+                      padding: '16px',
+                      backgroundColor: 'white'
+                    }}
+                  />
+                </div>
+                
+                {/* Botões de ação para QR */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const win = window.open()
+                      win?.document.write(`<img src="data:${paymentData.qr_mime_type};base64,${paymentData.qr_code}" style="width:100%;max-width:600px;margin:auto;display:block;padding:32px;background:white;image-rendering:pixelated;">`)
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Ver em Nova Aba
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const link = document.createElement('a')
+                      link.href = `data:${paymentData.qr_mime_type};base64,${paymentData.qr_code}`
+                      link.download = `ekwanza-qr-${paymentData.reference_code}.png`
+                      link.click()
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar QR
+                  </Button>
+                </div>
+              </motion.div>
+              
+              {/* Código numérico para entrada manual */}
+              {paymentData.ekwanza_code && (
+                <motion.div 
+                  className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Código É-kwanza:</span>
+                    <code className="text-lg font-mono font-bold">{paymentData.ekwanza_code}</code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(paymentData.ekwanza_code!, 'code')}
+                    >
+                      {copiedField === 'code' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    💡 Se o QR não funcionar, insira este código manualmente no Multicaixa Express
+                  </p>
+                </motion.div>
+              )}
+            </div>
           )}
 
           {/* Código/Referência (para mcx e referencia) */}
