@@ -504,30 +504,6 @@ async function createQRCodePayment(
   
   console.error('❌ TODOS OS ENDPOINTS QR FALHARAM')
   throw lastError || new Error('Todos os endpoints QR falharam')
-      const isNetworkError = error instanceof TypeError || 
-        /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error instanceof Error ? error.message : '')
-      
-      if (isNetworkError) {
-        console.error(`❌ Network/DNS error on ${baseUrl}:`, error instanceof Error ? error.message : error)
-        console.log(`🔄 Trying next baseUrl...`)
-        lastError = { baseUrl, error: 'NETWORK', message: error instanceof Error ? error.message : 'Network error' }
-        continue
-      }
-      
-      if (error.name === 'AbortError') {
-        console.error(`❌ Timeout on ${baseUrl}`)
-        lastError = { baseUrl, error: 'TIMEOUT', message: 'Request took too long (>15s)' }
-        continue
-      }
-      
-      // Re-throw non-network errors
-      throw error
-    }
-  }
-  
-  // All URLs failed
-  console.error('❌ All QR Code URLs failed:', lastError)
-  throw new TypeError('Network/DNS error: Could not reach É-kwanza API')
 }
 
 // Helper: Get OAuth2 token
