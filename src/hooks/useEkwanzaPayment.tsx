@@ -48,27 +48,11 @@ export const useEkwanzaPayment = () => {
       });
 
       if (error) {
-        console.error('Error creating É-kwanza payment:', error);
-        
-        // If MCX fails, automatically retry with QR Code
-        if (params.payment_method === 'mcx' && 
-            (error.message?.includes('MCX_UNAVAILABLE') || 
-             error.message?.includes('fetch') || 
-             error.message?.includes('404'))) {
-          
-          toast({
-            title: "⚠️ MCX Express Indisponível",
-            description: "Gerando QR Code automaticamente...",
-            duration: 4000,
-          });
-          
-          setIsCreating(false);
-          return createPayment({
-            package_id: params.package_id,
-            payment_method: 'qrcode',
-            mobile_number: params.mobile_number
-          });
-        }
+        console.error('❌ Error creating É-kwanza payment:', {
+          method: params.payment_method,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
         
         // Enhanced error message for network/DNS issues
         let errorDescription = error.message || "Não foi possível criar o pagamento.";
@@ -87,24 +71,6 @@ export const useEkwanzaPayment = () => {
       }
 
       if (!data.success) {
-        // If MCX fails, automatically retry with QR Code
-        if (params.payment_method === 'mcx' && 
-            (data.error === 'MCX_UNAVAILABLE' || data.error === 'API_ERROR' || data.error === 'NETWORK')) {
-          
-          toast({
-            title: "⚠️ MCX Express Indisponível",
-            description: "Gerando QR Code automaticamente...",
-            duration: 4000,
-          });
-          
-          setIsCreating(false);
-          return createPayment({
-            package_id: params.package_id,
-            payment_method: 'qrcode',
-            mobile_number: params.mobile_number
-          });
-        }
-        
         // Map error codes to user-friendly messages
         let title = "❌ Erro ao Criar Pagamento";
         let description = data.message || "Não foi possível criar o pagamento.";
@@ -134,11 +100,37 @@ export const useEkwanzaPayment = () => {
           description += `\n\n💡 ${data.suggestion}`;
         }
         
+        // Log technical details to console for evidence collection
+        const technicalDetails = {
+          payment_method: params.payment_method,
+          error_code: data.error,
+          message: data.message,
+          technical_details: data.technical_details,
+          timestamp: new Date().toISOString(),
+          package_id: params.package_id
+        };
+        
+        console.error('📊 TECHNICAL ERROR DETAILS FOR EKWANZA:', JSON.stringify(technicalDetails, null, 2));
+        
+        // Store in window for easy access
+        (window as any).__lastEkwanzaError = technicalDetails;
+        
         toast({
           title,
           description,
           variant: "destructive",
           duration: 8000,
+          action: data.technical_details ? {
+            label: "📋 Copiar Detalhes",
+            onClick: () => {
+              navigator.clipboard.writeText(JSON.stringify(technicalDetails, null, 2));
+              toast({
+                title: "✅ Detalhes Técnicos Copiados",
+                description: "Cole em um arquivo de texto para enviar ao suporte.",
+                duration: 3000
+              });
+            }
+          } as any : undefined
         });
         return null;
       }
