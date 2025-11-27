@@ -179,17 +179,59 @@ Este documento serve como template para documentar os secrets antes da migraçã
 
 ---
 
-### 4. Email/SMTP (0 secrets configurados atualmente)
+### 4. Email/SMTP (5 secrets necessários)
 
-**⚠️ NOTA:** Não foram encontrados secrets SMTP configurados no Supabase atual. Se o envio de email estiver ativo, os valores podem estar:
-1. Hardcoded nas Edge Functions
-2. Configurados de outra forma
-3. Ainda não implementados
+**⚠️ CONFIGURAÇÃO NECESSÁRIA:** O sistema precisa de envio de emails.
 
-**Ação necessária antes da migração:**
-- Verificar se existe configuração SMTP ativa
-- Documentar valores se existirem
-- Se não existir, planear configuração futura
+#### SMTP_HOST
+- **Tipo:** String (hostname)
+- **Uso:** Servidor SMTP para envio de emails
+- **Usado em:**
+  - `supabase/functions/send-confirmation-email/`
+  - `supabase/functions/confirm-email/`
+- **Valor atual:** `[PREENCHER - ex: smtp.gmail.com, smtp.sendgrid.net]`
+- **Novo valor Lovable Cloud:** `[SERÁ O MESMO]`
+
+#### SMTP_PORT
+- **Tipo:** Number
+- **Uso:** Porta do servidor SMTP
+- **Usado em:** Mesmas funções acima
+- **Valor atual:** `[PREENCHER - ex: 587 (TLS) ou 465 (SSL)]`
+- **Novo valor Lovable Cloud:** `[SERÁ O MESMO]`
+
+#### SMTP_USER
+- **Tipo:** String (email ou username)
+- **Uso:** Username para autenticação SMTP
+- **Usado em:** Mesmas funções acima
+- **Valor atual:** `[PREENCHER - ex: seu@email.com]`
+- **Novo valor Lovable Cloud:** `[SERÁ O MESMO]`
+
+#### SMTP_PASSWORD
+- **Tipo:** String (password ou app password)
+- **Uso:** Password para autenticação SMTP
+- **Usado em:** Mesmas funções acima
+- **Valor atual:** `[PREENCHER - CONFIDENCIAL]`
+- **Novo valor Lovable Cloud:** `[SERÁ O MESMO]`
+- **⚠️ NOTA:** Se usar Gmail, criar App Password específica
+
+#### SMTP_FROM_EMAIL
+- **Tipo:** String (email)
+- **Uso:** Email do remetente
+- **Usado em:** Mesmas funções acima
+- **Valor atual:** `[PREENCHER - ex: noreply@seudominio.com]`
+- **Novo valor Lovable Cloud:** `[SERÁ O MESMO]`
+
+**Providers SMTP Recomendados:**
+- **SendGrid** (gratuito até 100 emails/dia): https://sendgrid.com/
+- **Gmail** (com App Password): https://myaccount.google.com/apppasswords
+- **Mailgun** (gratuito até 5000 emails/mês): https://www.mailgun.com/
+- **Resend** (gratuito até 3000 emails/mês): https://resend.com/
+
+**Como obter credenciais SMTP:**
+1. Escolher provider acima
+2. Criar conta e verificar domínio (se aplicável)
+3. Gerar API Key ou App Password
+4. Preencher valores acima
 
 
 ---
@@ -215,14 +257,16 @@ Este documento serve como template para documentar os secrets antes da migraçã
 - [ ] Preencher todos os valores atuais acima
 - [ ] Verificar acesso aos sistemas externos (BulkSMS, BulkGate, eKwanza)
 - [ ] Validar que todos os secrets estão corretos (testar APIs)
-- [ ] Decidir sobre configuração SMTP (se necessária)
+- [x] Decidir sobre configuração SMTP ✅ **CONFIRMADO: Necessário**
+- [ ] Configurar provider SMTP (SendGrid, Gmail, Mailgun ou Resend)
+- [ ] Obter credenciais SMTP (host, port, user, password, from_email)
 - [ ] Criar backup seguro deste documento (NÃO no git)
 
 ### Durante a Migração
-- [ ] Criar os 17 secrets no Lovable Cloud (excluindo SUPABASE_SERVICE_ROLE_KEY que é automático)
+- [ ] Criar os 22 secrets no Lovable Cloud (17 anteriores + 5 SMTP, excluindo SUPABASE_SERVICE_ROLE_KEY que é automático)
 - [ ] Testar conectividade com cada API externa
 - [ ] Validar que Edge Functions conseguem aceder aos secrets
-- [ ] Configurar SMTP se necessário
+- [ ] Testar envio de email SMTP
 
 ### Após a Migração
 - [ ] Confirmar que todos os serviços funcionam
@@ -287,6 +331,7 @@ Após ativar Lovable Cloud, usar este template para inserir secrets:
 lovable secrets:set BULKSMS_TOKEN_ID="[VALOR]"
 lovable secrets:set BULKSMS_TOKEN_SECRET="[VALOR]"
 lovable secrets:set BULKGATE_API_KEY="[VALOR]"
+lovable secrets:set BULKGATE_APPLICATION_ID="[VALOR]"
 
 # eKwanza - Básico
 lovable secrets:set EKWANZA_CLIENT_ID="[VALOR]"
@@ -309,6 +354,13 @@ lovable secrets:set ENABLE_REFERENCIA_EMIS="[VALOR]"
 
 # Segurança
 lovable secrets:set OTP_PEPPER="[VALOR]"
+
+# SMTP / Email (se configurado)
+lovable secrets:set SMTP_HOST="[VALOR]"
+lovable secrets:set SMTP_PORT="[VALOR]"
+lovable secrets:set SMTP_USER="[VALOR]"
+lovable secrets:set SMTP_PASSWORD="[VALOR]"
+lovable secrets:set SMTP_FROM_EMAIL="[VALOR]"
 
 # Supabase (geridos automaticamente pelo Lovable Cloud)
 # SUPABASE_SERVICE_ROLE_KEY - criado automaticamente
