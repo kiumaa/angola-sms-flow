@@ -38,27 +38,37 @@ Aceder ao Supabase Dashboard e preencher os valores em `docs/migration/secrets-d
 
 ---
 
-### 3. Verificar Dados de Produção
+### 3. Verificar Dados de Produção ✅ AJUDA FORNECIDA
 
-**Executar no Supabase SQL Editor:**
+**Como executar a query de validação:**
 
-```sql
--- Obter contagem de registos para validação pós-migração
-SELECT 
-  'profiles' as table_name, COUNT(*) as count FROM profiles
-UNION ALL
-SELECT 'contacts', COUNT(*) FROM contacts
-UNION ALL
-SELECT 'transactions', COUNT(*) FROM transactions
-UNION ALL
-SELECT 'sms_logs', COUNT(*) FROM sms_logs
-UNION ALL
-SELECT 'campaigns', COUNT(*) FROM campaigns
-UNION ALL
-SELECT 'sender_ids', COUNT(*) FROM sender_ids;
+1. **Abrir SQL Editor do Supabase:**
+   - Aceder: https://supabase.com/dashboard/project/hwxxcprqxqznselwzghi/sql/new
+   - Ou: Supabase Dashboard > SQL Editor > New Query
+
+2. **Copiar query completa:**
+   - Ficheiro criado: `docs/migration/sql-validation-query.sql`
+   - Copiar TODO o conteúdo do ficheiro
+
+3. **Executar:**
+   - Colar no SQL Editor
+   - Clicar em "Run" (ou Ctrl+Enter)
+
+4. **Guardar resultados:**
+   - Copiar TODAS as tabelas de resultados (4 tabelas)
+   - Colar num ficheiro: `validation-pre-migration-2024-11-27.txt`
+   - Guardar num local seguro
+
+**Exemplo do resultado esperado:**
+```
+tabela              total_registos    ativos    info_extra
+profiles            1234              1150      890
+contacts            5678              5500      234
+transactions        890               750       120
+...
 ```
 
-**Guardar resultado para comparação após migração.**
+**⚠️ IMPORTANTE:** Estes números serão usados para validar que NENHUM dado foi perdido na migração.
 
 ---
 
