@@ -814,15 +814,41 @@ async function createMCXPayment(
     }
   })
   
+  // Validar que baseUrl não é o URL de OAuth (erro comum)
+  if (baseUrl.includes('login.microsoftonline.com') || baseUrl.includes('auth.appypay')) {
+    console.error('❌ ERRO CRÍTICO: baseUrl está configurado como URL de OAuth!', {
+      baseUrl,
+      expected: 'https://ekz-partnersapi.e-kwanza.ao'
+    })
+    const error: any = new Error('MCX_CONFIG_MISSING')
+    error.technical_details = {
+      method: 'mcx',
+      error_type: 'invalid_base_url',
+      baseUrl,
+      expected: 'https://ekz-partnersapi.e-kwanza.ao',
+      suggestion: 'Verifique a variável de ambiente EKWANZA_BASE_URL'
+    }
+    throw error
+  }
+  
   // Tentar endpoints: primeiro v2.0/charges (conforme doc), depois /api/v1/GPO (fallback)
   const endpoints = [
     `${baseUrl}/v2.0/charges`, // Endpoint conforme documentação oficial
     `${baseUrl}/api/v1/GPO` // Endpoint alternativo (fallback)
   ]
   
+  // Validar que os endpoints não são URLs de OAuth
+  for (const endpoint of endpoints) {
+    if (endpoint.includes('login.microsoftonline.com') || endpoint.includes('auth.appypay')) {
+      console.error('❌ ERRO CRÍTICO: Endpoint contém URL de OAuth!', { endpoint, baseUrl })
+      throw new Error('MCX_CONFIG_MISSING: Endpoint inválido')
+    }
+  }
+  
   console.log('📤 Request payload:', {
     method: 'POST',
     hasToken: !!accessToken,
+    baseUrl,
     endpoints: endpoints,
     body: { 
       ...body, 
@@ -835,6 +861,12 @@ async function createMCXPayment(
   let lastError: any = null
   
   for (const url of endpoints) {
+    // Validação adicional antes de fazer a requisição
+    if (url.includes('login.microsoftonline.com') || url.includes('auth.appypay')) {
+      console.error('❌ ERRO: Tentando usar URL de OAuth como endpoint de pagamento!', { url })
+      continue // Pular este endpoint inválido
+    }
+    
     console.log(`🔍 Tentando endpoint: ${url}`)
     
     try {
@@ -981,11 +1013,19 @@ async function createMCXPayment(
   
   // Se chegou aqui, todos os endpoints falharam
   console.error('❌ === TODOS OS ENDPOINTS MCX FALHARAM ===')
+  console.error('📋 Endpoints tentados:', endpoints)
+  console.error('📋 Último erro:', lastError)
+  console.error('📋 Base URL usado:', baseUrl)
+  
   const finalError: any = new Error('MCX_ENDPOINT_NOT_FOUND')
   finalError.technical_details = {
     method: 'mcx',
+    base_url: baseUrl,
     endpoints_tried: endpoints,
-    last_error: lastError
+    last_error: lastError,
+    // Validar que não estamos usando URL de OAuth
+    is_oauth_url: baseUrl.includes('login.microsoftonline.com') || baseUrl.includes('auth.appypay'),
+    expected_base_url: 'https://ekz-partnersapi.e-kwanza.ao'
   }
   throw finalError
 }
