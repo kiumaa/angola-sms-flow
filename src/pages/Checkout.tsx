@@ -27,7 +27,8 @@ const Checkout = () => {
   const { createPayment, checkPaymentStatus, isCreating } = useEkwanzaPayment();
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | 'bank_transfer' | null>(null);
+  // MCX Express é o método padrão (gateway principal)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | 'bank_transfer' | null>('mcx');
   const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
   const [showEkwanzaModal, setShowEkwanzaModal] = useState(false);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);

@@ -291,9 +291,30 @@ serve(async (req) => {
           errorDetails.type = 'QR_ENDPOINT_NOT_FOUND'
           errorDetails.suggestion = 'Endpoint /api/v1/Ticket não encontrado. Verifique a configuração da API.'
         }
-        else if (errorMsg === 'MCX_UNAVAILABLE') {
+        // MCX Errors - melhorados
+        else if (errorMsg === 'MCX_UNAVAILABLE' || errorMsg === 'MCX_ENDPOINT_NOT_FOUND') {
           errorDetails.type = 'MCX_ENDPOINT_NOT_FOUND'
-          errorDetails.suggestion = 'Nenhum endpoint MCX (/GPO, /gpo, /MCX) funcionou. Verifique a configuração da API.'
+          errorDetails.suggestion = 'Endpoint MCX Express (/api/v1/GPO) não encontrado. Verifique EKWANZA_BASE_URL e configuração da API.'
+        }
+        else if (errorMsg === 'MCX_CONFIG_MISSING') {
+          errorDetails.type = 'MCX_CONFIG_MISSING'
+          errorDetails.suggestion = 'Configuração MCX incompleta. Verifique EKWANZA_MERCHANT_NUMBER e EKWANZA_GPO_PAYMENT_METHOD.'
+        }
+        else if (errorMsg === 'MCX_OAUTH_FAILED') {
+          errorDetails.type = 'MCX_OAUTH_FAILED'
+          errorDetails.suggestion = 'Falha na autenticação OAuth2. Verifique EKWANZA_OAUTH_URL, CLIENT_ID, CLIENT_SECRET e RESOURCE.'
+        }
+        else if (errorMsg === 'MCX_NETWORK_ERROR' || errorMsg === 'MCX_TIMEOUT') {
+          errorDetails.type = 'MCX_NETWORK_ERROR'
+          errorDetails.suggestion = 'Não foi possível conectar ao servidor É-kwanza. Verifique conectividade ou whitelist de IP.'
+        }
+        else if (errorMsg === 'MCX_UNAUTHORIZED') {
+          errorDetails.type = 'MCX_UNAUTHORIZED'
+          errorDetails.suggestion = 'Token OAuth2 inválido ou expirado. Verifique credenciais OAuth2.'
+        }
+        else if (errorMsg === 'MCX_BAD_REQUEST') {
+          errorDetails.type = 'MCX_BAD_REQUEST'
+          errorDetails.suggestion = 'Requisição inválida. Verifique payload (amount, mobileNumber, referenceCode).'
         }
         else if (errorMsg === 'REF_ENDPOINT_NOT_FOUND') {
           errorDetails.type = 'REF_ENDPOINT_NOT_FOUND'
@@ -336,7 +357,18 @@ serve(async (req) => {
       if (errorDetails.type === 'QR_ENDPOINT_NOT_FOUND') {
         message = 'Endpoint QR Code não encontrado.'
       } else if (errorDetails.type === 'MCX_ENDPOINT_NOT_FOUND') {
-        message = 'Endpoint MCX Express não encontrado.'
+        message = 'Endpoint MCX Express não encontrado. Verifique configuração da API.'
+      } else if (errorDetails.type === 'MCX_CONFIG_MISSING') {
+        message = 'Configuração MCX Express incompleta. Verifique secrets no Supabase.'
+      } else if (errorDetails.type === 'MCX_OAUTH_FAILED') {
+        message = 'Falha na autenticação OAuth2 para MCX Express.'
+      } else if (errorDetails.type === 'MCX_NETWORK_ERROR' || errorDetails.type === 'MCX_TIMEOUT') {
+        message = 'Não foi possível conectar ao servidor É-kwanza (MCX Express).'
+        suggestion = 'Verifique conectividade ou whitelist de IP. Tente novamente em alguns instantes.'
+      } else if (errorDetails.type === 'MCX_UNAUTHORIZED') {
+        message = 'Token OAuth2 inválido para MCX Express. Verifique credenciais.'
+      } else if (errorDetails.type === 'MCX_BAD_REQUEST') {
+        message = 'Requisição inválida para MCX Express. Verifique os dados fornecidos.'
       } else if (errorDetails.type === 'REF_ENDPOINT_NOT_FOUND') {
         message = 'Endpoint de Referência não encontrado (404).'
       } else if (errorDetails.type === 'PROVIDER_ERROR') {
@@ -620,348 +652,391 @@ async function getOAuth2Token(): Promise<string> {
   return data.access_token
 }
 
-// Helper: Create Multicaixa Express payment with retry and multi-path attempts
+// Helper: Create Multicaixa Express payment (MCX Express - Gateway Principal)
+// Conforme documentação oficial v2.5: Gateway de Pagamentos Online (GPO)
 async function createMCXPayment(
   amount: number,
   referenceCode: string,
   mobileNumber: string
 ): Promise<any> {
-  console.log('🎯 === INÍCIO MCX EXPRESS PAYMENT ===')
+  console.log('🎯 === MCX EXPRESS PAYMENT (GATEWAY PRINCIPAL) ===')
   
-  const baseUrls = getBaseUrls()
-  const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER')
-  const paymentMethodId = Deno.env.get('EKWANZA_GPO_PAYMENT_METHOD')
+  const baseUrl = Deno.env.get('EKWANZA_BASE_URL') || 'https://ekz-partnersapi.e-kwanza.ao'
+  const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER') // Nº conta: 01465115
+  const paymentMethodId = Deno.env.get('EKWANZA_GPO_PAYMENT_METHOD') // paymentMethodGPO
+  const apiKey = Deno.env.get('EKWANZA_GPO_API_KEY') || paymentMethodId // ApiKey GPO (mesmo valor que paymentMethodGPO)
   
-  console.log('📋 Configuração MCX:', {
-    amount,
-    referenceCode,
-    mobileNumber,
-    merchantNumber,
-    paymentMethodId
-  })
-  
-  // Get OAuth2 token
-  console.log('🔐 Obtendo OAuth2 token...')
-  const accessToken = await getOAuth2Token()
-  console.log('✅ OAuth2 token obtido:', accessToken ? 'SIM' : 'NÃO')
-  
-  const body = {
-    paymentMethodId: paymentMethodId,
-    amount: amount,
-    referenceCode: referenceCode,
-    mobileNumber: mobileNumber,
-    merchantNumber: merchantNumber,
-    description: `Créditos SMS AO`
-  }
-  
-  // Multiple path variants (case-sensitivity)
-  const pathVariants = [
-    '/api/v1/GPO',
-    '/api/v1/gpo',
-    '/api/v1/MCX',
-    '/api/v1/Mcx',
-    '/api/v1/mcx',
-    '/api/v1/payments/mcx'
-  ]
-  
-  console.log('🌐 Base URLs:', baseUrls)
-  console.log('🛣️ Path variants a testar:', pathVariants)
-  console.log('📤 Request body:', JSON.stringify(body, null, 2))
-  
-  const allAttempts: any[] = []
-  let lastError: any = null
-  
-  for (const baseUrl of baseUrls) {
-    for (const path of pathVariants) {
-      const url = `${baseUrl}${path}`
-      
-      console.log(`\n🔍 Tentando: ${url}`)
-      
-      const attempt: any = {
-        url,
-        base_url: baseUrl,
-        path,
-        timestamp: new Date().toISOString()
-      }
-      
-      try {
-        const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 15000)
-        
-        console.log('📤 Headers:', {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer [TOKEN]'
-        })
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          },
-          body: JSON.stringify(body),
-          signal: controller.signal
-        })
-        
-        clearTimeout(timeout)
-        
-        attempt.status = response.status
-        attempt.headers = Object.fromEntries(response.headers.entries())
-        
-        console.log(`📥 Response status: ${response.status}`)
-        console.log(`📥 Headers:`, attempt.headers)
-        
-        if (response.ok) {
-          const data = await response.json()
-          attempt.success = true
-          attempt.response_keys = Object.keys(data)
-          
-          console.log(`✅ === MCX EXPRESS FUNCIONA! ===`)
-          console.log(`🎉 URL CORRETA: ${url}`)
-          console.log(`📝 IMPORTANTE: Configurar EKWANZA_BASE_URL=${baseUrl}`)
-          console.log(`📝 IMPORTANTE: Path correto: ${path}`)
-          console.log(`📊 Response keys:`, attempt.response_keys)
-          
-          allAttempts.push(attempt)
-          return data
-        }
-        
-        const errorText = await response.text()
-        attempt.success = false
-        attempt.error_body = errorText.substring(0, 500)
-        
-        // Se 404, tentar próximo path
-        if (response.status === 404) {
-          console.log(`⏭️ 404 em ${path}, tentando próximo...`)
-          lastError = attempt
-          allAttempts.push(attempt)
-          continue
-        }
-        
-        // Se 4xx diferente de 404, abortar (erro de payload)
-        if (response.status >= 400 && response.status < 500) {
-          console.error(`🚫 Erro do cliente (${response.status}):`, errorText.substring(0, 300))
-          attempt.abort_reason = 'Client error (not 404)'
-          allAttempts.push(attempt)
-          throw new Error(`MCX error: ${response.status}`)
-        }
-        
-        lastError = attempt
-        allAttempts.push(attempt)
-      } catch (error) {
-        attempt.success = false
-        attempt.error = error instanceof Error ? error.message : String(error)
-        attempt.error_type = error.name
-        
-        console.error(`❌ Exceção:`, {
-          error: attempt.error,
-          type: attempt.error_type
-        })
-        
-        lastError = attempt
-        allAttempts.push(attempt)
-      }
-    }
-  }
-  
-  console.error('❌ === FIM MCX EXPRESS (TODAS TENTATIVAS FALHARAM) ===')
-  console.error('📊 Total de tentativas:', allAttempts.length)
-  console.error('📊 Resumo completo:', JSON.stringify(allAttempts, null, 2))
-  
-  const error: any = new Error('MCX_UNAVAILABLE')
-  error.technical_details = {
-    method: 'mcx',
-    attempts: allAttempts,
-    last_error: lastError,
-    base_urls_tried: baseUrls,
-    paths_tried: pathVariants,
-    total_attempts: allAttempts.length
-  }
-  throw error
-}
-
-// Helper: Create Referência EMIS payment with retry logic
-async function createReferenciaPayment(
-  amount: number,
-  referenceCode: string
-): Promise<any> {
-  console.log('🎯 === INÍCIO REFERÊNCIA EMIS PAYMENT ===')
-  
-  const baseUrls = getBaseUrls()
-  const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER')
-  const paymentMethodId = Deno.env.get('EKWANZA_REF_PAYMENT_METHOD')
-  
-  console.log('📋 Configuração Referência:', {
-    amount,
-    referenceCode,
-    merchantNumber,
-    paymentMethodId
-  })
-  
-  // Get OAuth2 token
-  console.log('🔐 Obtendo OAuth2 token...')
-  const accessToken = await getOAuth2Token()
-  console.log('✅ OAuth2 token obtido:', accessToken ? 'SIM' : 'NÃO')
-  
-  const body = {
-    paymentMethodId: paymentMethodId,
-    amount: amount,
-    referenceCode: referenceCode,
-    merchantNumber: merchantNumber,
-    description: `Créditos SMS AO`
-  }
-  
-  // Try different URL variants (case sensitivity, trailing slash)
-  const pathVariants = ['/api/v1/REF', '/api/v1/Ref', '/api/v1/REF/']
-  
-  console.log('🌐 Base URLs:', baseUrls)
-  console.log('🛣️ Paths a testar:', pathVariants)
-  console.log('📤 Request body:', JSON.stringify(body, null, 2))
-  
-  const allAttempts: any[] = []
-  let lastError: any = null
-  
-  for (const baseUrl of baseUrls) {
-    for (const path of pathVariants) {
-      const url = `${baseUrl}${path}`
-      
-      console.log(`\n🔍 Tentando: ${url}`)
-      
-      const attempt: any = {
-        url,
-        base_url: baseUrl,
-        path,
-        timestamp: new Date().toISOString()
-      }
-      
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        
-        console.log('📤 Headers:', {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer [TOKEN]'
-        })
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(body),
-          signal: controller.signal
-        })
-        
-        clearTimeout(timeoutId);
-        
-        attempt.status = response.status
-        attempt.headers = Object.fromEntries(response.headers.entries())
-        
-        console.log(`📥 Response status: ${response.status}`)
-        console.log(`📥 Headers:`, attempt.headers)
-        
-        if (response.ok) {
-          const data = await response.json()
-          attempt.success = true
-          attempt.response_keys = Object.keys(data)
-          
-          console.log(`✅ === REFERÊNCIA EMIS FUNCIONA! ===`)
-          console.log(`🎉 URL CORRETA: ${url}`)
-          console.log(`📝 IMPORTANTE: Configurar EKWANZA_BASE_URL=${baseUrl}`)
-          console.log(`📝 IMPORTANTE: Path correto: ${path}`)
-          console.log(`📊 Response keys:`, attempt.response_keys)
-          
-          allAttempts.push(attempt)
-          return data
-        }
-        
-        const errorText = await response.text()
-        attempt.success = false
-        attempt.error_body = errorText.substring(0, 500)
-        
-        console.error(`❌ Falha ${response.status}:`, errorText.substring(0, 300))
-        
-        // If not 404 and not 5xx, throw immediately (auth/config error)
-        if (response.status !== 404 && response.status < 500) {
-          attempt.abort_reason = 'Client error (not 404)'
-          allAttempts.push(attempt)
-          throw new Error(`É-kwanza Referência API error: ${response.status}`)
-        }
-        
-        lastError = attempt
-        allAttempts.push(attempt)
-        
-        // If not 404, don't try other path variants for this baseUrl
-        if (response.status !== 404) {
-          break
-        }
-      } catch (error) {
-        // Detect DNS/Network errors more broadly
-        const isNetworkError = error instanceof TypeError || 
-          /dns error|failed to lookup|ENOTFOUND|ECONN|network/i.test(error instanceof Error ? error.message : '')
-        
-        attempt.success = false
-        
-        if (isNetworkError) {
-          attempt.error = 'NETWORK'
-          attempt.error_message = error instanceof Error ? error.message : 'Network error'
-          
-          console.error(`❌ Network/DNS error:`, attempt.error_message)
-          console.log(`🔄 Tentando próximo baseUrl...`)
-          
-          lastError = attempt
-          allAttempts.push(attempt)
-          break // Try next baseUrl
-        }
-        
-        if (error.name === 'AbortError') {
-          attempt.error = 'TIMEOUT'
-          attempt.error_message = 'Request took too long (>15s)'
-          
-          console.error(`❌ Timeout`)
-          
-          lastError = attempt
-          allAttempts.push(attempt)
-          break
-        }
-        
-        // Re-throw non-network errors
-        throw error
-      }
-    }
-  }
-  
-  console.error('❌ === FIM REFERÊNCIA EMIS (TODAS TENTATIVAS FALHARAM) ===')
-  console.error('📊 Total de tentativas:', allAttempts.length)
-  console.error('📊 Resumo completo:', JSON.stringify(allAttempts, null, 2))
-  
-  // Determine error type
-  if (allAttempts.some(a => a.status === 404)) {
-    const error: any = new Error('REF_ENDPOINT_NOT_FOUND')
+  // Validação de configuração obrigatória
+  if (!merchantNumber || !paymentMethodId) {
+    const error: any = new Error('MCX_CONFIG_MISSING')
     error.technical_details = {
-      method: 'referencia',
-      attempts: allAttempts,
-      last_error: lastError,
-      base_urls_tried: baseUrls,
-      paths_tried: pathVariants,
-      total_attempts: allAttempts.length
+      method: 'mcx',
+      missing_config: {
+        merchantNumber: !merchantNumber,
+        paymentMethodId: !paymentMethodId
+      }
     }
     throw error
   }
   
-  const error: any = new TypeError('REF_NETWORK_ERROR')
-  error.technical_details = {
-    method: 'referencia',
-    attempts: allAttempts,
-    last_error: lastError,
-    base_urls_tried: baseUrls,
-    paths_tried: pathVariants,
-    total_attempts: allAttempts.length
+  console.log('📋 Configuração MCX:', {
+    baseUrl,
+    amount,
+    referenceCode,
+    mobileNumber: mobileNumber.substring(0, 4) + '***',
+    merchantNumber,
+    paymentMethodId: paymentMethodId.substring(0, 8) + '***',
+    hasApiKey: !!apiKey
+  })
+  
+  // Get OAuth2 token
+  console.log('🔐 Obtendo OAuth2 token...')
+  let accessToken: string
+  try {
+    accessToken = await getOAuth2Token()
+    console.log('✅ OAuth2 token obtido com sucesso')
+  } catch (error) {
+    console.error('❌ Falha ao obter OAuth2 token:', error)
+    const oauthError: any = new Error('MCX_OAUTH_FAILED')
+    oauthError.technical_details = {
+      method: 'mcx',
+      oauth_error: error instanceof Error ? error.message : String(error)
+    }
+    throw oauthError
   }
-  throw error
+  
+  // Formato do número de telefone (remover + se presente, manter apenas dígitos)
+  const phoneNumber = mobileNumber.replace(/^\+244/, '').replace(/^244/, '').replace(/\D/g, '')
+  
+  // Payload conforme documentação oficial v2.5 - Gateway de Pagamentos Online (GPO)
+  // Formato: { amount, currency, description, merchantTransactionId, paymentMethod, paymentInfo, options }
+  const body = {
+    amount: amount,
+    currency: "AOA",
+    description: "Créditos SMS AO",
+    merchantTransactionId: referenceCode, // ID único da transação
+    paymentMethod: `GPO_${paymentMethodId}`, // Formato: GPO_{paymentMethodId}
+    paymentInfo: {
+      phoneNumber: phoneNumber // Número sem código do país
+    },
+    options: {
+      MerchantIdentifier: merchantNumber, // Nº conta do comerciante
+      ApiKey: apiKey || paymentMethodId // Chave API AppyPay para autenticar comerciante
+    }
+  }
+  
+  // Tentar endpoints: primeiro v2.0/charges (conforme doc), depois /api/v1/GPO (fallback)
+  const endpoints = [
+    `${baseUrl}/v2.0/charges`, // Endpoint conforme documentação oficial
+    `${baseUrl}/api/v1/GPO` // Endpoint alternativo (fallback)
+  ]
+  
+  console.log('📤 Request payload:', {
+    method: 'POST',
+    hasToken: !!accessToken,
+    endpoints: endpoints,
+    body: { 
+      ...body, 
+      paymentInfo: { phoneNumber: phoneNumber.substring(0, 4) + '***' },
+      options: { ...body.options, ApiKey: (apiKey || paymentMethodId).substring(0, 8) + '***' }
+    }
+  })
+  
+  // Tentar ambos os endpoints (v2.0/charges primeiro, depois /api/v1/GPO como fallback)
+  let lastError: any = null
+  
+  for (const url of endpoints) {
+    console.log(`🔍 Tentando endpoint: ${url}`)
+    
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 20000) // 20s timeout
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeout)
+      
+      console.log(`📥 Response status: ${response.status} ${response.statusText}`)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`❌ MCX API Error (${response.status}) em ${url}:`, errorText.substring(0, 500))
+        
+        // Se 404, tentar próximo endpoint
+        if (response.status === 404 && endpoints.indexOf(url) < endpoints.length - 1) {
+          console.log(`⏭️ Endpoint ${url} retornou 404, tentando próximo...`)
+          lastError = { url, status: response.status, error: errorText }
+          continue
+        }
+        
+        // Mapear erros HTTP para códigos específicos
+        let errorCode = 'MCX_API_ERROR'
+        if (response.status === 401) {
+          errorCode = 'MCX_UNAUTHORIZED'
+        } else if (response.status === 404) {
+          errorCode = 'MCX_ENDPOINT_NOT_FOUND'
+        } else if (response.status === 400) {
+          errorCode = 'MCX_BAD_REQUEST'
+        } else if (response.status >= 500) {
+          errorCode = 'MCX_SERVER_ERROR'
+        }
+        
+        const error: any = new Error(errorCode)
+        error.technical_details = {
+          method: 'mcx',
+          http_status: response.status,
+          http_status_text: response.statusText,
+          error_body: errorText.substring(0, 1000),
+          url,
+          request_body: { 
+            ...body, 
+            paymentInfo: { phoneNumber: phoneNumber.substring(0, 4) + '***' },
+            options: { ...body.options, ApiKey: '[REDACTED]' }
+          }
+        }
+        throw error
+      }
+      
+      const data = await response.json()
+      console.log('✅ === MCX EXPRESS PAYMENT CRIADO COM SUCESSO! ===')
+      console.log(`🎉 Endpoint que funcionou: ${url}`)
+      console.log('📊 Response keys:', Object.keys(data))
+      console.log('🎉 Código MCX:', data.Code || data.code || data.ekwanzaTransactionId || 'N/A')
+      
+      // Normalizar resposta (pode vir em formatos diferentes)
+      return {
+        Code: data.Code || data.code || data.ekwanzaTransactionId,
+        OperationCode: data.OperationCode || data.operationCode || data.ekzOperationCode,
+        Message: data.Message || data.message || 'Pagamento criado com sucesso',
+        ExpirationDate: data.ExpirationDate || data.expirationDate
+      }
+      
+    } catch (error) {
+      // Se não é erro de rede, re-throw imediatamente
+      if (error instanceof Error && !error.message.includes('MCX_')) {
+        // Erros de rede/DNS - tentar próximo endpoint
+        if (error.message.includes('fetch') || 
+            error.message.includes('dns') || 
+            error.message.includes('ENOTFOUND') ||
+            error.message.includes('ECONN') ||
+            error.name === 'AbortError') {
+          console.log(`⚠️ Erro ao conectar com ${url}, tentando próximo endpoint...`)
+          lastError = { url, error: error.message }
+          continue
+        }
+      }
+      
+      // Re-throw outros erros
+      throw error
+    }
+  }
+  
+  // Se chegou aqui, todos os endpoints falharam
+  console.error('❌ === TODOS OS ENDPOINTS MCX FALHARAM ===')
+  const finalError: any = new Error('MCX_ENDPOINT_NOT_FOUND')
+  finalError.technical_details = {
+    method: 'mcx',
+    endpoints_tried: endpoints,
+    last_error: lastError
+  }
+  throw finalError
+}
+
+// Helper: Create Referência EMIS payment
+// Conforme documentação oficial v2.5: Pagamento por Referência
+async function createReferenciaPayment(
+  amount: number,
+  referenceCode: string
+): Promise<any> {
+  console.log('🎯 === REFERÊNCIA EMIS PAYMENT ===')
+  
+  const baseUrl = Deno.env.get('EKWANZA_BASE_URL') || 'https://ekz-partnersapi.e-kwanza.ao'
+  const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER')
+  const paymentMethodId = Deno.env.get('EKWANZA_REF_PAYMENT_METHOD')
+  const apiKey = Deno.env.get('EKWANZA_REF_API_KEY') || paymentMethodId // ApiKey REF
+  
+  // Validação de configuração obrigatória
+  if (!merchantNumber || !paymentMethodId) {
+    const error: any = new Error('REF_CONFIG_MISSING')
+    error.technical_details = {
+      method: 'referencia',
+      missing_config: {
+        merchantNumber: !merchantNumber,
+        paymentMethodId: !paymentMethodId
+      }
+    }
+    throw error
+  }
+  
+  console.log('📋 Configuração Referência:', {
+    baseUrl,
+    amount,
+    referenceCode,
+    merchantNumber,
+    paymentMethodId: paymentMethodId.substring(0, 8) + '***',
+    hasApiKey: !!apiKey
+  })
+  
+  // Get OAuth2 token
+  console.log('🔐 Obtendo OAuth2 token...')
+  let accessToken: string
+  try {
+    accessToken = await getOAuth2Token()
+    console.log('✅ OAuth2 token obtido com sucesso')
+  } catch (error) {
+    console.error('❌ Falha ao obter OAuth2 token:', error)
+    const oauthError: any = new Error('REF_OAUTH_FAILED')
+    oauthError.technical_details = {
+      method: 'referencia',
+      oauth_error: error instanceof Error ? error.message : String(error)
+    }
+    throw oauthError
+  }
+  
+  // Payload conforme documentação oficial v2.5 - Pagamento por Referência
+  // Formato: { amount, currency, description, merchantTransactionId, paymentMethod, options }
+  const body = {
+    amount: amount,
+    currency: "AOA",
+    description: "Créditos SMS AO",
+    merchantTransactionId: referenceCode, // ID único da transação
+    paymentMethod: `REF_${paymentMethodId}`, // Formato: REF_{paymentMethodId}
+    options: {
+      MerchantIdentifier: merchantNumber, // Nº conta do comerciante
+      ApiKey: apiKey || paymentMethodId // Chave API AppyPay para autenticar comerciante
+    }
+  }
+  
+  // Tentar endpoints: primeiro v2.0/charges (conforme doc), depois /api/v1/REF (fallback)
+  const endpoints = [
+    `${baseUrl}/v2.0/charges`, // Endpoint conforme documentação oficial
+    `${baseUrl}/api/v1/REF` // Endpoint alternativo (fallback)
+  ]
+  
+  console.log('📤 Request payload:', {
+    method: 'POST',
+    hasToken: !!accessToken,
+    endpoints: endpoints,
+    body: { 
+      ...body, 
+      options: { ...body.options, ApiKey: (apiKey || paymentMethodId).substring(0, 8) + '***' }
+    }
+  })
+  
+  // Tentar ambos os endpoints (v2.0/charges primeiro, depois /api/v1/REF como fallback)
+  let lastError: any = null
+  
+  for (const url of endpoints) {
+    console.log(`🔍 Tentando endpoint: ${url}`)
+    
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 20000) // 20s timeout
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeout)
+      
+      console.log(`📥 Response status: ${response.status} ${response.statusText}`)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`❌ REF API Error (${response.status}) em ${url}:`, errorText.substring(0, 500))
+        
+        // Se 404, tentar próximo endpoint
+        if (response.status === 404 && endpoints.indexOf(url) < endpoints.length - 1) {
+          console.log(`⏭️ Endpoint ${url} retornou 404, tentando próximo...`)
+          lastError = { url, status: response.status, error: errorText }
+          continue
+        }
+        
+        // Mapear erros HTTP para códigos específicos
+        let errorCode = 'REF_API_ERROR'
+        if (response.status === 401) {
+          errorCode = 'REF_UNAUTHORIZED'
+        } else if (response.status === 404) {
+          errorCode = 'REF_ENDPOINT_NOT_FOUND'
+        } else if (response.status === 400) {
+          errorCode = 'REF_BAD_REQUEST'
+        } else if (response.status >= 500) {
+          errorCode = 'REF_SERVER_ERROR'
+        }
+        
+        const error: any = new Error(errorCode)
+        error.technical_details = {
+          method: 'referencia',
+          http_status: response.status,
+          http_status_text: response.statusText,
+          error_body: errorText.substring(0, 1000),
+          url,
+          request_body: { 
+            ...body, 
+            options: { ...body.options, ApiKey: '[REDACTED]' }
+          }
+        }
+        throw error
+      }
+      
+      const data = await response.json()
+      console.log('✅ === REFERÊNCIA EMIS PAYMENT CRIADO COM SUCESSO! ===')
+      console.log(`🎉 Endpoint que funcionou: ${url}`)
+      console.log('📊 Response keys:', Object.keys(data))
+      console.log('🎉 Código REF:', data.Code || data.code || data.referenceNumber || 'N/A')
+      
+      // Normalizar resposta (pode vir em formatos diferentes)
+      return {
+        Code: data.Code || data.code || data.referenceNumber,
+        OperationCode: data.OperationCode || data.operationCode || data.ekzOperationCode,
+        ReferenceNumber: data.ReferenceNumber || data.referenceNumber,
+        Message: data.Message || data.message || 'Referência criada com sucesso',
+        ExpirationDate: data.ExpirationDate || data.expirationDate
+      }
+      
+    } catch (error) {
+      // Se não é erro de rede, re-throw imediatamente
+      if (error instanceof Error && !error.message.includes('REF_')) {
+        // Erros de rede/DNS - tentar próximo endpoint
+        if (error.message.includes('fetch') || 
+            error.message.includes('dns') || 
+            error.message.includes('ENOTFOUND') ||
+            error.message.includes('ECONN') ||
+            error.name === 'AbortError') {
+          console.log(`⚠️ Erro ao conectar com ${url}, tentando próximo endpoint...`)
+          lastError = { url, error: error.message }
+          continue
+        }
+      }
+      
+      // Re-throw outros erros
+      throw error
+    }
+  }
+  
+  // Se chegou aqui, todos os endpoints falharam
+  console.error('❌ === TODOS OS ENDPOINTS REF FALHARAM ===')
+  const finalError: any = new Error('REF_ENDPOINT_NOT_FOUND')
+  finalError.technical_details = {
+    method: 'referencia',
+    endpoints_tried: endpoints,
+    last_error: lastError
+  }
+  throw finalError
 }

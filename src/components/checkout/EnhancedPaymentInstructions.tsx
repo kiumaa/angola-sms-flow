@@ -230,11 +230,11 @@ export const EnhancedPaymentInstructions = ({
               </div>
             </motion.button>
 
-            {/* Multicaixa Express */}
+            {/* Multicaixa Express - GATEWAY PRINCIPAL */}
             <motion.button
               onClick={() => onPaymentMethodChange?.('mcx')}
               className={cn(
-                "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left",
+                "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left relative",
                 selectedPaymentMethod === 'mcx'
                   ? "border-primary bg-primary/10 shadow-glow"
                   : "border-muted/20 hover:border-primary/50"
@@ -242,6 +242,12 @@ export const EnhancedPaymentInstructions = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
+            {/* Badge "Principal" */}
+            {selectedPaymentMethod === 'mcx' && (
+              <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full">
+                PRINCIPAL
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-white/95 dark:bg-white">
@@ -252,9 +258,14 @@ export const EnhancedPaymentInstructions = ({
                   />
                 </div>
                 <div>
-                  <h5 className="font-medium">Multicaixa Express</h5>
+                  <h5 className="font-medium flex items-center gap-2">
+                    Multicaixa Express
+                    {selectedPaymentMethod === 'mcx' && (
+                      <Badge variant="default" className="text-xs">Recomendado</Badge>
+                    )}
+                  </h5>
                   <p className="text-sm text-muted-foreground">
-                    Pagamento via Multicaixa Express
+                    Pagamento rápido e seguro via Multicaixa Express
                   </p>
                 </div>
               </div>
