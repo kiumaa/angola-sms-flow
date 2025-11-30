@@ -16,6 +16,14 @@ interface SMTPTestRequest {
   test_email: string;
 }
 
+interface SMTPSettings {
+  host: string;
+  port: number;
+  from_email: string;
+  username: string;
+  use_tls: boolean;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -41,11 +49,13 @@ const handler = async (req: Request): Promise<Response> => {
     if (!smtpSettings) {
       throw new Error('No active SMTP configuration found');
     }
+
+    const settings = smtpSettings as SMTPSettings;
     
     console.log('Testing SMTP connection with settings:', {
-      host: smtpSettings.host,
-      port: smtpSettings.port,
-      from: smtpSettings.from_email
+      host: settings.host,
+      port: settings.port,
+      from: settings.from_email
     });
 
     // For now, we'll simulate SMTP testing since Deno's SMTP capabilities are limited

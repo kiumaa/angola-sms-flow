@@ -9,6 +9,7 @@ const supabase = createClient(
 interface ContactData {
   phone: string;
   name?: string;
+  email?: string;
   attributes?: Record<string, any>;
   tags?: string[];
 }
