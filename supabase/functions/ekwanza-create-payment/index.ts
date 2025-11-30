@@ -705,8 +705,33 @@ async function createMCXPayment(
     throw oauthError
   }
   
-  // Formato do número de telefone (remover + se presente, manter apenas dígitos)
-  const phoneNumber = mobileNumber.replace(/^\+244/, '').replace(/^244/, '').replace(/\D/g, '')
+  // Formato do número de telefone para MCX Express
+  // A API espera apenas os 9 dígitos (sem código do país, sem espaços)
+  // Exemplo: "923456789" (não "+244923456789" ou "923 456 789")
+  let phoneNumber = mobileNumber.replace(/\s/g, '').replace(/^\+244/, '').replace(/^244/, '').replace(/\D/g, '')
+  
+  // Validar formato angolano (9 dígitos começando com 9)
+  if (!/^9\d{8}$/.test(phoneNumber)) {
+    console.error('❌ Formato de telefone inválido:', { 
+      original: mobileNumber, 
+      cleaned: phoneNumber,
+      expected: '9 dígitos começando com 9 (ex: 923456789)'
+    })
+    const error: any = new Error('MCX_BAD_REQUEST')
+    error.technical_details = {
+      method: 'mcx',
+      error_type: 'invalid_phone_format',
+      original_phone: mobileNumber,
+      cleaned_phone: phoneNumber,
+      expected_format: '9 dígitos começando com 9'
+    }
+    throw error
+  }
+  
+  console.log('📱 Número de telefone formatado:', {
+    original: mobileNumber,
+    formatted: phoneNumber
+  })
   
   // Payload conforme documentação oficial v2.5 - Gateway de Pagamentos Online (GPO)
   // Formato: { amount, currency, description, merchantTransactionId, paymentMethod, paymentInfo, options }
@@ -717,13 +742,25 @@ async function createMCXPayment(
     merchantTransactionId: referenceCode, // ID único da transação
     paymentMethod: `GPO_${paymentMethodId}`, // Formato: GPO_{paymentMethodId}
     paymentInfo: {
-      phoneNumber: phoneNumber // Número sem código do país
+      phoneNumber: phoneNumber // Número sem código do país (9 dígitos: 9XXXXXXXX)
     },
     options: {
       MerchantIdentifier: merchantNumber, // Nº conta do comerciante
       ApiKey: apiKey || paymentMethodId // Chave API AppyPay para autenticar comerciante
     }
   }
+  
+  console.log('📦 Payload MCX completo:', {
+    amount: body.amount,
+    currency: body.currency,
+    merchantTransactionId: body.merchantTransactionId,
+    paymentMethod: body.paymentMethod,
+    paymentInfo: { phoneNumber: phoneNumber.substring(0, 3) + '***' + phoneNumber.slice(-2) },
+    options: {
+      MerchantIdentifier: body.options.MerchantIdentifier,
+      ApiKey: (body.options.ApiKey || '').substring(0, 8) + '***'
+    }
+  })
   
   // Tentar endpoints: primeiro v2.0/charges (conforme doc), depois /api/v1/GPO (fallback)
   const endpoints = [

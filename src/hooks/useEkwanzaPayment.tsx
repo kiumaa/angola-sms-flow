@@ -78,7 +78,54 @@ export const useEkwanzaPayment = () => {
         if (data.error === 'RATE_LIMIT') {
           title = "⏳ Limite Atingido";
           description = data.message || "Limite de tentativas atingido. Aguarde 1 minuto e tente novamente.";
-        } else if (data.error === 'ENDPOINT_NOT_FOUND') {
+        } 
+        // MCX Express Errors
+        else if (data.error === 'MCX_ENDPOINT_NOT_FOUND') {
+          title = "🚫 Endpoint MCX Não Encontrado";
+          description = "O endpoint MCX Express não foi encontrado. Verifique a configuração da API.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        } else if (data.error === 'MCX_CONFIG_MISSING') {
+          title = "⚙️ Configuração Incompleta";
+          description = "Configuração MCX Express incompleta. Verifique os secrets no Supabase.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        } else if (data.error === 'MCX_OAUTH_FAILED') {
+          title = "🔐 Erro de Autenticação";
+          description = "Falha na autenticação OAuth2 para MCX Express. Verifique as credenciais.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        } else if (data.error === 'MCX_NETWORK_ERROR' || data.error === 'MCX_TIMEOUT') {
+          title = "🌐 Erro de Conexão";
+          description = "Não foi possível conectar ao servidor É-kwanza (MCX Express).";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+          description += "\n\nTente novamente em alguns instantes ou use Transferência Bancária como alternativa.";
+        } else if (data.error === 'MCX_UNAUTHORIZED') {
+          title = "🔒 Token Inválido";
+          description = "Token OAuth2 inválido ou expirado. Verifique as credenciais.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        } else if (data.error === 'MCX_BAD_REQUEST') {
+          title = "⚠️ Requisição Inválida";
+          description = "Os dados fornecidos são inválidos. Verifique o número de telefone e valor.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        } else if (data.error === 'MCX_API_ERROR' || data.error === 'MCX_SERVER_ERROR') {
+          title = "⚠️ Erro do Servidor";
+          description = "O servidor É-kwanza retornou um erro. Tente novamente em alguns instantes.";
+          if (data.details) {
+            description += `\n\nDetalhes: ${data.details.substring(0, 100)}`;
+          }
+        }
+        // Referência EMIS Errors
+        else if (data.error === 'ENDPOINT_NOT_FOUND' || data.error === 'REF_ENDPOINT_NOT_FOUND') {
           title = "🚫 Rota de Referência Indisponível";
           description = "O endpoint de Referência EMIS não está disponível no momento. Tente Multicaixa Express ou Transferência Bancária como alternativa.";
           if (data.suggestion) {

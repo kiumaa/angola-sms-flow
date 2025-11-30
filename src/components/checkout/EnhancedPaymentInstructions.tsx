@@ -109,7 +109,9 @@ export const EnhancedPaymentInstructions = ({
     }
     
     if (onEkwanzaPayment) {
-      onEkwanzaPayment(selectedPaymentMethod, mobileNumber || undefined);
+      // Limpar número de telefone antes de enviar (remover espaços)
+      const cleanedMobileNumber = mobileNumber.replace(/\s/g, '');
+      onEkwanzaPayment(selectedPaymentMethod, cleanedMobileNumber || undefined);
     }
   };
 
