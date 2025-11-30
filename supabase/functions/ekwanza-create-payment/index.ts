@@ -40,14 +40,15 @@ function detectQrMimeType(base64: string | null): string {
 
 // Helper function to normalize É-kwanza response field names (case-sensitive API)
 function normalizePaymentResponse(data: any) {
+  // Suportar diferentes formatos de resposta (QR Code, MCX, REF)
   const normalized = {
-    code: data.Code || data.code || null,
+    code: data.Code || data.code || data.ekwanzaTransactionId || data.merchantTransactionId || null,
     qrCode: data.QRCode || data.qrCode || null,
     qrMimeType: detectQrMimeType(data.QRCode || data.qrCode),
-    operationCode: data.OperationCode || data.operationCode || null,
+    operationCode: data.OperationCode || data.operationCode || data.ekzOperationCode || null,
     referenceNumber: data.ReferenceNumber || data.referenceNumber || null,
-    expirationDate: parseMicrosoftJsonDate(data.ExpirationDate || data.expirationDate),
-    message: data.Message || data.message || null
+    expirationDate: parseMicrosoftJsonDate(data.ExpirationDate || data.expirationDate || data.expiresAt),
+    message: data.Message || data.message || data.statusMessage || null
   };
   
   console.log('🔄 Normalized É-kwanza response:', {
@@ -55,7 +56,9 @@ function normalizePaymentResponse(data: any) {
     hasQRCode: !!normalized.qrCode,
     qrMimeType: normalized.qrMimeType,
     hasExpiration: !!normalized.expirationDate,
-    expirationDate: normalized.expirationDate
+    expirationDate: normalized.expirationDate,
+    hasOperationCode: !!normalized.operationCode,
+    hasReferenceNumber: !!normalized.referenceNumber
   });
   
   return normalized;
@@ -395,6 +398,36 @@ serve(async (req) => {
     // PHASE 1: Normalize response from É-kwanza API
     const normalized = normalizePaymentResponse(ekwanzaResponse);
 
+    // Validar que temos pelo menos um código de identificação
+    if (!normalized.code) {
+      console.error('❌ Resposta da API não contém código de identificação:', {
+        ekwanzaResponse,
+        normalized,
+        payment_method
+      })
+      
+      // Rollback transaction
+      await supabaseAdmin
+        .from('transactions')
+        .update({ status: 'failed' })
+        .eq('id', transaction.id)
+      
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'INVALID_RESPONSE',
+        message: 'A resposta da API É-kwanza não contém um código de identificação válido.',
+        suggestion: 'Tente novamente ou use outro método de pagamento.',
+        technical_details: {
+          payment_method,
+          response_keys: Object.keys(ekwanzaResponse || {}),
+          normalized
+        }
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     // PHASE 3: Log payment data before saving to database
     console.log('💾 Attempting to save payment to database:', {
       payment_method,
@@ -402,7 +435,8 @@ serve(async (req) => {
       expiration_value: normalized.expirationDate,
       has_qr_code: !!normalized.qrCode,
       qr_mime_type: normalized.qrMimeType,
-      ekwanza_code: normalized.code
+      ekwanza_code: normalized.code,
+      operation_code: normalized.operationCode
     });
 
     // Save payment in database
@@ -431,10 +465,28 @@ serve(async (req) => {
         error: paymentError,
         code: paymentError?.code,
         message: paymentError?.message,
-        details: paymentError?.details
+        details: paymentError?.details,
+        normalized_code: normalized.code
       })
-      return new Response(JSON.stringify({ error: 'Error saving payment data' }), {
-        status: 500,
+      
+      // Rollback transaction
+      await supabaseAdmin
+        .from('transactions')
+        .update({ status: 'failed' })
+        .eq('id', transaction.id)
+      
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'DATABASE_ERROR',
+        message: 'Erro ao salvar dados do pagamento no banco de dados.',
+        suggestion: 'Tente novamente. Se o problema persistir, entre em contato com o suporte.',
+        technical_details: {
+          payment_method,
+          error_code: paymentError?.code,
+          error_message: paymentError?.message
+        }
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
@@ -805,7 +857,13 @@ async function createMCXPayment(
       console.log(`📥 Response status: ${response.status} ${response.statusText}`)
       
       if (!response.ok) {
-        const errorText = await response.text()
+        let errorText: string
+        try {
+          errorText = await response.text()
+        } catch (textError) {
+          errorText = `Erro ao ler resposta: ${textError instanceof Error ? textError.message : String(textError)}`
+        }
+        
         console.error(`❌ MCX API Error (${response.status}) em ${url}:`, errorText.substring(0, 500))
         
         // Se 404, tentar próximo endpoint
@@ -813,6 +871,17 @@ async function createMCXPayment(
           console.log(`⏭️ Endpoint ${url} retornou 404, tentando próximo...`)
           lastError = { url, status: response.status, error: errorText }
           continue
+        }
+        
+        // Tentar fazer parse do erro como JSON para obter mais detalhes
+        let errorData: any = null
+        try {
+          if (errorText && errorText.trim().startsWith('{')) {
+            errorData = JSON.parse(errorText)
+            console.log('📋 Error response parsed:', errorData)
+          }
+        } catch (parseErr) {
+          // Não é JSON, usar texto como está
         }
         
         // Mapear erros HTTP para códigos específicos
@@ -833,6 +902,7 @@ async function createMCXPayment(
           http_status: response.status,
           http_status_text: response.statusText,
           error_body: errorText.substring(0, 1000),
+          error_data: errorData,
           url,
           request_body: { 
             ...body, 
@@ -843,19 +913,51 @@ async function createMCXPayment(
         throw error
       }
       
-      const data = await response.json()
-      console.log('✅ === MCX EXPRESS PAYMENT CRIADO COM SUCESSO! ===')
-      console.log(`🎉 Endpoint que funcionou: ${url}`)
-      console.log('📊 Response keys:', Object.keys(data))
-      console.log('🎉 Código MCX:', data.Code || data.code || data.ekwanzaTransactionId || 'N/A')
-      
-      // Normalizar resposta (pode vir em formatos diferentes)
-      return {
-        Code: data.Code || data.code || data.ekwanzaTransactionId,
-        OperationCode: data.OperationCode || data.operationCode || data.ekzOperationCode,
-        Message: data.Message || data.message || 'Pagamento criado com sucesso',
-        ExpirationDate: data.ExpirationDate || data.expirationDate
+      // Tentar fazer parse do JSON
+      let data: any
+      try {
+        const responseText = await response.text()
+        console.log('📥 Response body (first 500 chars):', responseText.substring(0, 500))
+        
+        if (!responseText || responseText.trim() === '') {
+          console.error('❌ Response body está vazio')
+          throw new Error('MCX_API_ERROR: Response body is empty')
+        }
+        
+        data = JSON.parse(responseText)
+        console.log('✅ === MCX EXPRESS PAYMENT CRIADO COM SUCESSO! ===')
+        console.log(`🎉 Endpoint que funcionou: ${url}`)
+        console.log('📊 Response keys:', Object.keys(data))
+        console.log('📊 Response data completo:', JSON.stringify(data, null, 2))
+        console.log('🎉 Código MCX:', data.Code || data.code || data.ekwanzaTransactionId || data.merchantTransactionId || 'N/A')
+      } catch (parseError) {
+        console.error('❌ Erro ao fazer parse do JSON:', parseError)
+        const parseErr: any = new Error('MCX_API_ERROR')
+        parseErr.technical_details = {
+          method: 'mcx',
+          error_type: 'json_parse_error',
+          parse_error: parseError instanceof Error ? parseError.message : String(parseError),
+          url,
+          response_status: response.status
+        }
+        throw parseErr
       }
+      
+      // Normalizar resposta (pode vir em formatos diferentes da API v2.5)
+      // A resposta pode ter diferentes estruturas dependendo do endpoint
+      const normalizedResponse = {
+        Code: data.Code || data.code || data.ekwanzaTransactionId || data.merchantTransactionId || null,
+        OperationCode: data.OperationCode || data.operationCode || data.ekzOperationCode || data.operationCode || null,
+        Message: data.Message || data.message || data.statusMessage || 'Pagamento criado com sucesso',
+        ExpirationDate: data.ExpirationDate || data.expirationDate || data.expiresAt || null,
+        // Campos adicionais que podem vir na resposta
+        ReferenceNumber: data.ReferenceNumber || data.referenceNumber || null,
+        Status: data.Status || data.status || null
+      }
+      
+      console.log('🔄 Resposta normalizada:', normalizedResponse)
+      
+      return normalizedResponse
       
     } catch (error) {
       // Se não é erro de rede, re-throw imediatamente

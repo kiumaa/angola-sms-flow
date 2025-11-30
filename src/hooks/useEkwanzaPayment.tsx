@@ -123,6 +123,18 @@ export const useEkwanzaPayment = () => {
           if (data.details) {
             description += `\n\nDetalhes: ${data.details.substring(0, 100)}`;
           }
+        } else if (data.error === 'INVALID_RESPONSE') {
+          title = "⚠️ Resposta Inválida";
+          description = "A resposta da API É-kwanza não contém os dados esperados.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        } else if (data.error === 'DATABASE_ERROR') {
+          title = "💾 Erro no Banco de Dados";
+          description = "Erro ao salvar dados do pagamento. Tente novamente.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
         }
         // Referência EMIS Errors
         else if (data.error === 'ENDPOINT_NOT_FOUND' || data.error === 'REF_ENDPOINT_NOT_FOUND') {
