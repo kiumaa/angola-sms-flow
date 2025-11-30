@@ -60,6 +60,18 @@ export const EnhancedPaymentInstructions = ({
   const [mobileNumber, setMobileNumber] = useState('');
   const [mobileError, setMobileError] = useState('');
 
+  // Validação de props
+  if (!amount || amount <= 0) {
+    console.error('❌ Amount inválido:', amount);
+    return (
+      <Card className="card-futuristic">
+        <CardContent className="pt-6">
+          <p className="text-destructive">Erro: Valor inválido. Por favor, recarregue a página.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
@@ -91,27 +103,83 @@ export const EnhancedPaymentInstructions = ({
   };
 
   const handleConfirmPayment = () => {
-    if (!selectedPaymentMethod) return;
-    
-    if (selectedPaymentMethod === 'bank_transfer') {
-      onConfirmOrder();
-      return;
-    }
-    
-    // Validar telefone para QR Code e MCX
-    if ((selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx') && !mobileNumber) {
-      setMobileError('Número de telefone é obrigatório');
-      return;
-    }
-    
-    if ((selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx') && !validatePhone(mobileNumber)) {
-      return;
-    }
-    
-    if (onEkwanzaPayment) {
-      // Limpar número de telefone antes de enviar (remover espaços)
-      const cleanedMobileNumber = mobileNumber.replace(/\s/g, '');
-      onEkwanzaPayment(selectedPaymentMethod, cleanedMobileNumber || undefined);
+    try {
+      if (!selectedPaymentMethod) {
+        console.warn('⚠️ Nenhum método de pagamento selecionado');
+        toast({
+          title: "⚠️ Método Não Selecionado",
+          description: "Por favor, selecione um método de pagamento.",
+          variant: "destructive",
+          duration: 4000,
+        });
+        return;
+      }
+      
+      if (selectedPaymentMethod === 'bank_transfer') {
+        if (onConfirmOrder) {
+          onConfirmOrder();
+        } else {
+          console.error('❌ onConfirmOrder não está definido');
+          toast({
+            title: "❌ Erro",
+            description: "Função de confirmação não disponível. Recarregue a página.",
+            variant: "destructive",
+            duration: 5000,
+          });
+        }
+        return;
+      }
+      
+      // Validar telefone para QR Code e MCX
+      if ((selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx')) {
+        if (!mobileNumber || mobileNumber.trim() === '') {
+          setMobileError('Número de telefone é obrigatório');
+          toast({
+            title: "⚠️ Telefone Obrigatório",
+            description: "Por favor, insira seu número de telefone para continuar.",
+            variant: "destructive",
+            duration: 4000,
+          });
+          return;
+        }
+        
+        if (!validatePhone(mobileNumber)) {
+          toast({
+            title: "⚠️ Telefone Inválido",
+            description: "Por favor, insira um número de telefone válido (9 dígitos começando com 9).",
+            variant: "destructive",
+            duration: 4000,
+          });
+          return;
+        }
+      }
+      
+      if (onEkwanzaPayment) {
+        // Limpar número de telefone antes de enviar (remover espaços)
+        const cleanedMobileNumber = mobileNumber.replace(/\s/g, '');
+        console.log('🔄 Chamando onEkwanzaPayment:', {
+          method: selectedPaymentMethod,
+          hasMobileNumber: !!cleanedMobileNumber,
+          mobileNumberLength: cleanedMobileNumber?.length
+        });
+        onEkwanzaPayment(selectedPaymentMethod, cleanedMobileNumber || undefined);
+      } else {
+        console.error('❌ onEkwanzaPayment não está definido');
+        toast({
+          title: "❌ Erro",
+          description: "Função de pagamento não disponível. Recarregue a página.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro inesperado em handleConfirmPayment:', error);
+      toast({
+        title: "❌ Erro Inesperado",
+        description: "Ocorreu um erro ao processar o pagamento. Por favor, tente novamente.",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   };
 

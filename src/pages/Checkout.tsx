@@ -50,35 +50,52 @@ const Checkout = () => {
   }, [pollingInterval]);
 
   const startPolling = (paymentId: string) => {
+    if (!paymentId) {
+      console.error('❌ Payment ID não fornecido para polling');
+      return;
+    }
+
+    console.log('🔄 Iniciando polling para payment:', paymentId);
+    
     // Poll every 10 seconds
     const interval = setInterval(async () => {
-      const status = await checkPaymentStatus(paymentId);
-      
-      if (status?.status === 'paid') {
-        clearInterval(interval);
-        setPollingInterval(null);
+      try {
+        const status = await checkPaymentStatus(paymentId);
         
-        toast({
-          title: "✅ Pagamento Confirmado!",
-          description: "Seus créditos foram adicionados com sucesso.",
-          duration: 5000,
-        });
+        if (!status) {
+          console.warn('⚠️ Status não retornado para payment:', paymentId);
+          return;
+        }
         
-        setShowEkwanzaModal(false);
-        refreshCredits();
-        navigate(`/checkout/success/${paymentData?.transaction_id}`);
-      } else if (status?.status === 'expired') {
-        clearInterval(interval);
-        setPollingInterval(null);
-        
-        toast({
-          title: "⏰ Pagamento Expirado",
-          description: "O tempo para completar o pagamento expirou. Crie um novo pagamento.",
-          variant: "destructive",
-          duration: 5000,
-        });
-        
-        setShowEkwanzaModal(false);
+        if (status.status === 'paid') {
+          clearInterval(interval);
+          setPollingInterval(null);
+          
+          toast({
+            title: "✅ Pagamento Confirmado!",
+            description: "Seus créditos foram adicionados com sucesso.",
+            duration: 5000,
+          });
+          
+          setShowEkwanzaModal(false);
+          refreshCredits();
+          navigate(`/checkout/success/${paymentData?.transaction_id}`);
+        } else if (status.status === 'expired') {
+          clearInterval(interval);
+          setPollingInterval(null);
+          
+          toast({
+            title: "⏰ Pagamento Expirado",
+            description: "O tempo para completar o pagamento expirou. Crie um novo pagamento.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          
+          setShowEkwanzaModal(false);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar status do pagamento:', error);
+        // Não limpar o intervalo em caso de erro - continuar tentando
       }
     }, 10000); // 10 seconds
     
@@ -86,26 +103,61 @@ const Checkout = () => {
   };
 
   const handleEkwanzaPayment = async (paymentMethod: PaymentMethod, mobileNumber?: string) => {
-    if (!selectedPackage || !user) return;
+    if (!selectedPackage || !user) {
+      console.error('❌ Missing required data:', { selectedPackage: !!selectedPackage, user: !!user });
+      toast({
+        title: "❌ Erro",
+        description: "Dados incompletos. Por favor, recarregue a página e tente novamente.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
 
-    const payment = await createPayment({
-      package_id: selectedPackage.id,
-      payment_method: paymentMethod,
-      mobile_number: mobileNumber
-    });
+    try {
+      console.log('🔄 Iniciando criação de pagamento MCX:', {
+        package_id: selectedPackage.id,
+        payment_method: paymentMethod,
+        has_mobile_number: !!mobileNumber
+      });
 
-    if (payment) {
-      setPaymentData(payment);
-      setShowEkwanzaModal(true);
-      startPolling(payment.payment_id);
-    } else if (paymentMethod === 'referencia') {
-      // If Referência failed, suggest MCX as fallback
-      showInfoToast(
-        "💡 Sugestão de Método Alternativo",
-        "A Referência EMIS não está disponível. Recomendamos usar Multicaixa Express (MCX) ou Transferência Bancária como alternativa."
-      );
-      // Auto-switch to MCX
-      setSelectedPaymentMethod('mcx');
+      const payment = await createPayment({
+        package_id: selectedPackage.id,
+        payment_method: paymentMethod,
+        mobile_number: mobileNumber
+      });
+
+      if (payment) {
+        console.log('✅ Pagamento criado com sucesso:', payment.payment_id);
+        setPaymentData(payment);
+        setShowEkwanzaModal(true);
+        startPolling(payment.payment_id);
+      } else if (paymentMethod === 'referencia') {
+        // If Referência failed, suggest MCX as fallback
+        showInfoToast(
+          "💡 Sugestão de Método Alternativo",
+          "A Referência EMIS não está disponível. Recomendamos usar Multicaixa Express (MCX) ou Transferência Bancária como alternativa."
+        );
+        // Auto-switch to MCX
+        setSelectedPaymentMethod('mcx');
+      }
+    } catch (error) {
+      console.error('❌ Erro inesperado ao criar pagamento:', error);
+      toast({
+        title: "❌ Erro Inesperado",
+        description: "Ocorreu um erro ao processar o pagamento. Por favor, tente novamente ou use Transferência Bancária.",
+        variant: "destructive",
+        duration: 6000,
+      });
+      
+      // Log detalhado para diagnóstico
+      if (error instanceof Error) {
+        console.error('📊 Detalhes do erro:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+      }
     }
   };
 
@@ -155,7 +207,7 @@ const Checkout = () => {
     account: "123456789",
     iban: "0006 0000 3442 5465 3012.5",
     holder: "KB AGENCY- PRESTAÇÃO DE SERVIÇOS,LDA",
-    reference: selectedPackage?.id?.substring(0, 8).toUpperCase() || "REF00000"
+    reference: selectedPackage?.id?.substring(0, 8)?.toUpperCase() || "REF00000"
   };
 
   if (loading) {
@@ -266,36 +318,46 @@ const Checkout = () => {
           </div>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Enhanced Order Summary */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <EnhancedOrderSummary 
-              selectedPackage={selectedPackage} 
-              userCredits={credits}
-            />
-          </motion.div>
+        {selectedPackage ? (
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Enhanced Order Summary */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <EnhancedOrderSummary 
+                selectedPackage={selectedPackage} 
+                userCredits={credits}
+              />
+            </motion.div>
 
-          {/* Enhanced Payment Instructions */}
+            {/* Enhanced Payment Instructions */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <EnhancedPaymentInstructions
+                bankDetails={bankDetails}
+                amount={selectedPackage.price_kwanza}
+                isProcessing={isProcessing || isCreating}
+                onConfirmOrder={handleBankTransferPayment}
+                onEkwanzaPayment={handleEkwanzaPayment}
+                selectedPaymentMethod={selectedPaymentMethod}
+                onPaymentMethodChange={setSelectedPaymentMethod}
+              />
+            </motion.div>
+          </div>
+        ) : (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
           >
-            <EnhancedPaymentInstructions
-              bankDetails={bankDetails}
-              amount={selectedPackage.price_kwanza}
-              isProcessing={isProcessing || isCreating}
-              onConfirmOrder={handleBankTransferPayment}
-              onEkwanzaPayment={handleEkwanzaPayment}
-              selectedPaymentMethod={selectedPaymentMethod}
-              onPaymentMethodChange={setSelectedPaymentMethod}
-            />
+            <p className="text-muted-foreground">Carregando informações do pacote...</p>
           </motion.div>
-        </div>
+        )}
 
         {/* É-kwanza Payment Modal */}
         <EkwanzaPaymentModal
