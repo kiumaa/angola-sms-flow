@@ -585,7 +585,7 @@ async function createQRCodePayment(
     } catch (error) {
       attempt.success = false
       attempt.error = error instanceof Error ? error.message : String(error)
-      attempt.error_type = error.name
+      attempt.error_type = error instanceof Error ? error.name : 'UnknownError'
       
       console.error(`❌ Exceção ao conectar:`, {
         error: attempt.error,

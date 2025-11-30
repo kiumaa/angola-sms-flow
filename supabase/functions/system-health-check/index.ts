@@ -72,9 +72,10 @@ Deno.serve(async (req) => {
 
       console.log(`✅ Database check: ${dbResponseTime}ms`);
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       checks.database = {
         status: 'fail',
-        message: `Database error: ${error.message}`,
+        message: `Database error: ${errorMsg}`,
         lastChecked: new Date().toISOString()
       };
 
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
         category: 'database',
         message: 'Database connection failed!',
         timestamp: new Date().toISOString(),
-        metadata: { error: error.message }
+        metadata: { error: errorMsg }
       });
 
       console.error('❌ Database check failed:', error);
@@ -140,7 +141,7 @@ Deno.serve(async (req) => {
     } catch (error) {
       checks.sms_gateways = {
         status: 'fail',
-        message: `Gateway check error: ${error.message}`,
+        message: `Gateway check error: ${error instanceof Error ? error.message : String(error)}`,
         lastChecked: new Date().toISOString()
       };
 
@@ -184,7 +185,7 @@ Deno.serve(async (req) => {
     } catch (error) {
       checks.authentication = {
         status: 'fail',
-        message: `Auth check error: ${error.message}`,
+        message: `Auth check error: ${error instanceof Error ? error.message : String(error)}`,
         lastChecked: new Date().toISOString()
       };
 
@@ -233,7 +234,7 @@ Deno.serve(async (req) => {
         lastChecked: new Date().toISOString()
       };
 
-      console.warn('⚠️ RLS policies check skipped:', error.message);
+      console.warn('⚠️ RLS policies check skipped:', error instanceof Error ? error.message : String(error));
     }
 
     // ========================================================================
@@ -275,7 +276,7 @@ Deno.serve(async (req) => {
         lastChecked: new Date().toISOString()
       };
 
-      console.warn('⚠️ Edge functions check skipped:', error.message);
+      console.warn('⚠️ Edge functions check skipped:', error instanceof Error ? error.message : String(error));
     }
 
     // ========================================================================
@@ -324,11 +325,12 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Health check fatal error:', error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
 
     return new Response(JSON.stringify({
       timestamp: new Date().toISOString(),
       status: 'critical',
-      error: error.message,
+      error: errorMsg,
       checks: {},
       metrics: {
         total_checks: 0,
@@ -340,7 +342,7 @@ Deno.serve(async (req) => {
       alerts: [{
         level: 'critical',
         category: 'system',
-        message: `Health check failed: ${error.message}`,
+        message: `Health check failed: ${errorMsg}`,
         timestamp: new Date().toISOString()
       }]
     }, null, 2), {

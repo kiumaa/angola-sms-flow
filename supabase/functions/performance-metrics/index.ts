@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
     console.error('❌ Metrics collection failed:', error);
 
     return new Response(JSON.stringify({
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString()
     }), {
       headers: {
