@@ -721,7 +721,7 @@ async function createMCXPayment(
 ): Promise<any> {
   console.log('🎯 === MCX EXPRESS PAYMENT (GATEWAY PRINCIPAL) ===')
   
-  const baseUrl = Deno.env.get('EKWANZA_BASE_URL') || 'https://ekz-partnersapi.e-kwanza.ao'
+  const baseUrl = Deno.env.get('EKWANZA_BASE_URL') || 'https://login.microsoftonline.com/auth.appypay.co.ao'
   const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER') // Nº conta: 01465115
   const paymentMethodId = Deno.env.get('EKWANZA_GPO_PAYMENT_METHOD') // paymentMethodGPO
   const apiKey = Deno.env.get('EKWANZA_GPO_API_KEY') || paymentMethodId // ApiKey GPO (mesmo valor que paymentMethodGPO)

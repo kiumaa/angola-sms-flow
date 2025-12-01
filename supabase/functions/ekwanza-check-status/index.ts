@@ -197,19 +197,18 @@ serve(async (req) => {
   }
 })
 
-// Get base URL (NEVER use OAuth domain)
+// Get base URL for É-kwanza API
 function getBaseUrl(): string {
   const configuredUrl = Deno.env.get('EKWANZA_BASE_URL')
   
-  // Never use OAuth domain
-  if (configuredUrl && !configuredUrl.includes('oauth') && !configuredUrl.includes('login.microsoft')) {
+  if (configuredUrl) {
     console.log('📍 Using EKWANZA_BASE_URL:', configuredUrl)
     return configuredUrl.replace(/\/$/, '')
   }
   
-  // Fallback to known API domains
-  console.log('📍 Using fallback baseUrl: ekz-partnersapi.e-kwanza.ao')
-  return 'https://ekz-partnersapi.e-kwanza.ao'
+  // Fallback para domínio oficial É-kwanza (confirmado pela equipa)
+  console.log('📍 Using fallback baseUrl: login.microsoftonline.com/auth.appypay.co.ao')
+  return 'https://login.microsoftonline.com/auth.appypay.co.ao'
 }
 
 // Check payment status via É-kwanza API
