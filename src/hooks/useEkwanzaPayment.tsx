@@ -79,6 +79,14 @@ export const useEkwanzaPayment = () => {
           title = "⏳ Limite Atingido";
           description = data.message || "Limite de tentativas atingido. Aguarde 1 minuto e tente novamente.";
         } 
+        // QR Code Disabled
+        else if (data.error === 'QR_CODE_DISABLED') {
+          title = "🚫 QR Code Desabilitado";
+          description = "QR Code está temporariamente desabilitado. Use MCX Express ou Referência EMIS como alternativa.";
+          if (data.suggestion) {
+            description += `\n\n💡 ${data.suggestion}`;
+          }
+        }
         // MCX Express Errors
         else if (data.error === 'MCX_ENDPOINT_NOT_FOUND') {
           title = "🚫 Endpoint MCX Não Encontrado";

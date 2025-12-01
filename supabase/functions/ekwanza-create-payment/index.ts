@@ -140,8 +140,8 @@ serve(async (req) => {
       })
     }
 
-    // Validate mobile number for qrcode and mcx
-    if ((payment_method === 'qrcode' || payment_method === 'mcx') && !mobile_number) {
+    // Validate mobile number for mcx (qrcode desabilitado)
+    if (payment_method === 'mcx' && !mobile_number) {
       return new Response(JSON.stringify({ error: 'Mobile number required for this payment method' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -246,12 +246,14 @@ serve(async (req) => {
     let ekwanzaResponse: any
     
     try {
+      // QR Code temporariamente desabilitado - apenas MCX Express e Referências ativos
       if (payment_method === 'qrcode') {
-        ekwanzaResponse = await createQRCodePayment(
-          creditPackage.price_kwanza,
-          reference_code,
-          mobile_number!
-        )
+        const error: any = new Error('QR_CODE_DISABLED')
+        error.technical_details = {
+          method: 'qrcode',
+          message: 'QR Code temporariamente desabilitado. Use MCX Express ou Referência EMIS.'
+        }
+        throw error
       } else if (payment_method === 'mcx') {
         // Let createMCXPayment handle retry/fallback across all domains
         ekwanzaResponse = await createMCXPayment(
@@ -290,7 +292,11 @@ serve(async (req) => {
         const errorMsg = error.message
         
         // Specific error codes from functions
-        if (errorMsg === 'QR_ENDPOINT_NOT_FOUND') {
+        if (errorMsg === 'QR_CODE_DISABLED') {
+          errorDetails.type = 'QR_CODE_DISABLED'
+          errorDetails.suggestion = 'QR Code está temporariamente desabilitado. Use MCX Express ou Referência EMIS como alternativa.'
+        }
+        else if (errorMsg === 'QR_ENDPOINT_NOT_FOUND') {
           errorDetails.type = 'QR_ENDPOINT_NOT_FOUND'
           errorDetails.suggestion = 'Endpoint /api/v1/Ticket não encontrado. Verifique a configuração da API.'
         }
@@ -357,7 +363,9 @@ serve(async (req) => {
       let message = 'Erro ao processar pagamento'
       let suggestion = errorDetails.suggestion
       
-      if (errorDetails.type === 'QR_ENDPOINT_NOT_FOUND') {
+      if (errorDetails.type === 'QR_CODE_DISABLED') {
+        message = 'QR Code está temporariamente desabilitado. Use MCX Express ou Referência EMIS.'
+      } else if (errorDetails.type === 'QR_ENDPOINT_NOT_FOUND') {
         message = 'Endpoint QR Code não encontrado.'
       } else if (errorDetails.type === 'MCX_ENDPOINT_NOT_FOUND') {
         message = 'Endpoint MCX Express não encontrado. Verifique configuração da API.'
@@ -814,36 +822,11 @@ async function createMCXPayment(
     }
   })
   
-  // Validar que baseUrl não é o URL de OAuth (erro comum)
-  if (baseUrl.includes('login.microsoftonline.com') || baseUrl.includes('auth.appypay')) {
-    console.error('❌ ERRO CRÍTICO: baseUrl está configurado como URL de OAuth!', {
-      baseUrl,
-      expected: 'https://ekz-partnersapi.e-kwanza.ao'
-    })
-    const error: any = new Error('MCX_CONFIG_MISSING')
-    error.technical_details = {
-      method: 'mcx',
-      error_type: 'invalid_base_url',
-      baseUrl,
-      expected: 'https://ekz-partnersapi.e-kwanza.ao',
-      suggestion: 'Verifique a variável de ambiente EKWANZA_BASE_URL'
-    }
-    throw error
-  }
-  
   // Tentar endpoints: primeiro v2.0/charges (conforme doc), depois /api/v1/GPO (fallback)
   const endpoints = [
     `${baseUrl}/v2.0/charges`, // Endpoint conforme documentação oficial
     `${baseUrl}/api/v1/GPO` // Endpoint alternativo (fallback)
   ]
-  
-  // Validar que os endpoints não são URLs de OAuth
-  for (const endpoint of endpoints) {
-    if (endpoint.includes('login.microsoftonline.com') || endpoint.includes('auth.appypay')) {
-      console.error('❌ ERRO CRÍTICO: Endpoint contém URL de OAuth!', { endpoint, baseUrl })
-      throw new Error('MCX_CONFIG_MISSING: Endpoint inválido')
-    }
-  }
   
   console.log('📤 Request payload:', {
     method: 'POST',
@@ -861,12 +844,6 @@ async function createMCXPayment(
   let lastError: any = null
   
   for (const url of endpoints) {
-    // Validação adicional antes de fazer a requisição
-    if (url.includes('login.microsoftonline.com') || url.includes('auth.appypay')) {
-      console.error('❌ ERRO: Tentando usar URL de OAuth como endpoint de pagamento!', { url })
-      continue // Pular este endpoint inválido
-    }
-    
     console.log(`🔍 Tentando endpoint: ${url}`)
     
     try {
@@ -1022,10 +999,7 @@ async function createMCXPayment(
     method: 'mcx',
     base_url: baseUrl,
     endpoints_tried: endpoints,
-    last_error: lastError,
-    // Validar que não estamos usando URL de OAuth
-    is_oauth_url: baseUrl.includes('login.microsoftonline.com') || baseUrl.includes('auth.appypay'),
-    expected_base_url: 'https://ekz-partnersapi.e-kwanza.ao'
+    last_error: lastError
   }
   throw finalError
 }
@@ -1038,7 +1012,9 @@ async function createReferenciaPayment(
 ): Promise<any> {
   console.log('🎯 === REFERÊNCIA EMIS PAYMENT ===')
   
-  const baseUrl = Deno.env.get('EKWANZA_BASE_URL') || 'https://ekz-partnersapi.e-kwanza.ao'
+  // Base URL para GPR (Referências) - mesmo domínio que GPO
+  // Usa o domínio auth.appypay.co.ao (sem /oauth2/token)
+  const baseUrl = Deno.env.get('EKWANZA_BASE_URL') || 'https://login.microsoftonline.com/auth.appypay.co.ao'
   const merchantNumber = Deno.env.get('EKWANZA_MERCHANT_NUMBER')
   const paymentMethodId = Deno.env.get('EKWANZA_REF_PAYMENT_METHOD')
   const apiKey = Deno.env.get('EKWANZA_REF_API_KEY') || paymentMethodId // ApiKey REF

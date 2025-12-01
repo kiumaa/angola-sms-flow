@@ -130,8 +130,8 @@ export const EnhancedPaymentInstructions = ({
         return;
       }
       
-      // Validar telefone para QR Code e MCX
-      if ((selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx')) {
+      // Validar telefone para MCX (QR Code desabilitado)
+      if (selectedPaymentMethod === 'mcx') {
         if (!mobileNumber || mobileNumber.trim() === '') {
           setMobileError('Número de telefone é obrigatório');
           toast({
@@ -269,8 +269,8 @@ export const EnhancedPaymentInstructions = ({
               </div>
             </motion.button>
 
-            {/* QR Code É-kwanza */}
-            <motion.button
+            {/* QR Code É-kwanza - TEMPORARIAMENTE DESABILITADO */}
+            {/* <motion.button
               onClick={() => onPaymentMethodChange?.('qrcode')}
               className={cn(
                 "w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left",
@@ -298,7 +298,7 @@ export const EnhancedPaymentInstructions = ({
                   <Check className="h-5 w-5 text-primary" />
                 )}
               </div>
-            </motion.button>
+            </motion.button> */}
 
             {/* Multicaixa Express - GATEWAY PRINCIPAL */}
             <motion.button
@@ -382,9 +382,9 @@ export const EnhancedPaymentInstructions = ({
           </div>
         </div>
 
-        {/* Mobile Number Input (for QR Code and MCX) */}
+        {/* Mobile Number Input (for MCX - QR Code desabilitado) */}
         <AnimatePresence>
-          {(selectedPaymentMethod === 'qrcode' || selectedPaymentMethod === 'mcx') && (
+          {selectedPaymentMethod === 'mcx' && (
             <motion.div
               className="space-y-2"
               initial={{ opacity: 0, height: 0 }}
