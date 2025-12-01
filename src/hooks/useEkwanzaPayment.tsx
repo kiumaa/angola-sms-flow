@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 export type PaymentMethod = 'qrcode' | 'mcx' | 'referencia';
 
@@ -187,17 +188,21 @@ export const useEkwanzaPayment = () => {
           description,
           variant: "destructive",
           duration: 8000,
-          action: data.technical_details ? {
-            label: "📋 Copiar Detalhes",
-            onClick: () => {
-              navigator.clipboard.writeText(JSON.stringify(technicalDetails, null, 2));
-              toast({
-                title: "✅ Detalhes Técnicos Copiados",
-                description: "Cole em um arquivo de texto para enviar ao suporte.",
-                duration: 3000
-              });
-            }
-          } as any : undefined
+          action: data.technical_details ? (
+            <ToastAction 
+              altText="Copiar detalhes técnicos"
+              onClick={() => {
+                navigator.clipboard.writeText(JSON.stringify(technicalDetails, null, 2));
+                toast({
+                  title: "✅ Detalhes Técnicos Copiados",
+                  description: "Cole em um arquivo de texto para enviar ao suporte.",
+                  duration: 3000
+                });
+              }}
+            >
+              📋 Copiar Detalhes
+            </ToastAction>
+          ) : undefined
         });
         return null;
       }
